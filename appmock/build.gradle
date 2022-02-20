@@ -29,10 +29,12 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+    
+    ndkVersion '22.1.7171670'
 }
 
 dependencies {
-    implementation files('libs/arklib.aar')
+    implementation files('../lib/build/outputs/aar/lib-release.aar')
 
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.4.1'

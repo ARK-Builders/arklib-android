@@ -37,7 +37,20 @@ jobs:
       run: rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
 
     - name: Build
-      run: ./gradlew assemble
+      run: ./gradlew lib:assemble
+      
+    - name: Instrumentation Tests
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        profile: Galaxy Nexus
+        api-level: 26
+        script: ./gradlew appmock:connectedCheck 
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v2
+      with:
+        name: instrumentation-test-results
+        path: ./appmock/build/reports/androidTests/connected/**
 
     - name: Publish Debug
       uses: actions/upload-artifact@v2
