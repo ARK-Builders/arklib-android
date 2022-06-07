@@ -37,7 +37,7 @@ pub mod android {
             .into()
     }
     #[no_mangle]
-    pub fn Java_space_taran_arklib_pdfThumbnailGenerate(
+    pub fn Java_space_taran_arklib_LibKt_pdfThumbnailGenerate(
         env: JNIEnv,
         _: JClass,
         jni_img_data: jbyteArray,
