@@ -12,8 +12,6 @@ android {
     defaultConfig {
         minSdkVersion 26
         targetSdkVersion 31
-        versionCode 1
-        versionName "1.0"
     }
 
     buildTypes {
@@ -31,7 +29,7 @@ cargo {
     libname = "arklib"
     targets = ["arm64", "x86", "x86_64", "arm"]
     prebuiltToolchains = true
-    verbose = true
+    // verbose = true
     profile = "release"
 }
 

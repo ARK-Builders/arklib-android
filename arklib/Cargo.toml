@@ -14,6 +14,8 @@ crc32fast = "1.3.0"
 env_logger = "0.9.0"
 log = "0.4.14"
 
+
 [target.'cfg(target_os="android")'.dependencies]
 jni = { version = "0.19.0", default-features = false }
 android_logger = "0.11.0"
+ndk = "0.6.0"
