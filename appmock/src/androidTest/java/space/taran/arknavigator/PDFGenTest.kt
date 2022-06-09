@@ -9,7 +9,7 @@ import junit.framework.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import space.taran.arknavigator.native.pdfThumbnailGenerate;
+import space.taran.arklib.pdfThumbnailGenerate;
 import java.io.File
 import kotlin.io.path.*
 
@@ -18,15 +18,28 @@ class PDFGenTest {
 
     @get:Rule
     val mainActivityRule = ActivityTestRule(MainActivity::class.java)
-
+//    @Test
+//    fun multi_pdfgen() {
+//        for (i in 0..2) {
+//            val appContext = InstrumentationRegistry
+//                .getInstrumentation()
+//                .targetContext
+//            val path = Path("${appContext.cacheDir}/test.pdf")
+//            appContext.resources.openRawResource(R.raw.pdfsample).copyTo(
+//                path.outputStream()
+//            )
+//            Log.i("PDFGen","Calling PDF Native Renderer")
+//            val data = path.inputStream().readBytes()
+//            val pdfData = pdfThumbnailGenerate(data,"")
+//            path.inputStream().close()
+//        }
+//    }
     @Test
     fun is_pdfgen() {
-//        System.loadLibrary("arklib")
         val appContext = InstrumentationRegistry
             .getInstrumentation()
             .targetContext
 
-//        Log.v("Path",asset.contentToString())
         val path = Path("${appContext.cacheDir}/test.pdf")
         val font_cache = Path("${appContext.cacheDir}/fonts")
         font_cache.createDirectories()

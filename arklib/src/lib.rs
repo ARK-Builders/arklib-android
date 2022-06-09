@@ -8,11 +8,15 @@ pub mod android {
     use jni::sys::{jbyteArray, jstring};
     use jni::JNIEnv;
     use log::{debug, error, log, log_enabled, trace, Level};
+    use std::env::set_var;
     use std::path::Path;
-
+    use std::{env, fs};
     extern crate android_logger;
     use android_logger::Config;
-
+    #[no_mangle]
+    pub extern "C" fn Java_space_taran_arklib_LibKt_initial(_: JNIEnv, _: JClass) {
+        android_logger::init_once(Config::default().with_min_level(Level::Trace));
+    }
     #[no_mangle]
     pub extern "C" fn Java_space_taran_arknavigator_mvp_model_repo_index_ResourceIdKt_computeIdNative(
         env: JNIEnv,
@@ -20,8 +24,6 @@ pub mod android {
         jni_size: i64,
         jni_file_name: JString,
     ) -> jlong {
-        android_logger::init_once(Config::default().with_min_level(Level::Trace));
-
         let file_size: usize =
             usize::try_from(jni_size).expect(&format!("Failed to parse input size"));
         println!("Received size: {}", file_size);
@@ -37,18 +39,12 @@ pub mod android {
             .into()
     }
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arknavigator_native_LibKt_pdfThumbnailGenerate(
+    pub extern "C" fn Java_space_taran_arklib_LibKt_pdfThumbnailGenerate(
         env: JNIEnv,
         _: JClass,
         jni_img_data: jbyteArray,
         jni_font_path: JString,
     ) -> jbyteArray {
-        android_logger::init_once(
-            Config::default()
-                .with_min_level(Level::Trace)
-                .with_tag("arklib"),
-        );
-
         let data: Vec<u8> = env
             .convert_byte_array(jni_img_data)
             .expect("failed to read bytes");
@@ -57,14 +53,10 @@ pub mod android {
             .expect("cannot get font path")
             .into();
         debug!("Received: {}", data.len());
-        // let data = arklib::pdf::render_preview_page(
-        //     data.as_slice(),
-        //     arklib::pdf::PDFQuailty::Low,
-        //     Some("/data/user/0/space.taran.arknavigator/cache/fonts".into()),
-        // );
-        // });
-        // let output = env.byte_array_from_slice(data.as_raw().as_slice()).unwrap();
-        // println!("data!");
-        jni_img_data
+        debug!("Font Path: {}", fontpath);
+        set_var("STANDARD_FONTS", fontpath);
+        let data = arklib::pdf::render_preview_page(data.as_slice(), arklib::pdf::PDFQuailty::Low);
+        let output = env.byte_array_from_slice(data.as_bytes()).unwrap();
+        output
     }
 }

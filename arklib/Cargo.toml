@@ -8,8 +8,8 @@ name = "arklib"
 crate-type = ["staticlib", "dylib"]
 
 [dependencies]
-# arklib = { git = "https://github.com/ARK-Builders/arklib", rev = "052832d" }
-arklib = { path = "../../arklib" }
+ arklib = { git = "https://github.com/nagato-chan/arklib" }
+#arklib = { path = "../../arklib" }
 crc32fast = "1.3.0"
 env_logger = "0.9.0"
 log = "0.4.14"
