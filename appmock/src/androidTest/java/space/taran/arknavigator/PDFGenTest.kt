@@ -35,30 +35,19 @@ class PDFGenTest {
 //        }
 //    }
     @Test
-    fun is_pdfgen() {
+    fun is_pdf_gen() {
         val appContext = InstrumentationRegistry
             .getInstrumentation()
             .targetContext
 
         val path = Path("${appContext.cacheDir}/test.pdf")
-        val font_cache = Path("${appContext.cacheDir}/fonts")
-        font_cache.createDirectories()
         appContext.resources.openRawResource(R.raw.test).copyTo(
             path.outputStream()
         )
-        appContext.resources.assets.list("fonts")?.map {
-
-            appContext.resources.assets.open("fonts/${it}").copyTo(
-                Path("${appContext.cacheDir}/fonts/${it}").outputStream()
-            )
-        }
         Log.i("PDFGen","Calling PDF Native Renderer")
-        Log.i("Path", font_cache.pathString)
-        File(font_cache.pathString).walk().forEach {
-            Log.i(it.name,it.path)
-        }
+
         val data = path.inputStream().readBytes()
-        val pdfData = pdfThumbnailGenerate(data,font_cache.pathString)
+        val pdfData = pdfThumbnailGenerate(data)
         path.inputStream().close()
     }
 }

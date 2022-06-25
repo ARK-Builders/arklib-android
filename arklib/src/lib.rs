@@ -4,17 +4,15 @@ pub mod android {
     extern crate jni;
 
     use jni::objects::{JClass, JString};
+    use jni::sys::jbyteArray;
     use jni::sys::jlong;
-    use jni::sys::{jbyteArray, jstring};
     use jni::JNIEnv;
-    use log::{debug, error, log, log_enabled, trace, Level};
-    use std::env::set_var;
+    use log::{debug, trace, Level};
     use std::path::Path;
-    use std::{env, fs};
     extern crate android_logger;
     use android_logger::Config;
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_initial(_: JNIEnv, _: JClass) {
+    pub extern "C" fn Java_space_taran_arklib_LibKt_initialRustLogger(_: JNIEnv, _: JClass) {
         android_logger::init_once(Config::default().with_min_level(Level::Trace));
     }
     #[no_mangle]
@@ -43,19 +41,13 @@ pub mod android {
         env: JNIEnv,
         _: JClass,
         jni_img_data: jbyteArray,
-        jni_font_path: JString,
     ) -> jbyteArray {
         let data: Vec<u8> = env
             .convert_byte_array(jni_img_data)
             .expect("failed to read bytes");
-        let fontpath: String = env
-            .get_string(jni_font_path)
-            .expect("cannot get font path")
-            .into();
         debug!("Received: {}", data.len());
-        debug!("Font Path: {}", fontpath);
-        set_var("STANDARD_FONTS", fontpath);
-        let data = arklib::pdf::render_preview_page(data.as_slice(), arklib::pdf::PDFQuailty::Low);
+
+        let data = arklib::pdf::render_preview_page(data.as_slice(), arklib::pdf::PDFQuality::Low);
         let output = env.byte_array_from_slice(data.as_bytes()).unwrap();
         output
     }

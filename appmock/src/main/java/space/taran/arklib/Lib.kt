@@ -1,5 +1,5 @@
 package space.taran.arklib;
 
-external fun pdfThumbnailGenerate(imgData:ByteArray, fontPath: String): ByteArray
+external fun pdfThumbnailGenerate(imgData:ByteArray): ByteArray
 
-external fun initial()
+external fun initialRustLogger()

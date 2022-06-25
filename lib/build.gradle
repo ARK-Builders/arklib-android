@@ -16,21 +16,23 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            buildConfigField 'String', 'BUILD_TYPE', "\"release\""
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
-    ndkVersion '22.1.7171670'
+    ndkVersion '24.0.8215888'
 }
 
 cargo {
+
     module  = "../arklib"
     libname = "arklib"
     targets = ["arm64", "x86", "x86_64", "arm"]
     prebuiltToolchains = true
-//    verbose = true
-    profile = "debug"
+//    Set to "debug" to enable logging. Or "release" to make a production build.
+    profile = "release"
 }
 
 dependencies {
@@ -42,3 +44,4 @@ tasks.whenTaskAdded { task ->
         task.dependsOn 'cargoBuild'
     }
 }
+
