@@ -5,7 +5,7 @@ edition = "2021"
 
 [lib]
 name = "arklib"
-crate-type = ["staticlib", "dylib"]
+crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 arklib = { git = "https://github.com/ARK-Builders/arklib" }

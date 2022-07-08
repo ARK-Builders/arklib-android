@@ -42,7 +42,8 @@ android {
 }
 
 dependencies {
-    implementation files('../lib/build/outputs/aar/lib-debug.aar')
+    // Change release to debug to ensure using debug build
+    implementation files('../lib/build/outputs/aar/lib-release.aar')
 
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.4.1'
