@@ -50,6 +50,7 @@ checksum = "08f9b8508dccb7687a1d6c4ce66b2b0ecef467c94667de27d8d7fe1f8d2a9cdc"
 [[package]]
 name = "arklib"
 version = "0.1.0"
+source = "git+https://github.com/ARK-Builders/arklib#cc7b2e65a09335f4d3335e49cb7f6a966467536e"
 dependencies = [
  "anyhow",
  "canonical-path",

@@ -18,22 +18,6 @@ class PDFGenTest {
 
     @get:Rule
     val mainActivityRule = ActivityTestRule(MainActivity::class.java)
-//    @Test
-//    fun multi_pdfgen() {
-//        for (i in 0..2) {
-//            val appContext = InstrumentationRegistry
-//                .getInstrumentation()
-//                .targetContext
-//            val path = Path("${appContext.cacheDir}/test.pdf")
-//            appContext.resources.openRawResource(R.raw.pdfsample).copyTo(
-//                path.outputStream()
-//            )
-//            Log.i("PDFGen","Calling PDF Native Renderer")
-//            val data = path.inputStream().readBytes()
-//            val pdfData = pdfThumbnailGenerate(data,"")
-//            path.inputStream().close()
-//        }
-//    }
     @Test
     fun is_pdf_gen() {
         val appContext = InstrumentationRegistry
