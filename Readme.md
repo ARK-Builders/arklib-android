@@ -9,6 +9,8 @@ An arklib wrapper for Android.
 
 ## Debug
 
+Make sure you have switch to `debug` profile in cargo config, which could be found at `lib/build.gradle` 
+
 Run the command to build
 
 ```sh
@@ -23,22 +25,10 @@ Connect to a device or setup an AVD and check the functionality.
 
 ## Build
 
-Before building for release, change those line in `lib/build.gradle`
-
-```groovy
-cargo {
-    module  = "../arklib"
-    libname = "arklib"
-    targets = ["arm64", "x86", "x86_64", "arm"]
-    prebuiltToolchains = true
-//    Set the profile to "release"
-    profile = "release"
-}
-
-```
-
-Then run the command to build
+Before make a release build, ensure you have set `profile = "release"` in cargo config.
 
 ```sh
 ./gradlew lib:assemble
 ```
+
+The generated release build is `lib/build/outputs/aar/lib-release.aar`

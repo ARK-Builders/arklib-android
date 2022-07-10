@@ -45,7 +45,6 @@ class PDFGenTest {
         val picDir = appContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         val pic = File(picDir, "test.png")
         Log.i("PDFGen", pic.path)
-//        val out = FileWriter(picDir)
         val out = FileOutputStream(pic)
         pdfData.compress(Bitmap.CompressFormat.PNG, 100, out);
         out.flush()
