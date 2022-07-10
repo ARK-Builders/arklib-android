@@ -1,9 +1,9 @@
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 apply plugin: 'org.mozilla.rust-android-gradle.rust-android'
 
 android {
     compileSdkVersion 31
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -12,8 +12,6 @@ android {
     defaultConfig {
         minSdkVersion 26
         targetSdkVersion 31
-        versionCode 1
-        versionName "1.0"
     }
 
     buildTypes {
@@ -23,24 +21,30 @@ android {
         }
     }
 
-    ndkVersion '22.1.7171670'
+    ndkVersion '24.0.8215888'
 }
 
 cargo {
+
     module  = "../arklib"
     libname = "arklib"
     targets = ["arm64", "x86", "x86_64", "arm"]
     prebuiltToolchains = true
-    verbose = true
+//    Set to "debug" to enable logging. Or "release" to make a production build.
     profile = "release"
 }
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
+    implementation 'androidx.core:core-ktx:1.7.0'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 
 tasks.whenTaskAdded { task ->
-    if ((task.name == 'javaPreCompileDebug' || task.name == 'javaPreCompileRelease')) {
+    if ((task.name == 'mergeDebugJniLibFolders' || task.name == 'mergeReleaseJniLibFolders')) {
         task.dependsOn 'cargoBuild'
     }
+}
+repositories {
+    mavenCentral()
 }
