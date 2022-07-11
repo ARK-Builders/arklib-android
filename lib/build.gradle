@@ -1,6 +1,13 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'org.mozilla.rust-android-gradle.rust-android'
+apply plugin: 'maven-publish'
+apply plugin: "com.palantir.git-version"
+apply plugin: 'pl.allegro.tech.build.axion-release'
+
+def verDetails = versionDetails()
+
+version = "${scmVersion.version}-${verDetails.gitHash}"
 
 android {
     compileSdkVersion 31
@@ -20,12 +27,15 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+        }
+    }
     ndkVersion '24.0.8215888'
 }
 
 cargo {
-
     module  = "../arklib"
     libname = "arklib"
     targets = ["arm64", "x86", "x86_64", "arm"]
@@ -45,6 +55,31 @@ tasks.whenTaskAdded { task ->
         task.dependsOn 'cargoBuild'
     }
 }
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId = "space.taran"
+            artifactId = "arklib"
+
+            afterEvaluate {
+                from components.release
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "GithubPackages"
+            url = "https://maven.pkg.github.com/ARK-Builders/arklib-android"
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+
+    }
+}
+
 repositories {
     mavenCentral()
 }
