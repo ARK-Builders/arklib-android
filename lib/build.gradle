@@ -2,6 +2,12 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'org.mozilla.rust-android-gradle.rust-android'
 apply plugin: 'maven-publish'
+apply plugin: "com.palantir.git-version"
+apply plugin: 'pl.allegro.tech.build.axion-release'
+
+def verDetails = versionDetails()
+
+version = "${scmVersion.version}-${verDetails.gitHash}"
 
 android {
     compileSdkVersion 31
@@ -55,7 +61,6 @@ publishing {
         release(MavenPublication) {
             groupId = "space.taran"
             artifactId = "arklib"
-            version = "1.0"
 
             afterEvaluate {
                 from components.release

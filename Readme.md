@@ -32,3 +32,13 @@ Before make a release build, ensure you have set `profile = "release"` in cargo 
 ```
 
 The generated release build is `lib/build/outputs/aar/lib-release.aar`
+
+## Publish New Version
+
+Ensure you have committed your changes.
+
+```sh
+./gradlew release
+```
+
+Then simply push to the repo.
