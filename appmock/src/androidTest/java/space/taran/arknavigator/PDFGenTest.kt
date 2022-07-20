@@ -30,7 +30,9 @@ class PDFGenTest {
             .targetContext
 
         val path = Path("${appContext.cacheDir}/test.pdf")
-
+        appContext.resources.openRawResource(R.raw.test).copyTo(
+            path.outputStream()
+        )
         Log.i("PDFGen","Calling PDF Native Renderer")
 
         val pdfData = pdfPreviewGenerate(path.toString(), PreviewQuality.LOW)
