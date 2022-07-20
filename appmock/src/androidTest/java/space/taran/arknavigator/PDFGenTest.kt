@@ -35,8 +35,7 @@ class PDFGenTest {
         )
         Log.i("PDFGen","Calling PDF Native Renderer")
 
-        val data = path.inputStream().readBytes()
-        val pdfData = pdfPreviewGenerate(data,PreviewQuality.LOW)
+        val pdfData = pdfPreviewGenerate(path.toString(), PreviewQuality.LOW)
         path.inputStream().close()
 
         val imgPixs = IntArray(pdfData.width * pdfData.height);

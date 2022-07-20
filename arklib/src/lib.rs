@@ -5,10 +5,10 @@ pub mod android {
 
     use jni::objects::{JClass, JString, JValue};
     use jni::sys::jlong;
-    use jni::sys::{jbyteArray, jint, jobject};
+    use jni::sys::{jint, jobject};
     use jni::JNIEnv;
     use log::{debug, trace, Level};
-    use std::path::Path;
+    use std::{fs::File, path::Path};
     extern crate android_logger;
     use android_logger::Config;
     use arklib::pdf::PDFQuality;
@@ -45,13 +45,15 @@ pub mod android {
     pub extern "C" fn Java_space_taran_arklib_LibKt_pdfPreviewGenerateNative(
         env: JNIEnv,
         _: JClass,
-        jni_data: jbyteArray,
+        jni_path: JString,
         jni_quality: JString,
     ) -> jobject {
-        let data: Vec<u8> = env
-            .convert_byte_array(jni_data)
-            .expect("failed to read bytes");
-        debug!("Received: {}", data.len());
+        let file_path: String = env
+            .get_string(jni_path)
+            .expect("failed to parse input file name")
+            .into();
+        debug!("Preview PDF Path: {file_path}");
+        let file = File::open(file_path).expect("failed to open file");
         let quality: String = env
             .get_string(jni_quality)
             .expect("failed to read quality")
@@ -66,7 +68,7 @@ pub mod android {
             }
         };
 
-        let image = arklib::pdf::render_preview_page(data.as_slice(), quality);
+        let image = arklib::pdf::render_preview_page(file, quality);
 
         let bitmap_cls = env.find_class("android/graphics/Bitmap").unwrap();
         let create_bitmap_fn = env
