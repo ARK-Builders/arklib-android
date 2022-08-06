@@ -5,7 +5,7 @@ pub mod android {
 
     use jni::objects::{JClass, JString, JValue};
     use jni::sys::jlong;
-    use jni::sys::{jint, jobject, jstring};
+    use jni::sys::{jint, jobject, jstring, jboolean};
     use jni::JNIEnv;
     use log::{debug, trace, Level};
     use std::{fs::File, path::{Path}};
@@ -66,15 +66,24 @@ pub mod android {
     #[no_mangle]
     pub extern "C" fn Java_space_taran_arklib_LibKt_loadLinkFileNative(env: JNIEnv,
         _: JClass,
-        jni_file_name: JString,
+        jni_file_path: JString,
     ) -> jstring {
         let file_path: String = env
-            .get_string(jni_file_name)
+            .get_string(jni_file_path)
             .expect("Failed to parse input file path")
             .into();
 
-        let linkJson = Link::load(file_path);
-        env.new_string(linkJson).unwrap().into_inner()
+        let path: &Path = Path::new(&file_path);
+
+        trace!("Received file path: {}", path.display());
+
+        let linkJson = Link::load(path).unwrap();
+
+        trace!("Loaded file: {}", linkJson);
+
+        env.new_string(linkJson)
+            .expect("Couldn't create java string!")
+            .into_inner()
     }
 
     #[no_mangle]
@@ -84,6 +93,7 @@ pub mod android {
         jni_desc: JString,
         jni_url: JString,
         jni_base_path: JString,
+        jni_download_preview: jboolean,
     ) {
         let title: String = env
             .get_string(jni_title)
@@ -101,16 +111,24 @@ pub mod android {
             .into();
         let path: &Path = Path::new(&base_path);
 
+        trace!("Received file path: {}", path.display());
+
         let url_str: String = env
             .get_string(jni_url)
             .expect("Failed to parse url")
             .into();
-        
+
         let url = Url::parse(url_str.as_str()).expect("Failed to parse url data");
 
+        trace!("Received url: {}", url.as_str());
+
+        let download_preview = jni_download_preview != 0;
+            
         let mut link = Link::new(title, desc, url);
         let hashedLinkName = link.format_name();
-        link.write_to_path_sync(path.join(hashedLinkName));
+        let hashedLinkFileName = format!("{}.link", hashedLinkName);
+        trace!("Generated hashed link filename: {}", hashedLinkFileName);
+        link.write_to_path_sync(path.join(hashedLinkFileName), download_preview);
     }
 
     #[no_mangle]

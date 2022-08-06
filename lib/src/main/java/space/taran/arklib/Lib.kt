@@ -2,14 +2,14 @@ package space.taran.arklib;
 
 import android.graphics.Bitmap
 
-private external fun createLinkFileNative(title: String, desc: String, url: String, basePath: String)
+private external fun createLinkFileNative(title: String, desc: String, url: String, basePath: String, downloadPreview: Boolean)
 private external fun loadLinkFileNative(file_name: String): String
 private external fun getLinkHashNative(url: String): String
 private external fun pdfPreviewGenerateNative(path: String, quality: String): Bitmap
 
 
-fun createLinkFile(title: String, desc: String, url: String, basePath: String) {
-   return createLinkFileNative(title, desc, url, basePath)
+fun createLinkFile(title: String, desc: String, url: String, basePath: String, downloadPreview: Boolean) {
+   return createLinkFileNative(title, desc, url, basePath, downloadPreview)
 }
 
 fun loadLinkFile(file_name: String): String {

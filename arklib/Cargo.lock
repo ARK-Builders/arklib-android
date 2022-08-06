@@ -62,7 +62,7 @@ checksum = "c91f1f46651137be86f3a2b9a8359f9ab421d04d941c62b5982e1ca21113adf9"
 [[package]]
 name = "arklib"
 version = "0.1.0"
-source = "git+https://github.com/hhio618/arklib?rev=1008853#1008853a12f87f687418292b6e631844561478bd"
+source = "git+https://github.com/hhio618/arklib?rev=6c90b452#6c90b452529a02a4219529b127e92c37e1fd03d9"
 dependencies = [
  "anyhow",
  "canonical-path",
@@ -70,7 +70,6 @@ dependencies = [
  "env_logger",
  "flate2",
  "fs_extra",
- "futures",
  "image",
  "lazy_static",
  "libloading",
@@ -82,6 +81,7 @@ dependencies = [
  "serde_json",
  "tar",
  "target-lexicon",
+ "tokio",
  "ureq",
  "url",
  "walkdir",
@@ -662,28 +662,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "futures"
-version = "0.3.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f73fe65f54d1e12b726f517d3e2135ca3125a437b6d998caf1962961f7172d9e"
-dependencies = [
- "futures-channel",
- "futures-core",
- "futures-executor",
- "futures-io",
- "futures-sink",
- "futures-task",
- "futures-util",
-]
-
-[[package]]
 name = "futures-channel"
 version = "0.3.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3083ce4b914124575708913bca19bfe887522d6e2e6d0952943f5eac4a74010"
 dependencies = [
  "futures-core",
- "futures-sink",
 ]
 
 [[package]]
@@ -691,34 +675,6 @@ name = "futures-core"
 version = "0.3.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c09fd04b7e4073ac7156a9539b57a484a8ea920f79c7c675d05d289ab6110d3"
-
-[[package]]
-name = "futures-executor"
-version = "0.3.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9420b90cfa29e327d0429f19be13e7ddb68fa1cccb09d65e5706b8c7a749b8a6"
-dependencies = [
- "futures-core",
- "futures-task",
- "futures-util",
-]
-
-[[package]]
-name = "futures-io"
-version = "0.3.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc4045962a5a5e935ee2fdedaa4e08284547402885ab326734432bed5d12966b"
-
-[[package]]
-name = "futures-macro"
-version = "0.3.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33c1e13800337f4d4d7a316bf45a567dbcb6ffe087f16424852d97e97a91f512"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
 
 [[package]]
 name = "futures-sink"
@@ -738,16 +694,10 @@ version = "0.3.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8b7abd5d659d9b90c8cba917f6ec750a74e2dc23902ef9cd4cc8c8b22e6036a"
 dependencies = [
- "futures-channel",
  "futures-core",
- "futures-io",
- "futures-macro",
- "futures-sink",
  "futures-task",
- "memchr",
  "pin-project-lite",
  "pin-utils",
- "slab",
 ]
 
 [[package]]
@@ -2130,6 +2080,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43b2853a4d09f215c24cc5489c992ce46052d359b5109343cbafbf26bc62f8a3"
 
 [[package]]
+name = "signal-hook-registry"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e51e73328dc4ac0c7ccbda3a494dfa03df1de2f46018127f60c693f2648455b0"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "siphasher"
 version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2378,10 +2337,25 @@ dependencies = [
  "libc",
  "memchr",
  "mio",
+ "num_cpus",
  "once_cell",
+ "parking_lot",
  "pin-project-lite",
+ "signal-hook-registry",
  "socket2",
+ "tokio-macros",
  "winapi",
+]
+
+[[package]]
+name = "tokio-macros"
+version = "1.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9724f9a975fb987ef7a3cd9be0350edcbe130698af5b8f7a631e23d42d052484"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
