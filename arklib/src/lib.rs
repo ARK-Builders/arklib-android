@@ -17,9 +17,8 @@ pub mod android {
     use jni::signature::{JavaType, Primitive};
     use jni_fn::jni_fn;
 
-    #[no_mangle]
-    #[jni_fn("space.taran.arklib")]
-    pub fn LibKt_initRustLogger(_: JNIEnv, _: JClass) {
+    #[jni_fn("space.taran.arklib.LibKt")]
+    pub fn initRustLogger(_: JNIEnv, _: JClass) {
         android_logger::init_once(Config::default().with_min_level(Level::Trace));
 
     }
@@ -46,9 +45,8 @@ pub mod android {
             .into()
     }
 
-    #[no_mangle]
-    #[jni_fn("space.taran.arklib")]
-    pub fn LibKt_pdfPreviewGenerateNative(
+    #[jni_fn("space.taran.arklib.LibKt")]
+    pub fn pdfPreviewGenerateNative(
         env: JNIEnv,
         _: JClass,
         jni_path: JString,
