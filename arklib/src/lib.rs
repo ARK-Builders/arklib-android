@@ -1,5 +1,6 @@
-#[cfg(target_os = "android")]
-#[allow(non_snake_case)]
+#![cfg(target_os = "android")]
+#![allow(non_snake_case)]
+mod index;
 pub mod android {
     extern crate jni;
 
@@ -14,11 +15,15 @@ pub mod android {
     use arklib::pdf::PDFQuality;
     use image::EncodableLayout;
     use jni::signature::{JavaType, Primitive};
+    use jni_fn::jni_fn;
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_initRustLogger(_: JNIEnv, _: JClass) {
+    #[jni_fn("space.taran.arklib")]
+    pub fn LibKt_initRustLogger(_: JNIEnv, _: JClass) {
         android_logger::init_once(Config::default().with_min_level(Level::Trace));
+
     }
+
     #[no_mangle]
     pub extern "C" fn Java_space_taran_arknavigator_mvp_model_repo_index_ResourceIdKt_computeIdNative(
         env: JNIEnv,
@@ -42,7 +47,8 @@ pub mod android {
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_pdfPreviewGenerateNative(
+    #[jni_fn("space.taran.arklib")]
+    pub fn LibKt_pdfPreviewGenerateNative(
         env: JNIEnv,
         _: JClass,
         jni_path: JString,
