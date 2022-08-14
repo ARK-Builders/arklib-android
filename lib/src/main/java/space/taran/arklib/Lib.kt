@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 
 private external fun createLinkFileNative(title: String, desc: String, url: String, basePath: String, downloadPreview: Boolean)
 private external fun loadLinkFileNative(file_name: String): String
+private external fun loadLinkPreviewNative(file_name: String): ByteArray?
 private external fun getLinkHashNative(url: String): String
 private external fun pdfPreviewGenerateNative(path: String, quality: String): Bitmap
 
@@ -22,6 +23,9 @@ fun getLinkHash(url: String): String {
 
 fun pdfPreviewGenerate(path: String, previewQuality: PreviewQuality): Bitmap {
    return pdfPreviewGenerateNative(path, previewQuality.name)
+}
+fun loadLinkPreview(file_name: String): ByteArray? {
+   return loadLinkPreviewNative(file_name)
 }
 
 // Initialize Rust Library Logging

@@ -3,7 +3,7 @@
 pub mod android {
     extern crate jni;
 
-    use jni::objects::{JClass, JString, JValue};
+    use jni::objects::{JClass, JString, JValue, JObject};
     use jni::sys::jlong;
     use jni::sys::{jint, jobject, jstring, jboolean};
     use jni::JNIEnv;
@@ -77,13 +77,41 @@ pub mod android {
 
         trace!("Received file path: {}", path.display());
 
-        let linkJson = Link::load(path).unwrap();
+        let linkJson = Link::load_json(path).unwrap();
 
         trace!("Loaded file: {}", linkJson);
 
         env.new_string(linkJson)
             .expect("Couldn't create java string!")
             .into_inner()
+    }
+
+    #[no_mangle]
+    pub extern "C" fn Java_space_taran_arklib_LibKt_loadLinkPreviewNative(env: JNIEnv,
+        _: JClass,
+        jni_file_path: JString,
+    ) -> jobject {
+        let file_path: String = env
+            .get_string(jni_file_path)
+            .expect("Failed to parse input file path")
+            .into();
+
+        let path: &Path = Path::new(&file_path);
+
+        trace!("Received file path: {}", path.display());
+
+        let linkPreview = Link::load_preview(path);
+        match linkPreview {
+            Ok(preview) => {
+                trace!("Link preview length: {}", preview.len());
+                env.byte_array_from_slice(preview.as_slice())
+                    .expect("Couldn't create java byte array!")
+            },
+            Err(e) => {
+                trace!("Load link preview image: {:?}", e);
+                JObject::null().into_inner()
+            }
+        }
     }
 
     #[no_mangle]
