@@ -14,3 +14,4 @@ external fun initRustLogger()
 enum class PreviewQuality {
     HIGH,MEDIUM,LOW
 }
+

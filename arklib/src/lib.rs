@@ -1,10 +1,11 @@
 #![cfg(target_os = "android")]
 #![allow(non_snake_case)]
+
 mod index;
 pub mod android {
     extern crate jni;
 
-    use jni::objects::{JClass, JString, JValue};
+    use jni::objects::{JClass, JObject, JString, JValue};
     use jni::sys::jlong;
     use jni::sys::{jint, jobject};
     use jni::JNIEnv;
@@ -20,7 +21,6 @@ pub mod android {
     #[jni_fn("space.taran.arklib.LibKt")]
     pub fn initRustLogger(_: JNIEnv, _: JClass) {
         android_logger::init_once(Config::default().with_min_level(Level::Trace));
-
     }
 
     #[no_mangle]
