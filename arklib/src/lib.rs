@@ -3,16 +3,18 @@
 pub mod android {
     extern crate jni;
 
-    use jni::objects::{JClass, JString, JValue};
+    use jni::objects::{JClass, JString, JValue, JObject};
     use jni::sys::jlong;
-    use jni::sys::{jint, jobject};
+    use jni::sys::{jint, jobject, jstring, jboolean};
     use jni::JNIEnv;
     use log::{debug, trace, Level};
-    use std::{fs::File, path::Path};
+    use std::{fs::File, path::{Path}};
     extern crate android_logger;
     use android_logger::Config;
     use arklib::pdf::PDFQuality;
+    use arklib::link::Link;
     use image::EncodableLayout;
+    use url::Url;
     use jni::signature::{JavaType, Primitive};
 
     #[no_mangle]
@@ -39,6 +41,122 @@ pub mod android {
         arklib::id::ResourceId::compute(file_size.try_into().unwrap(), file_path)
             .crc32
             .into()
+    }
+    
+
+    #[no_mangle]
+    pub extern "C" fn Java_space_taran_arklib_LibKt_getLinkHashNative(env: JNIEnv,
+        _: JClass,
+        jni_url: JString,
+    ) -> jstring {
+        let url_str: String = env
+            .get_string(jni_url)
+            .expect("Failed to parse url")
+            .into();
+    
+        let url = Url::parse(url_str.as_str())
+            .expect("Failed to parse url data");
+        let link = Link::new(String::from(""), String::from(""), url);
+
+        env.new_string(link.format_name())  
+            .expect("Couldn't create java string!")
+            .into_inner()
+    }
+
+    #[no_mangle]
+    pub extern "C" fn Java_space_taran_arklib_LibKt_loadLinkFileNative(env: JNIEnv,
+        _: JClass,
+        jni_file_path: JString,
+    ) -> jstring {
+        let file_path: String = env
+            .get_string(jni_file_path)
+            .expect("Failed to parse input file path")
+            .into();
+
+        let path: &Path = Path::new(&file_path);
+
+        trace!("Received file path: {}", path.display());
+
+        let linkJson = Link::load_json(path).unwrap();
+
+        trace!("Loaded file: {}", linkJson);
+
+        env.new_string(linkJson)
+            .expect("Couldn't create java string!")
+            .into_inner()
+    }
+
+    #[no_mangle]
+    pub extern "C" fn Java_space_taran_arklib_LibKt_loadLinkPreviewNative(env: JNIEnv,
+        _: JClass,
+        jni_file_path: JString,
+    ) -> jobject {
+        let file_path: String = env
+            .get_string(jni_file_path)
+            .expect("Failed to parse input file path")
+            .into();
+
+        let path: &Path = Path::new(&file_path);
+
+        trace!("Received file path: {}", path.display());
+
+        let linkPreview = Link::load_preview(path);
+        match linkPreview {
+            Ok(preview) => {
+                trace!("Link preview length: {}", preview.len());
+                env.byte_array_from_slice(preview.as_slice())
+                    .expect("Couldn't create java byte array!")
+            },
+            Err(e) => {
+                trace!("Load link preview image: {:?}", e);
+                JObject::null().into_inner()
+            }
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn Java_space_taran_arklib_LibKt_createLinkFileNative(env: JNIEnv,
+        _: JClass,
+        jni_title: JString,
+        jni_desc: JString,
+        jni_url: JString,
+        jni_base_path: JString,
+        jni_download_preview: jboolean,
+    ) {
+        let title: String = env
+            .get_string(jni_title)
+            .expect("Failed to parse title")
+            .into();
+        
+        let desc: String = env
+            .get_string(jni_desc)
+            .expect("Failed to parse description")
+            .into();
+
+        let base_path: String = env
+            .get_string(jni_base_path)
+            .expect("Failed to parse input base path")
+            .into();
+        let path: &Path = Path::new(&base_path);
+
+        trace!("Received file path: {}", path.display());
+
+        let url_str: String = env
+            .get_string(jni_url)
+            .expect("Failed to parse url")
+            .into();
+
+        let url = Url::parse(url_str.as_str()).expect("Failed to parse url data");
+
+        trace!("Received url: {}", url.as_str());
+
+        let download_preview = jni_download_preview != 0;
+            
+        let mut link = Link::new(title, desc, url);
+        let hashedLinkName = link.format_name();
+        let hashedLinkFileName = format!("{}.link", hashedLinkName);
+        trace!("Generated hashed link filename: {}", hashedLinkFileName);
+        link.write_to_path_sync(path.join(hashedLinkFileName), download_preview);
     }
 
     #[no_mangle]
