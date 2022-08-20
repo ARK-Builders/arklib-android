@@ -1,16 +1,24 @@
 #![cfg(target_os = "android")]
 #![allow(non_snake_case)]
+#![feature(thread_id_value)]
 
+use jni::objects::GlobalRef;
+
+mod errors;
 mod index;
+mod interop;
 pub mod android {
     extern crate jni;
 
-    use jni::objects::{JClass, JObject, JString, JValue};
     use jni::sys::jlong;
     use jni::sys::{jint, jobject};
     use jni::JNIEnv;
+    use jni::{
+        objects::{JClass, JObject, JString, JValue},
+        JavaVM,
+    };
     use log::{debug, trace, Level};
-    use std::{fs::File, path::Path};
+    use std::{ffi::c_void, fs::File, path::Path};
     extern crate android_logger;
     use android_logger::Config;
     use arklib::pdf::PDFQuality;
@@ -18,13 +26,18 @@ pub mod android {
     use jni::signature::{JavaType, Primitive};
     use jni_fn::jni_fn;
 
+    pub unsafe extern "system" fn JNI_OnLoad(vm: JavaVM, _reserved: c_void) -> jint {
+        let env = vm.get_env().unwrap();
+        0
+    }
+
     #[jni_fn("space.taran.arklib.LibKt")]
     pub fn initRustLogger(_: JNIEnv, _: JClass) {
         android_logger::init_once(Config::default().with_min_level(Level::Trace));
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arknavigator_mvp_model_repo_index_ResourceIdKt_computeIdNative(
+    pub extern "system" fn Java_space_taran_arknavigator_mvp_model_repo_index_ResourceIdKt_computeIdNative(
         env: JNIEnv,
         _: JClass,
         jni_size: i64,

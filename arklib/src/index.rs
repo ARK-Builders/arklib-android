@@ -10,14 +10,26 @@ use jni_fn::jni_fn;
 use paste::paste;
 use robusta_jni::convert::{Signature, TryFromJavaValue};
 
-struct RustResourcesIndex {
-    inner: ResourceIndex,
-}
+use crate::interop;
+
+struct RustResourcesIndex;
 
 impl RustResourcesIndex {
     #[jni_fn("space.taran.arklib.index")]
-    pub fn RustResourcesIndex_listResources(env: JNIEnv, jni_prefix: JString) -> Vec<jlong> {
-        let prefix: String = env.get_string(jni_prefix).unwrap().into();
+    pub fn RustResourcesIndex_init(env: &JNIEnv, root_path: JString, res: JObject) -> jlong {
+        let cls = env.get_object_class(res).unwrap();
+        let root_path = env.get_string(root_path).unwrap().into();
+
+        let ri = ResourceIndex::new(root_path, res);
+        interop::into_raw::<ResourceIndex>(ri);
+    }
+    #[jni_fn("space.taran.arklib.index")]
+    pub fn RustResourcesIndex_listResources(
+        env: JNIEnv,
+        clazz: JClass,
+        prefix: JString,
+    ) -> Vec<jlong> {
+        let prefix: String = env.get_string(prefix).unwrap().into();
         let path = PathBuf::from(prefix);
         todo!()
     }
@@ -26,12 +38,16 @@ impl RustResourcesIndex {
         todo!()
     }
     #[jni_fn("space.taran.arklib.index")]
-    pub fn RustResourcesIndex_getMeta(&mut self, id: jlong) {}
+    pub fn RustResourcesIndex_getMeta(id: jlong) {}
     #[jni_fn("space.taran.arklib.index")]
-    pub fn RustResourcesIndex_reindex() {}
+    pub fn RustResourcesIndex_reindex(env: &JNIEnv, this: JObject) {
+        let ri = interop::get_inner::<ResourceIndex>(env, this).unwrap();
+        ri.update();
+    }
     #[jni_fn("space.taran.arklib.index")]
-    pub fn RustResourcesIndex_remove(&mut self, id: jlong) {
-        self.inner.path2meta.retain(|_, v| id == v.id.crc32.into());
+    pub fn RustResourcesIndex_remove(env: &JNIEnv, id: jlong, this: JObject) {
+        let ri = interop::get_inner::<ResourceIndex>(env, this).unwrap();
+        ri.path2meta.retain(|_, v| id == v.id.crc32.into());
     }
     #[jni_fn("space.taran.arklib.index")]
     pub fn RustResourcesIndex_updateResource() {}
