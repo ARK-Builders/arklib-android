@@ -7,6 +7,7 @@ use jni::objects::GlobalRef;
 mod errors;
 mod index;
 mod interop;
+mod signature;
 pub mod android {
     extern crate jni;
 

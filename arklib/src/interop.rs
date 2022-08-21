@@ -1,4 +1,4 @@
-// Direct Copy From https://github.com/kawamuray/wasmtime-java
+// Modify From https://github.com/kawamuray/wasmtime-java
 use crate::errors::Result;
 use jni::descriptors::Desc;
 use jni::errors::{Error, Result as JniResult};
@@ -7,8 +7,11 @@ use jni::signature::{JavaType, Primitive};
 use jni::strings::JNIString;
 use jni::sys::jlong;
 use jni::JNIEnv;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
+use std::{
+    sync::atomic::{AtomicU64, Ordering},
+    thread::ThreadId,
+};
 
 pub const INNER_PTR_FIELD: &str = "innerPtr";
 
@@ -80,7 +83,7 @@ pub fn into_raw<T>(val: T) -> jlong
 where
     T: 'static,
 {
-    Box::into_raw(Box::new(ReentrantLock::new(val))) as jlong
+    Box::into_raw(Box::new(Mutex::new(val))) as jlong
 }
 
 /// Restore a Rust object of type `T` from a pointer.

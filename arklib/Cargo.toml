@@ -15,13 +15,17 @@ env_logger = "0.9.0"
 log = "0.4.14"
 image = "0.24.2"
 jni_fn = "0.1.0"
-jnix = { version = "0.4.0", features = ["derive"] }
-robusta_jni = "0.2.0"
+# jnix = { version = "0.4.0", features = ["derive"] }
+# robusta_jni = "0.2.0"
 paste = "1.0.8"
 thiserror = "1.0.32"
 anyhow = "1.0.62"
+chrono = "0.4.22"
+canonical-path = "2.0.2"
+convert_case = "0.5.0"
+
 
 [target.'cfg(target_os="android")'.dependencies]
 jni = { version = "0.19.0", default-features = false }
 android_logger = "0.11.0"
-ndk = "0.6.0"
+ndk = "0.7.0"
