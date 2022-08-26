@@ -32,6 +32,14 @@ data class ResourceMeta(
     val kind: ResourceKind?
 )
 
+    fun main(){
+        val test = ResourceMeta(1,"","",FileTime.fromMillis(111),1,ResourceKind.Video(1,11,1))
+
+        if (test.kind is ResourceKind.Video) {
+            println(test.kind.height)
+        }
+    }
+
 sealed class ResourceKind(val code: KindCode) {
     class Image : ResourceKind(KindCode.IMAGE)
 
