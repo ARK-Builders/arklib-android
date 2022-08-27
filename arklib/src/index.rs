@@ -1,6 +1,7 @@
 mod android {
     use std::{
         collections::{self, HashMap},
+        ffi::OsString,
         path::{Path, PathBuf},
         str::FromStr,
         time::SystemTime,
@@ -14,13 +15,16 @@ mod android {
     use canonical_path::CanonicalPathBuf;
     use chrono::{TimeZone, Utc};
     use convert_case::{Case, Casing};
-    use jni::sys::jobject;
     use jni::sys::{jlong, jobjectArray};
     use jni::{
         descriptors::Desc,
         objects::{JClass, JMap, JObject, JString, JValue},
     };
     use jni::{objects::AutoLocal, JNIEnv};
+    use jni::{
+        objects::{self, JList},
+        sys::jobject,
+    };
     use jni::{signature::JavaType, strings::JNIString};
     use jni_fn::jni_fn;
     use paste::paste;
@@ -75,6 +79,132 @@ mod android {
             .j()
             .unwrap()
     }
+
+    fn into_java_resource_meta<'a>(env: &JNIEnv<'a>, meta: ResourceMeta) -> JObject<'a> {
+        let resource_meta_cls = env
+            .find_class("space/taran/arklib/index/ResourceMeta")
+            .unwrap();
+        let filetime_cls = env.find_class("java/nio/file/attribute/FileTime").unwrap();
+        let resource_meta_constructor = env.get_method_id(resource_meta_cls, "<init>", "(JLjava/lang/String;Ljava/lang/String;Ljava/nio/file/attribute/FileTime;JLspace/taran/arklib/index/ResourceKind;)V
+").unwrap();
+        let rk_ty = "space/taran/arklib/index/ResourceKind";
+        let val = meta;
+        let id = val.id.crc32 as i64;
+        let name = env
+            .new_string(
+                val.name
+                    .unwrap_or(OsString::from(""))
+                    .into_string()
+                    .unwrap(),
+            )
+            .unwrap();
+        let extension = env
+            .new_string(
+                val.extension
+                    .unwrap_or(OsString::from(""))
+                    .into_string()
+                    .unwrap(),
+            )
+            .unwrap();
+        let modified = env
+            .call_static_method(
+                filetime_cls,
+                "fromMillis",
+                "(J)Ljava/nio/file/attribute/FileTime;",
+                &[JValue::Long(val.modified.timestamp_millis())],
+            )
+            .unwrap();
+        let size = val.id.file_size as i64;
+        let kind = val.kind.unwrap_or(ResourceKind::PlainText);
+        let kind_ty = format!("{rk_ty}${}", kind.to_string());
+        let kind_cls = env.find_class(kind_ty).unwrap();
+        let kind = match kind {
+            ResourceKind::Document { pages } => {
+                let long_cls = env.find_class("java/lang/Long").unwrap();
+
+                let pages = if let Some(pages) = pages {
+                    env.new_object(long_cls, "(J)V", &[JValue::Long(pages)])
+                        .unwrap()
+                } else {
+                    JObject::null()
+                };
+                let ty = env
+                    .get_method_id(kind_cls, "<init>", "(Ljava/lang/Long;)V")
+                    .unwrap();
+                env.new_object_unchecked(kind_cls, ty, &[JValue::from(pages)])
+                    .unwrap()
+            }
+            ResourceKind::Link {
+                title,
+                description,
+                url,
+            } => {
+                let title = env.new_string(title).unwrap();
+                let description = env.new_string(description).unwrap();
+                let url = env.new_string(url).unwrap();
+                env.new_object(
+                    kind_cls,
+                    format!("(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"),
+                    &[
+                        JValue::from(title),
+                        JValue::from(description),
+                        JValue::from(url),
+                    ],
+                )
+                .unwrap()
+            }
+            ResourceKind::Video {
+                height,
+                width,
+                duration,
+            } => {
+                let long_cls = env.find_class("java/lang/Long").unwrap();
+                let method_id = env.get_method_id(long_cls, "<init>", "(J)V").unwrap();
+                let height = env
+                    .new_object_unchecked(long_cls, method_id, &[JValue::Long(height)])
+                    .unwrap();
+                let width = env
+                    .new_object_unchecked(long_cls, method_id, &[JValue::Long(width)])
+                    .unwrap();
+                let duration = env
+                    .new_object_unchecked(long_cls, method_id, &[JValue::Long(duration)])
+                    .unwrap();
+                env.new_object(
+                    kind_cls,
+                    format!("(Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;)V"),
+                    &[
+                        JValue::from(height),
+                        JValue::from(width),
+                        JValue::from(duration),
+                    ],
+                )
+                .unwrap()
+            }
+            _ => env.new_object(kind_cls, format!("()V"), &[]).unwrap(),
+        };
+        env.new_object_unchecked(
+            resource_meta_cls,
+            resource_meta_constructor,
+            &[
+                JValue::Long(id),
+                JValue::from(name),
+                JValue::from(extension),
+                modified,
+                JValue::Long(size),
+                JValue::from(kind),
+            ],
+        )
+        .unwrap()
+    }
+    fn to_java_path<'a>(env: &JNIEnv<'a>, path: String) -> JObject<'a> {
+        let paths_cls = env.find_class("java/nio/file/Paths").unwrap();
+        let paths_get = env
+            .get_method_id(paths_cls, "get", "(Ljava/lang/String;[Ljava/lang/String;)")
+            .unwrap();
+        let path_val = env.new_string(path).unwrap();
+        env.new_object_unchecked(paths_cls, paths_get, &[JValue::from(path_val)])
+            .unwrap()
+    }
     impl RustResourcesIndex {
         #[jni_fn("space.taran.arklib.index")]
         pub fn RustResourcesIndex_init(
@@ -88,8 +218,16 @@ mod android {
             let res_iter = resources.iter().unwrap();
             let res = res_iter
                 .map(|(a, b)| {
-                    let path: String = env.get_string(JString::from(a)).unwrap().into();
+                    let path_obj = env
+                        .call_method(a, "toString", "()Ljava/lang/String;", &[])
+                        .unwrap()
+                        .l()
+                        .unwrap();
+
+                    let path: String = env.get_string(JString::from(path_obj)).unwrap().into();
+
                     let path = CanonicalPathBuf::new(path).unwrap();
+
                     let id = env.get_field(b, "id", "J").unwrap().j().unwrap();
 
                     let name = get_string_field(env, b, "name").into();
@@ -145,7 +283,7 @@ mod android {
                                     .l()
                                     .unwrap();
                                 let pages = get_integer_field(env, kind, "pages");
-                                ResourceKind::Document { pages }
+                                ResourceKind::Document { pages: Some(pages) }
                             }
                             ResourceKind::Link {
                                 title: _,
@@ -232,101 +370,7 @@ mod android {
                 ri.path2meta
             }
             .values()
-            .map(|val| {
-                let id = val.id.crc32 as i64;
-                let name = env
-                    .new_string(val.name.unwrap_or_default().into_string().unwrap())
-                    .unwrap();
-                let extension = env
-                    .new_string(val.extension.unwrap_or_default().into_string().unwrap())
-                    .unwrap();
-                let modified = env
-                    .call_static_method(
-                        filetime_cls,
-                        "fromMillis",
-                        "(J)Ljava/nio/file/attribute/FileTime;",
-                        &[JValue::Long(val.modified.timestamp_millis())],
-                    )
-                    .unwrap();
-                let size = val.id.file_size as i64;
-                let kind = val.kind.unwrap_or(ResourceKind::PlainText);
-                let kind_ty = format!("{rk_ty}${}", kind.to_string());
-                let kind_cls = env.find_class(kind_ty).unwrap();
-                let kind = match kind {
-                    ResourceKind::Document { pages } => {
-                        let long_cls = env.find_class("java/lang/Long").unwrap();
-                        let pages = env
-                            .new_object(long_cls, "(J)V", &[JValue::Long(pages)])
-                            .unwrap();
-                        env.new_object(
-                            kind_cls,
-                            format!("(Ljava/lang/Long;)V"),
-                            &[JValue::from(pages)],
-                        )
-                        .unwrap()
-                    }
-                    ResourceKind::Link {
-                        title,
-                        description,
-                        url,
-                    } => {
-                        let title = env.new_string(title).unwrap();
-                        let description = env.new_string(description).unwrap();
-                        let url = env.new_string(url).unwrap();
-                        env.new_object(
-                            kind_cls,
-                            format!("(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"),
-                            &[
-                                JValue::from(title),
-                                JValue::from(description),
-                                JValue::from(url),
-                            ],
-                        )
-                        .unwrap()
-                    }
-                    ResourceKind::Video {
-                        height,
-                        width,
-                        duration,
-                    } => {
-                        let long_cls = env.find_class("java/lang/Long").unwrap();
-                        let method_id = env.get_method_id(long_cls, "<init>", "(J)V").unwrap();
-                        let height = env
-                            .new_object_unchecked(long_cls, method_id, &[JValue::Long(height)])
-                            .unwrap();
-                        let width = env
-                            .new_object_unchecked(long_cls, method_id, &[JValue::Long(width)])
-                            .unwrap();
-                        let duration = env
-                            .new_object_unchecked(long_cls, method_id, &[JValue::Long(duration)])
-                            .unwrap();
-                        env.new_object(
-                            kind_cls,
-                            format!("(Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;)V"),
-                            &[
-                                JValue::from(height),
-                                JValue::from(width),
-                                JValue::from(duration),
-                            ],
-                        )
-                        .unwrap()
-                    }
-                    _ => env.new_object(kind_cls, format!("()V"), &[]).unwrap(),
-                };
-                env.new_object_unchecked(
-                    resource_meta_cls,
-                    resource_meta_constructor,
-                    &[
-                        JValue::Long(id),
-                        JValue::from(name),
-                        JValue::from(extension),
-                        modified,
-                        JValue::Long(size),
-                        JValue::from(kind),
-                    ],
-                )
-                .unwrap()
-            })
+            .map(|val| into_java_resource_meta(env, val.clone()))
             .collect::<Vec<_>>();
 
             let default_filetime = env
@@ -356,7 +400,7 @@ mod android {
                 .unwrap();
             let mut i = 0;
             for elem in val.iter() {
-                env.set_object_array_element(obj, i, *elem);
+                env.set_object_array_element(obj, i, *elem).unwrap();
                 i += i
             }
 
@@ -366,31 +410,88 @@ mod android {
         pub fn RustResourcesIndex_getPath(
             env: &JNIEnv,
             _clazz: JClass,
-            _this: JObject,
+            this: JObject,
             id: jlong,
-        ) -> JString {
-            JString::from("")
+        ) -> jobject {
+            let ri = get_index(env, this);
+            let val = ri.path2meta.iter().find(|&x| x.1.id.crc32 as i64 == id);
+            match val {
+                Some(val) => {
+                    let path_cls = env.find_class("java/nio/file/Path").unwrap();
+                    let path = val.0.as_path().to_str().unwrap();
+
+                    let path = env.new_string(path).unwrap();
+                    let obj = env
+                        .call_static_method(
+                            path_cls,
+                            "get",
+                            "(Ljava/lang/String;[Ljava/lang/String;)Ljava/nio/file/Path;",
+                            &[JValue::from(path)],
+                        )
+                        .unwrap()
+                        .l()
+                        .unwrap();
+                    obj.into_inner()
+                }
+                None => JObject::null().into_inner(),
+            }
         }
         #[jni_fn("space.taran.arklib.index")]
         pub fn RustResourcesIndex_getMeta(
             env: &JNIEnv,
             _clazz: JClass,
-            _this: JObject,
+            this: JObject,
             id: jlong,
-        ) -> JObject {
-            todo!()
+        ) -> jobject {
+            let ri = get_index(env, this);
+            let val = ri.path2meta.iter().find(|&x| x.1.id.crc32 as i64 == id);
+            match val {
+                Some(val) => into_java_resource_meta(env, val.1.clone()).into_inner(),
+                None => JObject::null().into_inner(),
+            }
         }
         #[jni_fn("space.taran.arklib.index")]
-        pub fn RustResourcesIndex_reindex(env: &JNIEnv, this: JObject) {
-            let mut ri = env
-                .get_rust_field::<_, _, ResourceIndex>(this, INNER_PTR_FIELD)
+        pub fn RustResourcesIndex_reindex(env: &JNIEnv, this: JObject) -> jobject {
+            let mut ri = get_index(env, this);
+            // ri.path2meta.iter().map(|x| x.0.)
+            let diff = ri.update().unwrap();
+
+            let updated = env.get_list(JObject::null()).unwrap();
+            for item in diff.updated.iter() {
+                let item = to_java_path(env, item.0.to_str().unwrap().to_string());
+                updated.add(item);
+            }
+            let deleted = env.get_list(JObject::null()).unwrap();
+            let de = ri.path2meta.values().collect::<Vec<_>>();
+            for item in diff.deleted.iter() {
+                let item = to_java_path(env, item.0.to_str().unwrap().to_string());
+                deleted.add(item);
+            }
+            let added = env.get_list(JObject::null()).unwrap();
+            for item in diff.added.iter() {
+                let item = to_java_path(env, item.0.to_str().unwrap().to_string());
+                added.add(item);
+            }
+            let difference_cls = env
+                .find_class("space/taran/arklib/index/Difference")
                 .unwrap();
-            ri.update();
+            env.new_object(
+                difference_cls,
+                "(Ljava/util/List;Ljava/util/List;Ljava/util/List;)V",
+                &[
+                    JValue::from(deleted),
+                    JValue::from(updated),
+                    JValue::from(added),
+                ],
+            )
+            .unwrap()
+            .into_inner()
         }
         #[jni_fn("space.taran.arklib.index")]
         pub fn RustResourcesIndex_remove(env: &JNIEnv, id: jlong, this: JObject) {
             let mut ri = interop::get_inner::<ResourceIndex>(env, this).unwrap();
-            ri.path2meta.retain(|_, v| id == v.id.crc32.into());
+            ri.path2meta
+                .retain(|_, v| id == <u32 as Into<i64>>::into(v.id.crc32));
         }
         #[jni_fn("space.taran.arklib.index")]
         pub fn RustResourcesIndex_updateResource() {}
