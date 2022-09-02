@@ -1,6 +1,5 @@
 #![cfg(target_os = "android")]
 #![allow(non_snake_case)]
-#![feature(thread_id_value)]
 
 use jni::objects::GlobalRef;
 
@@ -26,11 +25,6 @@ pub mod android {
     use image::EncodableLayout;
     use jni::signature::{JavaType, Primitive};
     use jni_fn::jni_fn;
-
-    pub unsafe extern "system" fn JNI_OnLoad(vm: JavaVM, _reserved: c_void) -> jint {
-        let env = vm.get_env().unwrap();
-        0
-    }
 
     #[jni_fn("space.taran.arklib.LibKt")]
     pub fn initRustLogger(_: JNIEnv, _: JClass) {

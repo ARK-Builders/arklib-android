@@ -8,8 +8,8 @@ name = "arklib"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-# arklib = { git = "https://github.com/ARK-Builders/arklib", rev = "e2fd66d5" }
-arklib = { path = "../../arklib" }
+arklib = { git = "https://github.com/ARK-Builders/arklib", branch = "android-index-rust" }
+# arklib = { path = "../../arklib" }
 crc32fast = "1.3.2"
 env_logger = "0.9.0"
 log = "0.4.14"

@@ -1,7 +1,6 @@
 package space.taran.arklib.index
 
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.nio.file.attribute.FileTime
 
 typealias ResourceId = Long
@@ -20,10 +19,10 @@ class RustResourcesIndex(root_path: String, res: ResourceMetas) {
     // TODO
     external fun reindex(): Difference
     external fun remove(id: ResourceId)
-    external fun updateResource()
+    external fun updateResource(path: Path, newResource: ResourceMeta)
 }
 
-data class Difference(val deleted: List<Path>, val updated: List<Path>, val added: List<Path>)
+data class Difference(val deleted: List<Path>, val added: List<Path>)
 
 data class ResourceMeta(
         val id: ResourceId,
@@ -33,14 +32,6 @@ data class ResourceMeta(
         val size: Long,
         val kind: ResourceKind?
 )
-
-fun main() {
-    val test = ResourceMeta(1, "", "", FileTime.fromMillis(111), 1, ResourceKind.Video(1, 11, 1))
-    Paths.get("")
-    if (test.kind is ResourceKind.Video) {
-        println(test.kind.height)
-    }
-}
 
 sealed class ResourceKind(val code: KindCode) {
     class Image : ResourceKind(KindCode.IMAGE)
