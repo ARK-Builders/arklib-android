@@ -13,8 +13,9 @@ class RustResourcesIndex(root_path: String, res: ResourceMetas) {
         innerPtr = init(root_path, res)
     }
     private external fun init(root_path: String, resources: ResourceMetas): Long
-    external fun listResources(prefix: String): ArrayList<ResourceMeta>
+    external fun listResources(prefix: String): ResourceMetas
     external fun getPath(id: ResourceId): Path
+    external fun listIds(): ArrayList<Long>
     external fun getMeta(id: ResourceId): ResourceMeta
     // TODO
     external fun reindex(): Difference
@@ -22,7 +23,7 @@ class RustResourcesIndex(root_path: String, res: ResourceMetas) {
     external fun updateResource(path: Path, newResource: ResourceMeta)
 }
 
-data class Difference(val deleted: List<Path>, val added: List<Path>)
+data class Difference(val deleted: ResourceMetas, val added: ResourceMetas)
 
 data class ResourceMeta(
         val id: ResourceId,

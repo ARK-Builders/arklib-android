@@ -26,6 +26,7 @@ mod android {
         sys::jobject,
     };
     use jni::{signature::JavaType, strings::JNIString};
+    use jni::objects::JMapIter;
     use jni_fn::jni_fn;
 
     use crate::{
@@ -386,14 +387,9 @@ mod android {
             jni_prefix: JString,
         ) -> jobjectArray {
             let ri = get_index(env, this);
-            let resource_meta_cls = env
-                .find_class("space/taran/arklib/index/ResourceMeta")
-                .unwrap();
-            let filetime_cls = env.find_class("java/nio/file/attribute/FileTime").unwrap();
-            let resource_meta_constructor = env.get_method_id(resource_meta_cls, "<init>", "(JLjava/lang/String;Ljava/lang/String;Ljava/nio/file/attribute/FileTime;JLspace/taran/arklib/index/ResourceKind;)V
-").unwrap();
-            let rk_ty = "space/taran/arklib/index/ResourceKind";
-            let val = if !jni_prefix.is_null() {
+
+            let jmap = env.get_map(JObject::null()).unwrap();
+            if !jni_prefix.is_null() {
                 let prefix: String = env.get_string(jni_prefix).unwrap().into();
                 ri.path2meta
                     .iter()
@@ -403,42 +399,14 @@ mod android {
             } else {
                 ri.path2meta
             }
-            .values()
-            .map(|val| into_java_resource_meta(env, val.clone()))
-            .collect::<Vec<_>>();
-
-            let default_filetime = env
-                .call_static_method(
-                    filetime_cls,
-                    "fromMillis",
-                    "(J)Ljava/nio/file/attribute/FileTime;",
-                    &[JValue::Long(0)],
-                )
-                .unwrap()
-                .l()
-                .unwrap();
-            let default_string = env.new_string("").unwrap();
-
-            let default_resource_meta = env.new_object(resource_meta_cls, "(ILjava/lang/String;Ljava/lang/String;Ljava/nio/file/attribute/FileTime;ILspace/taran/arklib/index/ResourceKind;)", &[
-                JValue::Long(1),
-                JValue::from(default_string),
-                JValue::from(default_string),
-                JValue::from(default_filetime),
-                JValue::Long(1)]).unwrap();
-            let obj = env
-                .new_object_array(
-                    val.len().try_into().unwrap(),
-                    resource_meta_cls,
-                    default_resource_meta,
-                )
-                .unwrap();
-            let mut i = 0;
-            for elem in val.iter() {
-                env.set_object_array_element(obj, i, *elem).unwrap();
-                i += i
-            }
-
-            obj
+                .iter()
+                .for_each(|(path,meta)| {
+                    let path = to_java_path(env,path.to_str().unwrap().to_string());
+                    let meta = into_java_resource_meta(env, meta.clone());
+                    jmap.put(path,meta).unwrap();
+                }
+                     );
+            jmap.into_inner()
         }
         #[jni_fn("space.taran.arklib.index.RustResourcesIndex")]
         pub fn getPath(env: &JNIEnv, _clazz: JClass, this: JObject, id: jlong) -> jobject {
@@ -480,32 +448,48 @@ mod android {
 
             let diff = ri.update().unwrap();
 
-            let deleted = env.get_list(JObject::null()).unwrap();
-            for item in diff.deleted.iter() {
-                let item = to_java_path(env, item.0.to_str().unwrap().to_string());
-                deleted.add(item).unwrap();
+            let deleted = env.get_map(JObject::null()).unwrap();
+            for (path,meta) in diff.deleted.iter() {
+                let path = to_java_path(env, path.to_str().unwrap().to_string());
+                let meta = into_java_resource_meta(env,meta.clone());
+                deleted.put(path,meta).unwrap();
             }
-            let added = env.get_list(JObject::null()).unwrap();
-            for item in diff.added.iter() {
-                let item = to_java_path(env, item.0.to_str().unwrap().to_string());
-                added.add(item).unwrap();
+
+            let added = env.get_map(JObject::null()).unwrap();
+            for (path,meta) in diff.added.iter() {
+                let path = to_java_path(env, path.to_str().unwrap().to_string());
+                let meta = into_java_resource_meta(env,meta.clone());
+                added.put(path, meta).unwrap();
             }
+
             let difference_cls = env
                 .find_class("space/taran/arklib/index/Difference")
                 .unwrap();
             env.new_object(
                 difference_cls,
-                "(Ljava/util/List;Ljava/util/List;)V",
+                "(Ljava/util/Map;Ljava/util/Map;)V",
                 &[JValue::from(deleted), JValue::from(added)],
             )
             .unwrap()
             .into_inner()
         }
         #[jni_fn("space.taran.arklib.index.RustResourcesIndex")]
-        pub fn remove(env: &JNIEnv, this: JObject, id: jlong) {
+        pub fn remove(env: &JNIEnv, this: JObject, id: jlong)->jobject {
             let mut ri = get_index(env, this);
-            ri.path2meta
-                .retain(|_, v| id == <u32 as Into<i64>>::into(v.id.crc32));
+        let val = ri.path2meta.clone();
+            let val =val.iter().find(|x|x.1.id.crc32 == id as u32);
+
+            match val {
+                Some((path,_)) => {
+                    let removed= ri.path2meta
+                        .remove(path.as_canonical_path()).unwrap();
+                    into_java_resource_meta(env,removed).into_inner()
+                },
+                None => {
+                    log::error!("given id not found: {}",id);
+        JObject::null().into_inner()
+                }
+            }
         }
         #[jni_fn("space.taran.arklib.index.RustResourcesIndex")]
         pub fn updateResource(env: &JNIEnv, this: JObject, path: JObject, new_resource: JObject) {
