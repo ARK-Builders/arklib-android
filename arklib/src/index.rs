@@ -476,13 +476,21 @@ mod android {
         #[jni_fn("space.taran.arklib.index.RustResourcesIndex")]
         pub fn remove(env: &JNIEnv, this: JObject, id: jlong)->jobject {
             let mut ri = get_index(env, this);
-        let val = ri.path2meta.clone();
-            let val =val.iter().find(|x|x.1.id.crc32 == id as u32);
+            let mut iter = ri.path2meta.into_iter();
+            let mut pair_iter = iter.by_ref().filter_map(|(path, meta) |{
 
+                Some((path,meta))
+            }).take_while(|(path,meta )| {
+                meta.id.crc32 == id as u32
+            }
+            );
+            let val = pair_iter.next();
+            ri.path2meta = iter.collect();
             match val {
-                Some((path,_)) => {
+                Some((path,meta_removed)) => {
                     let removed= ri.path2meta
                         .remove(path.as_canonical_path()).unwrap();
+
                     into_java_resource_meta(env,removed).into_inner()
                 },
                 None => {

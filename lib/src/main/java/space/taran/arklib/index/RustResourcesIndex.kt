@@ -19,7 +19,7 @@ class RustResourcesIndex(root_path: String, res: ResourceMetas) {
     external fun getMeta(id: ResourceId): ResourceMeta
     // TODO
     external fun reindex(): Difference
-    external fun remove(id: ResourceId)
+    external fun remove(id: ResourceId): Path
     external fun updateResource(path: Path, newResource: ResourceMeta)
 }
 

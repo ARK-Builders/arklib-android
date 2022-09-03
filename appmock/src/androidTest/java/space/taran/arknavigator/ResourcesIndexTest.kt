@@ -73,7 +73,7 @@ class ResourcesIndexTest {
 
     @Test
     fun remove() {
-        ri.remove(tempId)
+        val removed = ri.remove(tempId)
         val res = ri.listResources("")
         assertTrue(res.values.contains(tempMeta))
     }
