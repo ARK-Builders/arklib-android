@@ -6,6 +6,7 @@ mod android {
         str::FromStr,
         time::SystemTime,
     };
+    use std::sync::MutexGuard;
 
     use arklib::{
         id::ResourceId,
@@ -36,15 +37,15 @@ mod android {
 
     struct RustResourcesIndex;
 
-    fn get_index(env: &JNIEnv, this: JObject) -> ResourceIndex {
-        let ptr = env
-            .get_rust_field::<_, _, jlong>(this, INNER_PTR_FIELD)
+    fn get_index<'a>(env: &'a JNIEnv<'a>, this: JObject<'a>) -> MutexGuard<'a, ResourceIndex> {
+        let val = env
+            .get_rust_field::<_, _, ResourceIndex>(this, INNER_PTR_FIELD)
             .unwrap();
-        interop::from_raw::<ResourceIndex>(*ptr).unwrap()
+        val
     }
 
     // Get `java/lang/String` and parse into `String`
-    fn get_string_field<'a, O, S: Into<JNIString>>(env: &JNIEnv, obj: O, field: S) -> Option<String>
+    fn get_string_field<'a, O, S: Into<JNIString>>(env: JNIEnv, obj: O, field: S) -> Option<String>
     where
         O: Into<JObject<'a>>,
     {
@@ -54,13 +55,11 @@ mod android {
                 .l()
                 .unwrap(),
         );
-        // if raw.is_null() {
-        //     return None;
-        // }
+
         env.get_string(raw).ok().map(|s| s.into())
     }
     // Get Interger and parse into `i64`
-    fn get_integer_field<'a, O, S: Into<JNIString>>(env: &JNIEnv, obj: O, field: S) -> Option<i64>
+    fn get_integer_field<'a, O, S: Into<JNIString>>(env: JNIEnv, obj: O, field: S) -> Option<i64>
     where
         O: Into<JObject<'a>>,
     {
@@ -81,7 +80,7 @@ mod android {
                 .unwrap(),
         )
     }
-    fn from_java_resource_meta<'a>(env: &JNIEnv<'a>, meta: JObject) -> ResourceMeta {
+    fn from_java_resource_meta(env: JNIEnv, meta: JObject) -> ResourceMeta {
         let id = env.get_field(meta, "id", "J").unwrap().j().unwrap();
 
         let name = get_string_field(env, meta, "name").map(|s| s.into());
@@ -206,7 +205,7 @@ mod android {
             kind: Some(rk),
         }
     }
-    fn into_java_resource_meta<'a>(env: &JNIEnv<'a>, meta: ResourceMeta) -> JObject<'a> {
+    fn into_java_resource_meta(env: JNIEnv, meta: ResourceMeta) -> JObject {
         let resource_meta_cls = env
             .find_class("space/taran/arklib/index/ResourceMeta")
             .unwrap();
@@ -326,7 +325,7 @@ mod android {
         )
         .unwrap()
     }
-    fn to_java_path<'a>(env: &JNIEnv<'a>, path: String) -> JObject<'a> {
+    fn to_java_path(env: JNIEnv, path: String) -> JObject {
         let paths_cls = env.find_class("java/nio/file/Paths").unwrap();
         let paths_get = env
             .get_method_id(paths_cls, "get", "(Ljava/lang/String;[Ljava/lang/String;)")
@@ -335,7 +334,7 @@ mod android {
         env.new_object_unchecked(paths_cls, paths_get, &[JValue::from(path_val)])
             .unwrap()
     }
-    fn from_java_path<'a>(env: &JNIEnv<'a>, path: JObject) -> CanonicalPathBuf {
+    fn from_java_path(env: JNIEnv, path: JObject) -> CanonicalPathBuf {
         let path_cls = env.find_class("java/nio/file/Path").unwrap();
         let path_to_string = env
             .get_method_id(path_cls, "toString", "()Ljava/lang/String;")
@@ -355,8 +354,16 @@ mod android {
     }
     impl RustResourcesIndex {
         #[jni_fn("space.taran.arklib.index.RustResourcesIndex")]
-        pub fn init(env: &JNIEnv, _clazz: JClass, root_path: JString, resources: JObject) -> jlong {
-            let resources = JMap::from_env(env, resources).unwrap();
+        pub fn init(env: JNIEnv, _this: JObject, root_path: JString, resources: JObject) -> jlong {
+            let resources =
+                match env.get_map(resources) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        log::error!("{e}");
+                        panic!()
+                    }
+            };
+
             let root_path: String = env.get_string(root_path).unwrap().into();
             let res_iter = resources.iter().unwrap();
             let res = res_iter
@@ -381,12 +388,11 @@ mod android {
 
         #[jni_fn("space.taran.arklib.index.RustResourcesIndex")]
         pub fn listResources(
-            env: &JNIEnv,
-            _clazz: JClass,
+            env: JNIEnv,
             this: JObject,
             jni_prefix: JString,
         ) -> jobjectArray {
-            let ri = get_index(env, this);
+            let ri = get_index(&env, this);
 
             let jmap = env.get_map(JObject::null()).unwrap();
             if !jni_prefix.is_null() {
@@ -397,7 +403,7 @@ mod android {
                     .map(|(a, b)| (a.clone(), b.clone()))
                     .collect()
             } else {
-                ri.path2meta
+                ri.path2meta.clone()
             }
                 .iter()
                 .for_each(|(path,meta)| {
@@ -409,8 +415,8 @@ mod android {
             jmap.into_inner()
         }
         #[jni_fn("space.taran.arklib.index.RustResourcesIndex")]
-        pub fn getPath(env: &JNIEnv, _clazz: JClass, this: JObject, id: jlong) -> jobject {
-            let ri = get_index(env, this);
+        pub fn getPath(env: JNIEnv, this: JObject, id: jlong) -> jobject {
+            let ri = get_index(&env, this);
             let val = ri.path2meta.iter().find(|&x| x.1.id.crc32 as i64 == id);
             match val {
                 Some(val) => {
@@ -434,8 +440,8 @@ mod android {
             }
         }
         #[jni_fn("space.taran.arklib.index.RustResourcesIndex")]
-        pub fn getMeta(env: &JNIEnv, _clazz: JClass, this: JObject, id: jlong) -> jobject {
-            let ri = get_index(env, this);
+        pub fn getMeta(env: JNIEnv, this: JObject, id: jlong) -> jobject {
+            let ri = get_index(&env, this);
             let val = ri.path2meta.iter().find(|&x| x.1.id.crc32 as i64 == id);
             match val {
                 Some(val) => into_java_resource_meta(env, val.1.clone()).into_inner(),
@@ -443,19 +449,22 @@ mod android {
             }
         }
         #[jni_fn("space.taran.arklib.index.RustResourcesIndex")]
-        pub fn reindex(env: &JNIEnv, this: JObject) -> jobject {
-            let mut ri = get_index(env, this);
-
+        pub fn reindex(env: JNIEnv, this: JObject) -> jobject {
+            let mut ri = get_index(&env, this);
+            log::info!("reindexing...");
             let diff = ri.update().unwrap();
+            log::info!("got diff");
 
-            let deleted = env.get_map(JObject::null()).unwrap();
+            let linked_hashmap_cls = env.find_class("java/util/LinkedHashMap").unwrap();
+            let deleted = env.get_map(env.new_object(linked_hashmap_cls,"(Ljava/lang/Object;Ljava/lang/Object;)V",&[]).unwrap()).unwrap();
+            let added = env.get_map(env.new_object(linked_hashmap_cls,"(Ljava/lang/Object;Ljava/lang/Object;)V",&[]).unwrap()).unwrap();
+            log::info!("creating map");
             for (path,meta) in diff.deleted.iter() {
                 let path = to_java_path(env, path.to_str().unwrap().to_string());
                 let meta = into_java_resource_meta(env,meta.clone());
                 deleted.put(path,meta).unwrap();
             }
 
-            let added = env.get_map(JObject::null()).unwrap();
             for (path,meta) in diff.added.iter() {
                 let path = to_java_path(env, path.to_str().unwrap().to_string());
                 let meta = into_java_resource_meta(env,meta.clone());
@@ -474,9 +483,10 @@ mod android {
             .into_inner()
         }
         #[jni_fn("space.taran.arklib.index.RustResourcesIndex")]
-        pub fn remove(env: &JNIEnv, this: JObject, id: jlong)->jobject {
-            let mut ri = get_index(env, this);
-            let mut iter = ri.path2meta.into_iter();
+        pub fn remove(env: JNIEnv, this: JObject, id: jlong)->jobject {
+            let mut ri = get_index(&env, this);
+            log::info!("removing id: {id}");
+            let mut iter = ri.path2meta.clone().into_iter();
             let mut pair_iter = iter.by_ref().filter_map(|(path, meta) |{
 
                 Some((path,meta))
@@ -500,8 +510,8 @@ mod android {
             }
         }
         #[jni_fn("space.taran.arklib.index.RustResourcesIndex")]
-        pub fn updateResource(env: &JNIEnv, this: JObject, path: JObject, new_resource: JObject) {
-            let mut ri = get_index(env, this);
+        pub fn updateResource(env: JNIEnv, this: JObject, path: JObject, new_resource: JObject) {
+            let mut ri = get_index(&env, this);
             let path = from_java_path(env, path);
             let new_res = from_java_resource_meta(env, new_resource);
             match ri.path2meta.insert(path, new_res.clone()) {

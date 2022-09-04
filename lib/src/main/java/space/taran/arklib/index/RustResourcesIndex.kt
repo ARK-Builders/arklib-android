@@ -5,14 +5,14 @@ import java.nio.file.attribute.FileTime
 
 typealias ResourceId = Long
 
-typealias ResourceMetas = Map<Path, ResourceMeta>
+typealias ResourceMetas = MutableMap<Path, ResourceMeta>
 
 class RustResourcesIndex(root_path: String, res: ResourceMetas) {
     private val innerPtr: Long
     init {
         innerPtr = init(root_path, res)
     }
-    private external fun init(root_path: String, resources: ResourceMetas): Long
+    private external fun init(root_path: String, resources: MutableMap<Path,ResourceMeta>): Long
     external fun listResources(prefix: String): ResourceMetas
     external fun getPath(id: ResourceId): Path
     external fun listIds(): ArrayList<Long>

@@ -42,7 +42,7 @@ cargo {
     prebuiltToolchains = true
 //    extraCargoBuildArguments = ["--message-format=json"]
 //    Set to "debug" to enable logging. Or "release" to make a production build.
-    profile = "release"
+    profile = "debug"
 }
 
 dependencies {
