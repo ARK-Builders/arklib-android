@@ -12,6 +12,8 @@ import space.taran.arklib.createLinkFile
 import space.taran.arklib.getLinkHash
 import space.taran.arklib.loadLinkFile
 import space.taran.arklib.loadLinkPreview
+import space.taran.arklib.fetchLinkData
+import space.taran.arklib.LinkData
 import kotlin.io.path.Path
 import kotlin.io.path.pathString
 
@@ -47,6 +49,10 @@ class LinkTest {
                 assertNull(linkPreview)
             }
         }
+        val linkData = fetchLinkData(url)
+        // assertNotNull(linkData)
+        // assertNotNull(linkData?.title)
+        // assertFalse(linkData?.title.equals(""))
 
     }
 }

@@ -115,6 +115,71 @@ pub mod android {
     }
 
     #[no_mangle]
+    pub extern "C" fn Java_space_taran_arklib_LibKt_fetchLinkDataNative(env: JNIEnv,
+        _: JClass,
+        jni_url: JString,
+    ) -> jobject {
+        let url_str: String = env
+            .get_string(jni_url)
+            .expect("Failed to parse url")
+            .into();
+    
+        let url = Url::parse(url_str.as_str())
+            .expect("Failed to parse url data");
+
+        trace!("Received url: {}", url.as_str());
+
+        let og_result = Link::get_preview_synced(url);
+        match og_result {
+            Ok(og) => {
+                trace!("Got link title: {}", og.title.to_owned().unwrap());
+                let link_data_cls = env.find_class("space/taran/arklib/LinkData").unwrap();
+                let create_link_data_fn = env
+                    .get_static_method_id(
+                        link_data_cls,
+                        "create",
+                        "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lspace/taran/arklib/LinkData;",
+                    )
+                    .unwrap();
+                
+                let title = env.new_string(og.title.unwrap_or_default())
+                    .expect("Couldn't create java string!")
+                    .into_inner();
+                let description = env.new_string(og.description.unwrap_or_default())
+                    .expect("Couldn't create java string!")
+                    .into_inner();
+                let url = env.new_string(og.url.unwrap_or_default())
+                    .expect("Couldn't create java string!")
+                    .into_inner();
+                let image = env.new_string(og.image.unwrap_or_default())
+                    .expect("Couldn't create java string!")
+                    .into_inner();
+
+                let link_data = env
+                .call_static_method_unchecked(
+                    link_data_cls,
+                    create_link_data_fn,
+                    JavaType::Object(String::from("space/taran/arklib/LinkData")),
+                    &[
+                        JValue::from(title),
+                        JValue::from(description),
+                        JValue::from(url),
+                        JValue::from(image),
+                    ],
+                )
+                .unwrap()
+                .l()
+                .unwrap();
+                link_data.into_inner()
+            },
+            Err(e) => {
+                trace!("Fetch link preview: {:?}", e);
+                JObject::null().into_inner()
+            }
+        }
+    }
+
+    #[no_mangle]
     pub extern "C" fn Java_space_taran_arklib_LibKt_createLinkFileNative(env: JNIEnv,
         _: JClass,
         jni_title: JString,
