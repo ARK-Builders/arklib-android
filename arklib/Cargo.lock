@@ -97,6 +97,7 @@ dependencies = [
  "env_logger",
  "image",
  "jni",
+ "jni-glue",
  "jni_fn",
  "log",
  "ndk",
@@ -671,6 +672,16 @@ dependencies = [
  "log",
  "thiserror",
  "walkdir",
+]
+
+[[package]]
+name = "jni-glue"
+version = "0.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "abb534fa5773934d2580025e31b660656898f449366b7d3c8c51ba36a1609314"
+dependencies = [
+ "jni-sys",
+ "lazy_static",
 ]
 
 [[package]]

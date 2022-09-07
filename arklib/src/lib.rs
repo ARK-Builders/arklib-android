@@ -7,6 +7,7 @@ mod errors;
 mod index;
 mod interop;
 mod signature;
+mod utils;
 pub mod android {
     extern crate jni;
 
