@@ -46,11 +46,11 @@ mod android {
     use jni::{signature::JavaType, strings::JNIString};
     use jni_fn::jni_fn;
 
+    use crate::signature::STRING;
     use crate::{
         interop::{self, INNER_PTR_FIELD},
         signature,
     };
-    use crate::signature::STRING;
 
     struct RustResourcesIndex;
 
@@ -205,9 +205,10 @@ mod android {
     ) -> Result<JObject, jni::errors::Error> {
         let resource_meta_cls = env.find_class("space/taran/arklib/index/ResourceMeta")?;
         let filetime_cls = env.find_class("java/nio/file/attribute/FileTime")?;
-        log::info!("creating resource meta");
-        let resource_meta_constructor = env.get_method_id(resource_meta_cls, "<init>", "(JLjava/lang/String;Ljava/lang/String;Ljava/nio/file/attribute/FileTime;JLspace/taran/arklib/index/ResourceKind;)V
-")?;
+        log::info!("converting resource meta");
+        //         let resource_meta_constructor = env.get_method_id(resource_meta_cls, "<init>", "(JLjava/lang/String;Ljava/lang/String;Ljava/nio/file/attribute/FileTime;JLspace/taran/arklib/index/ResourceKind;)V
+        // ")?;
+
         let rk_ty = "space/taran/arklib/index/ResourceKind";
         let val = meta;
         let id = val.id.crc32 as i64;
@@ -232,18 +233,19 @@ mod android {
         let size = val.id.file_size as i64;
         let kind = val.kind.unwrap_or(ResourceKind::PlainText);
         let kind_ty = format!("{rk_ty}${}", kind.to_string());
+        log::debug!("Type: {kind_ty}");
         let kind_cls = env.find_class(kind_ty)?;
         let kind = match kind {
             ResourceKind::Document { pages } => {
-                let long_cls = env.find_class("java/lang/Long")?;
-
                 let pages = if let Some(pages) = pages {
+                    let long_cls = env.find_class("java/lang/Long")?;
                     env.new_object(long_cls, "(J)V", &[JValue::Long(pages)])?
                 } else {
+                    log::info!("page is None, return null");
                     JObject::null()
                 };
-                let ty = env.get_method_id(kind_cls, "<init>", "(Ljava/lang/Long;)V")?;
-                env.new_object_unchecked(kind_cls, ty, &[JValue::from(pages)])?
+                log::info!("creating kind object");
+                env.new_object(kind_cls, "(Ljava/lang/Long;)V", &[JValue::from(pages)])?
             }
             ResourceKind::Link {
                 title,
@@ -293,9 +295,9 @@ mod android {
             }
             _ => env.new_object(kind_cls, format!("()V"), &[])?,
         };
-        env.new_object_unchecked(
+        env.new_object(
             resource_meta_cls,
-            resource_meta_constructor,
+            "(JLjava/lang/String;Ljava/lang/String;Ljava/nio/file/attribute/FileTime;JLspace/taran/arklib/index/ResourceKind;)V",
             &[
                 JValue::Long(id),
                 JValue::from(name),
@@ -311,15 +313,15 @@ mod android {
         let paths_cls = env.find_class("java/nio/file/Paths")?;
         let sig = "(Ljava/lang/String;[Ljava/lang/String;)Ljava/nio/file/Path;";
         let string_cls = env.find_class("java/lang/String")?;
-        let method_id = env.get_static_method_id(paths_cls,"get", sig)?;
+        let method_id = env.get_static_method_id(paths_cls, "get", sig)?;
         log::info!("path: {path}");
         let path_val = env.new_string(path)?;
-        let n = env.new_object_array(1,string_cls,env.new_string("")?)?;
+        let n = env.new_object_array(0, string_cls, JObject::null())?;
         env.call_static_method_unchecked(
             paths_cls,
             method_id,
             JavaType::Object(String::from("java/nio/file/Path")),
-            &[JValue::from(path_val),JValue::from(n)],
+            &[JValue::from(path_val), JValue::from(n)],
         )?
         .l()
         // Ok(JObject::null())
@@ -446,19 +448,21 @@ mod android {
             let added = env
                 .get_map(env.new_object(linked_hashmap_cls, "()V", &[]).unwrap())
                 .unwrap();
-            log::info!("creating map");
+
             for (path, meta) in diff.deleted.iter() {
+                log::info!("add deleted: {}",path.as_path().to_str().unwrap());
                 let path = wrap_error!(env, to_java_path(env, path.to_str().unwrap().to_string()));
                 let meta = wrap_error!(env, into_java_resource_meta(env, meta.clone()));
                 deleted.put(path, meta).unwrap();
             }
 
             for (path, meta) in diff.added.iter() {
+                log::info!("add added: {}", path.as_path().to_str().unwrap());
                 let path = wrap_error!(env, to_java_path(env, path.to_str().unwrap().to_string()));
                 let meta = wrap_error!(env, into_java_resource_meta(env, meta.clone()));
                 added.put(path, meta).unwrap();
             }
-
+            log::info!("creating difference");
             let difference_cls = env
                 .find_class("space/taran/arklib/index/Difference")
                 .unwrap();

@@ -26,7 +26,7 @@ class RustResourcesIndex(root_path: String, res: ResourceMetas) {
 data class Difference(val deleted: ResourceMetas, val added: ResourceMetas)
 
 data class ResourceMeta(
-        val id: ResourceId,
+        val id: Long,
         val name: String,
         val extension: String,
         val modified: FileTime,
@@ -40,7 +40,7 @@ sealed class ResourceKind(val code: KindCode) {
     class Video(val height: Long? = null, val width: Long? = null, val duration: Long? = null) :
             ResourceKind(KindCode.VIDEO)
 
-    class Document(val pages: Int? = null) : ResourceKind(KindCode.DOCUMENT)
+    class Document(val pages: Long? = null) : ResourceKind(KindCode.DOCUMENT)
 
     class Link(
             val title: String? = null,
