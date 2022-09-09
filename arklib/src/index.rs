@@ -44,6 +44,7 @@ mod android {
         sys::jobject,
     };
     use jni::{signature::JavaType, strings::JNIString};
+    use jni::strings::JNIStr;
     use jni_fn::jni_fn;
 
     use crate::signature::STRING;
@@ -98,7 +99,7 @@ mod android {
         )
     }
     fn from_java_resource_meta(env: JNIEnv, meta: JObject) -> Result<ResourceMeta> {
-        let id = env.get_field(meta, "id", "J").unwrap().j().unwrap();
+        let id = env.get_field(meta, "id", "J")?.j()?;
 
         let name = get_string_field(env, meta, "name").map(|s| s.into());
         let extension = get_string_field(env, meta, "extension").map(|s| s.into());
@@ -324,21 +325,24 @@ mod android {
             &[JValue::from(path_val), JValue::from(n)],
         )?
         .l()
-        // Ok(JObject::null())
     }
     fn from_java_path(env: JNIEnv, path: JObject) -> Result<CanonicalPathBuf> {
-        let path_cls = env.find_class("java/nio/file/Path")?;
-        let path_to_string = env.get_method_id(path_cls, "toString", "()Ljava/lang/String;")?;
+        log::info!("converting from java path");
+
         let path = env
-            .call_method_unchecked(
+            .call_method(
                 path,
-                path_to_string,
-                JavaType::Object("java/lang/String".into()),
+                "toString",
+                "()Ljava/lang/String;",
                 &[],
             )?
             .l()?;
-        let path: String = env.get_string(JString::from(path))?.into();
-        Ok(CanonicalPathBuf::new(path).unwrap())
+
+        let path_obj = JString::from(path);
+
+        let path:String = env.get_string(path_obj)?.into();
+        Ok(CanonicalPathBuf::canonicalize(path)?)
+
     }
 
     impl RustResourcesIndex {
@@ -356,14 +360,8 @@ mod android {
             let res_iter = resources.iter().unwrap();
             let res = res_iter
                 .map(|(a, b)| {
-                    let path_obj = env
-                        .call_method(a, "toString", "()Ljava/lang/String;", &[])
-                        .unwrap()
-                        .l()
-                        .unwrap();
 
-                    let path: String = env.get_string(JString::from(path_obj)).unwrap().into();
-
+                    let path = wrap_error!(env,from_java_path(env,a));
                     let path = CanonicalPathBuf::new(path).unwrap();
 
                     let meta = wrap_error!(env, from_java_resource_meta(env, b));
@@ -377,16 +375,23 @@ mod android {
         #[jni_fn("space.taran.arklib.index.RustResourcesIndex")]
         pub fn listResources(env: JNIEnv, this: JObject, jni_prefix: JString) -> jobjectArray {
             let ri = get_index(&env, this);
+            let linked_hashmap_cls = env.find_class("java/util/LinkedHashMap").unwrap();
 
-            let jmap = env.get_map(JObject::null()).unwrap();
+            let jmap = env
+                .get_map(env.new_object(linked_hashmap_cls, "()V", &[]).unwrap())
+                .unwrap();
+
+
             if !jni_prefix.is_null() {
                 let prefix: String = env.get_string(jni_prefix).unwrap().into();
+                log::info!("getting resources in prefix: {prefix}");
                 ri.path2meta
                     .iter()
                     .filter(|(path, _)| path.starts_with(prefix.clone()))
                     .map(|(a, b)| (a.clone(), b.clone()))
                     .collect()
             } else {
+                log::info!("prefix is none, use default");
                 ri.path2meta.clone()
             }
             .iter()
@@ -400,24 +405,13 @@ mod android {
         #[jni_fn("space.taran.arklib.index.RustResourcesIndex")]
         pub fn getPath(env: JNIEnv, this: JObject, id: jlong) -> jobject {
             let ri = get_index(&env, this);
+            log::info!("getting path by id: {id}");
             let val = ri.path2meta.iter().find(|&x| x.1.id.crc32 as i64 == id);
             match val {
                 Some(val) => {
-                    let path_cls = env.find_class("java/nio/file/Path").unwrap();
-                    let path = val.0.as_path().to_str().unwrap();
-
-                    let path = env.new_string(path).unwrap();
-                    let obj = env
-                        .call_static_method(
-                            path_cls,
-                            "get",
-                            "(Ljava/lang/String;[Ljava/lang/String;)Ljava/nio/file/Path;",
-                            &[JValue::from(path)],
-                        )
-                        .unwrap()
-                        .l()
-                        .unwrap();
-                    obj.into_inner()
+                    let path = val.0.as_path( ).to_str().unwrap().to_string();
+                    let wrapper = wrap_error!(env, to_java_path(env, path));
+                    wrapper.into_inner()
                 }
                 None => JObject::null().into_inner(),
             }
@@ -478,27 +472,29 @@ mod android {
         pub fn remove(env: JNIEnv, this: JObject, id: jlong) -> jobject {
             let mut ri = get_index(&env, this);
             log::info!("removing id: {id}");
-            let mut iter = ri.path2meta.clone().into_iter();
-            let mut pair_iter = iter
-                .by_ref()
-                .filter_map(|(path, meta)| Some((path, meta)))
-                .take_while(|(path, meta)| meta.id.crc32 == id as u32);
+            log::info!("Index: {:#?}", ri.path2meta.clone());
+            let cl = ri.path2meta.clone();
+            let iter = cl.into_iter();
+            let mut pair_iter = iter.filter(|(_,meta)| meta.id.crc32 == id as u32);
             let val = pair_iter.next();
-            ri.path2meta = iter.collect();
-            match val {
+            log::info!("Removed: {:#?}",val);
+            let obj = match val {
                 Some((path, meta_removed)) => {
-                    let removed = ri.path2meta.remove(path.as_canonical_path()).unwrap();
-
-                    wrap_error!(env, into_java_resource_meta(env, removed)).into_inner()
+                    ri.path2meta.remove(path.as_canonical_path()).unwrap();
+                    let wrapper = wrap_error!(env, to_java_path(env, path.to_str().unwrap().to_string())).into_inner();
+                    wrapper
                 }
                 None => {
                     log::error!("given id not found: {}", id);
                     JObject::null().into_inner()
                 }
-            }
+            };
+
+            obj
         }
         #[jni_fn("space.taran.arklib.index.RustResourcesIndex")]
         pub fn updateResource(env: JNIEnv, this: JObject, path: JObject, new_resource: JObject) {
+            log::info!("updating resources");
             let mut ri = get_index(&env, this);
             let path = wrap_error!(env, from_java_path(env, path));
             let new_res = wrap_error!(env, from_java_resource_meta(env, new_resource));

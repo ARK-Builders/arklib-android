@@ -13,7 +13,7 @@ class RustResourcesIndex(root_path: String, res: ResourceMetas) {
         innerPtr = init(root_path, res)
     }
     private external fun init(root_path: String, resources: MutableMap<Path,ResourceMeta>): Long
-    external fun listResources(prefix: String): ResourceMetas
+    external fun listResources(prefix: String?): ResourceMetas
     external fun getPath(id: ResourceId): Path
     external fun listIds(): ArrayList<Long>
     external fun getMeta(id: ResourceId): ResourceMeta
