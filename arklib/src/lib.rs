@@ -1,28 +1,41 @@
-#[cfg(target_os = "android")]
-#[allow(non_snake_case)]
+#![cfg(target_os = "android")]
+#![allow(non_snake_case)]
+
+use jni::objects::GlobalRef;
+
+mod errors;
+mod index;
+mod interop;
+mod signature;
+mod utils;
 pub mod android {
     extern crate jni;
 
-    use jni::objects::{JClass, JString, JValue, JObject};
     use jni::sys::jlong;
-    use jni::sys::{jint, jobject, jstring, jboolean};
+    use jni::sys::{jboolean, jint, jobject, jstring};
     use jni::JNIEnv;
+    use jni::{
+        objects::{JClass, JObject, JString, JValue},
+        JavaVM,
+    };
     use log::{debug, trace, Level};
-    use std::{fs::File, path::{Path}};
+    use std::{ffi::c_void, fs::File, path::Path};
     extern crate android_logger;
     use android_logger::Config;
-    use arklib::pdf::PDFQuality;
     use arklib::link::Link;
+    use arklib::pdf::PDFQuality;
     use image::EncodableLayout;
-    use url::Url;
     use jni::signature::{JavaType, Primitive};
+    use jni_fn::jni_fn;
+    use url::Url;
 
-    #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_initRustLogger(_: JNIEnv, _: JClass) {
+    #[jni_fn("space.taran.arklib.LibKt")]
+    pub fn initRustLogger(_: JNIEnv, _: JClass) {
         android_logger::init_once(Config::default().with_min_level(Level::Trace));
     }
+
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arknavigator_mvp_model_repo_index_ResourceIdKt_computeIdNative(
+    pub extern "system" fn Java_space_taran_arknavigator_mvp_model_repo_index_ResourceIdKt_computeIdNative(
         env: JNIEnv,
         _: JClass,
         jni_size: i64,
@@ -42,29 +55,26 @@ pub mod android {
             .crc32
             .into()
     }
-    
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_getLinkHashNative(env: JNIEnv,
+    pub extern "C" fn Java_space_taran_arklib_LibKt_getLinkHashNative(
+        env: JNIEnv,
         _: JClass,
         jni_url: JString,
     ) -> jstring {
-        let url_str: String = env
-            .get_string(jni_url)
-            .expect("Failed to parse url")
-            .into();
-    
-        let url = Url::parse(url_str.as_str())
-            .expect("Failed to parse url data");
+        let url_str: String = env.get_string(jni_url).expect("Failed to parse url").into();
+
+        let url = Url::parse(url_str.as_str()).expect("Failed to parse url data");
         let link = Link::new(String::from(""), String::from(""), url);
 
-        env.new_string(link.format_name())  
+        env.new_string(link.format_name())
             .expect("Couldn't create java string!")
             .into_inner()
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_loadLinkFileNative(env: JNIEnv,
+    pub extern "C" fn Java_space_taran_arklib_LibKt_loadLinkFileNative(
+        env: JNIEnv,
         _: JClass,
         jni_file_path: JString,
     ) -> jstring {
@@ -87,7 +97,8 @@ pub mod android {
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_loadLinkPreviewNative(env: JNIEnv,
+    pub extern "C" fn Java_space_taran_arklib_LibKt_loadLinkPreviewNative(
+        env: JNIEnv,
         _: JClass,
         jni_file_path: JString,
     ) -> jobject {
@@ -106,7 +117,7 @@ pub mod android {
                 trace!("Link preview length: {}", preview.len());
                 env.byte_array_from_slice(preview.as_slice())
                     .expect("Couldn't create java byte array!")
-            },
+            }
             Err(e) => {
                 trace!("Load link preview image: {:?}", e);
                 JObject::null().into_inner()
@@ -115,7 +126,8 @@ pub mod android {
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_createLinkFileNative(env: JNIEnv,
+    pub extern "C" fn Java_space_taran_arklib_LibKt_createLinkFileNative(
+        env: JNIEnv,
         _: JClass,
         jni_title: JString,
         jni_desc: JString,
@@ -127,7 +139,7 @@ pub mod android {
             .get_string(jni_title)
             .expect("Failed to parse title")
             .into();
-        
+
         let desc: String = env
             .get_string(jni_desc)
             .expect("Failed to parse description")
@@ -141,17 +153,14 @@ pub mod android {
 
         trace!("Received file path: {}", path.display());
 
-        let url_str: String = env
-            .get_string(jni_url)
-            .expect("Failed to parse url")
-            .into();
+        let url_str: String = env.get_string(jni_url).expect("Failed to parse url").into();
 
         let url = Url::parse(url_str.as_str()).expect("Failed to parse url data");
 
         trace!("Received url: {}", url.as_str());
 
         let download_preview = jni_download_preview != 0;
-            
+
         let mut link = Link::new(title, desc, url);
         let hashedLinkName = link.format_name();
         let hashedLinkFileName = format!("{}.link", hashedLinkName);
@@ -159,8 +168,8 @@ pub mod android {
         link.write_to_path_sync(path.join(hashedLinkFileName), download_preview);
     }
 
-    #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_pdfPreviewGenerateNative(
+    #[jni_fn("space.taran.arklib.LibKt")]
+    pub fn pdfPreviewGenerateNative(
         env: JNIEnv,
         _: JClass,
         jni_path: JString,

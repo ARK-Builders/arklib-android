@@ -39,7 +39,11 @@ cargo {
     module  = "../arklib"
     libname = "arklib"
     targets = ["arm64", "x86", "x86_64", "arm"]
+
+    //  TODO Switch
+//    targets = ["x86_64"]
     prebuiltToolchains = true
+//    extraCargoBuildArguments = ["--message-format=json"]
 //    Set to "debug" to enable logging. Or "release" to make a production build.
     profile = "release"
 }
