@@ -43,6 +43,7 @@ cargo {
     //  TODO Switch
 //    targets = ["x86_64"]
     prebuiltToolchains = true
+    // uncomment the line to enable code completion in vscode.
 //    extraCargoBuildArguments = ["--message-format=json"]
 //    Set to "debug" to enable logging. Or "release" to make a production build.
     profile = "release"

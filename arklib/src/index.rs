@@ -32,19 +32,22 @@ mod android {
     };
     // use jni::errors::Result;
     use anyhow::Result;
-    use jni::objects::JMapIter;
     use jni::sys::{jlong, jobjectArray};
     use jni::{
         descriptors::Desc,
         objects::{JClass, JMap, JObject, JString, JValue},
     };
     use jni::{objects::AutoLocal, JNIEnv};
+    use jni::{objects::JMapIter, sys::jboolean};
     use jni::{
         objects::{self, JList},
         sys::jobject,
     };
     use jni::{signature::JavaType, strings::JNIString};
-    use jni::strings::JNIStr;
+    use jni::{
+        strings::JNIStr,
+        sys::{JNI_FALSE, JNI_TRUE},
+    };
     use jni_fn::jni_fn;
 
     use crate::signature::STRING;
@@ -330,19 +333,13 @@ mod android {
         log::info!("converting from java path");
 
         let path = env
-            .call_method(
-                path,
-                "toString",
-                "()Ljava/lang/String;",
-                &[],
-            )?
+            .call_method(path, "toString", "()Ljava/lang/String;", &[])?
             .l()?;
 
         let path_obj = JString::from(path);
 
-        let path:String = env.get_string(path_obj)?.into();
+        let path: String = env.get_string(path_obj)?.into();
         Ok(CanonicalPathBuf::canonicalize(path)?)
-
     }
 
     impl RustResourcesIndex {
@@ -360,8 +357,7 @@ mod android {
             let res_iter = resources.iter().unwrap();
             let res = res_iter
                 .map(|(a, b)| {
-
-                    let path = wrap_error!(env,from_java_path(env,a));
+                    let path = wrap_error!(env, from_java_path(env, a));
                     let path = CanonicalPathBuf::new(path).unwrap();
 
                     let meta = wrap_error!(env, from_java_resource_meta(env, b));
@@ -380,7 +376,6 @@ mod android {
             let jmap = env
                 .get_map(env.new_object(linked_hashmap_cls, "()V", &[]).unwrap())
                 .unwrap();
-
 
             if !jni_prefix.is_null() {
                 let prefix: String = env.get_string(jni_prefix).unwrap().into();
@@ -409,7 +404,7 @@ mod android {
             let val = ri.path2meta.iter().find(|&x| x.1.id.crc32 as i64 == id);
             match val {
                 Some(val) => {
-                    let path = val.0.as_path( ).to_str().unwrap().to_string();
+                    let path = val.0.as_path().to_str().unwrap().to_string();
                     let wrapper = wrap_error!(env, to_java_path(env, path));
                     wrapper.into_inner()
                 }
@@ -444,7 +439,7 @@ mod android {
                 .unwrap();
 
             for (path, meta) in diff.deleted.iter() {
-                log::info!("add deleted: {}",path.as_path().to_str().unwrap());
+                log::info!("add deleted: {}", path.as_path().to_str().unwrap());
                 let path = wrap_error!(env, to_java_path(env, path.to_str().unwrap().to_string()));
                 let meta = wrap_error!(env, into_java_resource_meta(env, meta.clone()));
                 deleted.put(path, meta).unwrap();
@@ -475,13 +470,15 @@ mod android {
             log::info!("Index: {:#?}", ri.path2meta.clone());
             let cl = ri.path2meta.clone();
             let iter = cl.into_iter();
-            let mut pair_iter = iter.filter(|(_,meta)| meta.id.crc32 == id as u32);
+            let mut pair_iter = iter.filter(|(_, meta)| meta.id.crc32 == id as u32);
             let val = pair_iter.next();
-            log::info!("Removed: {:#?}",val);
+            log::info!("Removed: {:#?}", val);
             let obj = match val {
                 Some((path, meta_removed)) => {
                     ri.path2meta.remove(path.as_canonical_path()).unwrap();
-                    let wrapper = wrap_error!(env, to_java_path(env, path.to_str().unwrap().to_string())).into_inner();
+                    let wrapper =
+                        wrap_error!(env, to_java_path(env, path.to_str().unwrap().to_string()))
+                            .into_inner();
                     wrapper
                 }
                 None => {
@@ -509,6 +506,15 @@ mod android {
                     );
                 }
             };
+        }
+
+        #[jni_fn("space.taran.arklib.index.RustResourcesIndex")]
+        pub fn contains(env: JNIEnv, this: JObject, id: jlong) -> jboolean {
+            let ri = get_index(&env, this);
+            match ri.path2meta.values().find(|x| x.id.crc32 == id as u32) {
+                Some(_) => JNI_TRUE,
+                None => JNI_FALSE,
+            }
         }
     }
 }

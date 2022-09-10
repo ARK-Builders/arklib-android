@@ -12,12 +12,12 @@ class RustResourcesIndex(root_path: String, res: ResourceMetas) {
     init {
         innerPtr = init(root_path, res)
     }
-    private external fun init(root_path: String, resources: MutableMap<Path,ResourceMeta>): Long
+    private external fun init(root_path: String, resources: MutableMap<Path, ResourceMeta>): Long
     external fun listResources(prefix: String?): ResourceMetas
-    external fun getPath(id: ResourceId): Path
-    external fun listIds(): ArrayList<Long>
-    external fun getMeta(id: ResourceId): ResourceMeta
+    external fun getPath(id: ResourceId): Path?
     // TODO
+    external fun getMeta(id: ResourceId): ResourceMeta?
+    external fun contains(id: ResourceId): Boolean
     external fun reindex(): Difference
     external fun remove(id: ResourceId): Path
     external fun updateResource(path: Path, newResource: ResourceMeta)
