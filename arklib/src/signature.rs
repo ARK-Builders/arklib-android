@@ -1,5 +1,5 @@
 //! Common Type Signature
 
-pub const INTEGER: &'static str = "Ljava/lang/Integer;";
+pub const LONG: &'static str = "Ljava/lang/Long;";
 
 pub const STRING: &'static str = "Ljava/lang/String;";

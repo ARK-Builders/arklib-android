@@ -4,8 +4,8 @@ mod android {
             match $body {
                 Ok(v) => v,
                 Err(e) => {
-                    // $env.throw(e).expect("error in throwing exception");
                     log::error!("{e}");
+                    // $env.exception_occurred().unwrap()
                     // $default
                     panic!()
                 }
@@ -32,12 +32,15 @@ mod android {
     };
     // use jni::errors::Result;
     use anyhow::Result;
-    use jni::sys::{jlong, jobjectArray};
     use jni::{
         descriptors::Desc,
         objects::{JClass, JMap, JObject, JString, JValue},
     };
     use jni::{objects::AutoLocal, JNIEnv};
+    use jni::{
+        objects::JFieldID,
+        sys::{jlong, jobjectArray},
+    };
     use jni::{objects::JMapIter, sys::jboolean};
     use jni::{
         objects::{self, JList},
@@ -50,7 +53,6 @@ mod android {
     };
     use jni_fn::jni_fn;
 
-    use crate::signature::STRING;
     use crate::{
         interop::{self, INNER_PTR_FIELD},
         signature,
@@ -66,46 +68,53 @@ mod android {
     }
 
     // Get `java/lang/String` and parse into `String`
-    fn get_string_field<'a, O, S: Into<JNIString>>(env: JNIEnv, obj: O, field: S) -> Option<String>
+    fn get_string_field<'a, O, T>(env: JNIEnv<'a>, obj: O, field: T) -> Result<Option<String>>
     where
         O: Into<JObject<'a>>,
+        T: Desc<'a, JFieldID<'a>>,
     {
         let raw = JString::from(
-            env.get_field(obj.into(), field.into(), "Ljava/lang/String;")
-                .unwrap()
-                .l()
-                .unwrap(),
+            env.get_field_unchecked(
+                obj.into(),
+                field,
+                JavaType::Object(signature::STRING.to_string()),
+            )?
+            .l()?,
         );
 
-        env.get_string(raw).ok().map(|s| s.into())
-    }
-    // Get Interger and parse into `i64`
-    fn get_integer_field<'a, O, S: Into<JNIString>>(env: JNIEnv, obj: O, field: S) -> Option<i64>
-    where
-        O: Into<JObject<'a>>,
-    {
-        let integer_cls = env.find_class("java/lang/Integer").unwrap();
-        let raw = env
-            .get_field(obj.into(), field.into(), signature::INTEGER)
-            .unwrap()
-            .l()
-            .unwrap();
         if raw.is_null() {
-            return None;
+            return Ok(None);
         }
 
-        Some(
-            env.call_method(integer_cls, "longValue", "()J", &[])
-                .unwrap()
-                .j()
-                .unwrap(),
-        )
+        Ok(Some(env.get_string(raw)?.into()))
+    }
+    // Get Interger and parse into `i64`
+    fn get_long_field<'a, O, T>(env: JNIEnv<'a>, obj: O, field: T) -> Result<Option<i64>>
+    where
+        O: Into<JObject<'a>>,
+        T: Desc<'a, JFieldID<'a>>,
+    {
+        let raw = env
+            .get_field_unchecked(
+                obj.into(),
+                field,
+                JavaType::Object(signature::LONG.to_string()),
+            )?
+            .l()?;
+        if raw.is_null() {
+            return Ok(None);
+        }
+        // log::info!("got long, converting to primitive");
+        Ok(Some(env.call_method(raw, "longValue", "()J", &[])?.j()?))
     }
     fn from_java_resource_meta(env: JNIEnv, meta: JObject) -> Result<ResourceMeta> {
+        let rk_ty = "space/taran/arklib/index/ResourceKind";
+        let res_meta_cls = "space/taran/arklib/index/ResourceMeta";
         let id = env.get_field(meta, "id", "J")?.j()?;
-
-        let name = get_string_field(env, meta, "name").map(|s| s.into());
-        let extension = get_string_field(env, meta, "extension").map(|s| s.into());
+        let name = env.get_field_id(res_meta_cls, "name", signature::STRING)?;
+        let extension = env.get_field_id(res_meta_cls, "extension", signature::STRING)?;
+        let name = wrap_error!(env, get_string_field(env, meta, name)).map(|s| s.into());
+        let extension = wrap_error!(env, get_string_field(env, meta, extension)).map(|s| s.into());
         // Modified Field Transform
         let modified_fn = env
             .get_field(meta, "modified", "Ljava/nio/file/attribute/FileTime;")?
@@ -146,15 +155,16 @@ mod android {
                     .l()?,
             ))?
             .into();
-
-        let rk_ty = "space/taran/arklib/index/ResourceKind";
-        let rk = ResourceKind::from_str(&kind_code_name)
-            .map::<Result<ResourceKind>, _>(|s| match s {
+        log::info!("kind code name: {kind_code_name}");
+        let rk = ResourceKind::from_str(&kind_code_name).map::<Result<ResourceKind>, _>(
+            |s| match s {
                 ResourceKind::Document { pages: _ } => {
-                    let kind = env
-                        .get_field(meta, "kind", format!("{rk_ty}$Document"))?
-                        .l()?;
-                    let pages = get_integer_field(env, kind, "pages");
+                    let cls = format!("{rk_ty}$Document");
+                    log::info!("detected document");
+                    let field_id = env.get_field_id(cls, "pages", signature::LONG)?;
+
+                    let pages = wrap_error!(env, get_long_field(env, kind, field_id));
+
                     Ok(ResourceKind::Document { pages })
                 }
                 ResourceKind::Link {
@@ -162,10 +172,13 @@ mod android {
                     description: _,
                     url: _,
                 } => {
-                    let kind = env.get_field(meta, "kind", format!("{rk_ty}$Link"))?.l()?;
-                    let title = get_string_field(env, kind, "title");
-                    let description = get_string_field(env, kind, "description");
-                    let url = get_string_field(env, kind, "url");
+                    let cls = format!("{rk_ty}$Link");
+                    let title = env.get_field_id(&cls, "title", signature::STRING)?;
+                    let description = env.get_field_id(&cls, "description", signature::STRING)?;
+                    let url = env.get_field_id(cls, "url", signature::STRING)?;
+                    let title = wrap_error!(env, get_string_field(env, kind, title));
+                    let description = wrap_error!(env, get_string_field(env, kind, description));
+                    let url = wrap_error!(env, get_string_field(env, kind, url));
                     Ok(ResourceKind::Link {
                         title,
                         description,
@@ -177,10 +190,16 @@ mod android {
                     width: _,
                     duration: _,
                 } => {
-                    let kind = env.get_field(meta, "kind", format!("{rk_ty}$Video"))?.l()?;
-                    let height = get_integer_field(env, kind, "height");
-                    let width = get_integer_field(env, kind, "width");
-                    let duration = get_integer_field(env, kind, "duration");
+                    // let kind = env
+                    //     .get_field(meta, "kind", )?
+                    //     .l()?;
+                    let cls = format!("L{rk_ty}$Video;");
+                    let height = env.get_field_id(cls.clone(), "height", signature::LONG)?;
+                    let width = env.get_field_id(cls.clone(), "width", signature::LONG)?;
+                    let duration = env.get_field_id(cls, "duration", signature::LONG)?;
+                    let height = wrap_error!(env, get_long_field(env, kind, height));
+                    let width = wrap_error!(env, get_long_field(env, kind, width));
+                    let duration = wrap_error!(env, get_long_field(env, kind, duration));
                     Ok(ResourceKind::Video {
                         height,
                         width,
@@ -188,9 +207,8 @@ mod android {
                     })
                 }
                 _ => Ok(s),
-            })
-            .unwrap()
-            .unwrap();
+            },
+        )??;
 
         Ok(ResourceMeta {
             id: ResourceId {
@@ -345,6 +363,7 @@ mod android {
     impl RustResourcesIndex {
         #[jni_fn("space.taran.arklib.index.RustResourcesIndex")]
         pub fn init(env: JNIEnv, _this: JObject, root_path: JString, resources: JObject) -> jlong {
+            log::info!("initializing native resource index");
             let resources = match env.get_map(resources) {
                 Ok(v) => v,
                 Err(e) => {
@@ -352,15 +371,15 @@ mod android {
                     panic!()
                 }
             };
-
-            let root_path: String = env.get_string(root_path).unwrap().into();
-            let res_iter = resources.iter().unwrap();
+            log::info!("got map");
+            let root_path: String = wrap_error!(env, env.get_string(root_path)).into();
+            let res_iter = wrap_error!(env, resources.iter());
             let res = res_iter
                 .map(|(a, b)| {
                     let path = wrap_error!(env, from_java_path(env, a));
-                    let path = CanonicalPathBuf::new(path).unwrap();
-
+                    log::debug!("path: {:?}", path);
                     let meta = wrap_error!(env, from_java_resource_meta(env, b));
+                    log::debug!("meta: {:?}", meta);
                     (path, meta)
                 })
                 .collect();

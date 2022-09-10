@@ -2,7 +2,6 @@ package space.taran.arklib.index
 
 import java.nio.file.Path
 import java.nio.file.attribute.FileTime
-
 typealias ResourceId = Long
 
 typealias ResourceMetas = MutableMap<Path, ResourceMeta>
