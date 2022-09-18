@@ -50,9 +50,8 @@ class LinkTest {
             }
         }
         val linkData = fetchLinkData(url)
-        // assertNotNull(linkData)
-        // assertNotNull(linkData?.title)
-        // assertFalse(linkData?.title.equals(""))
-
+        assertNotNull(linkData)
+        assertNotNull(linkData?.title)
+        assertFalse(linkData?.title.equals(""))
     }
 }

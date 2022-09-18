@@ -9,7 +9,7 @@ public data class LinkData(
    val imageUrl: String){
    companion object {
      @JvmStatic
-     fun create(title: String, desc: String, url: String, imageUrl: String) : LinkData = LinkData(title, desc, url, imageUrl)
+     fun create(title: String, desc: String, url: String, imageUrl: String) : LinkData? = LinkData(title, desc, url, imageUrl)
   }
 }
 
@@ -17,7 +17,7 @@ private external fun createLinkFileNative(title: String, desc: String, url: Stri
 private external fun loadLinkFileNative(file_name: String): String
 private external fun loadLinkPreviewNative(file_name: String): ByteArray?
 private external fun getLinkHashNative(url: String): String
-private external fun fetchLinkDataNative(url: String): LinkData
+private external fun fetchLinkDataNative(url: String): LinkData?
 private external fun pdfPreviewGenerateNative(path: String, quality: String): Bitmap
 
 
@@ -33,7 +33,7 @@ fun getLinkHash(url: String): String {
    return getLinkHashNative(url)
 }
 
-fun fetchLinkData(url: String): LinkData {
+fun fetchLinkData(url: String): LinkData? {
    return fetchLinkDataNative(url)
 }
 
