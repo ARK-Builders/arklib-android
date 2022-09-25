@@ -1,10 +1,11 @@
+#[macro_export]
 macro_rules! wrap_error {
-    ($env:expr, $body:expr, $default:expr) => {
+    ($env:expr, $body:expr) => {
         match $body {
             Ok(v) => v,
             Err(e) => {
-                $env.throw(e).expect("error in throwing exception");
-                $default
+                log::error!("{e}");
+                panic!()
             }
         }
     };

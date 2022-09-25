@@ -44,7 +44,7 @@ cargo {
 //    targets = ["x86_64"]
     prebuiltToolchains = true
     // uncomment the line to enable code completion in vscode.
-//    extraCargoBuildArguments = ["--message-format=json"]
+   extraCargoBuildArguments = System.getenv("RA_ENABLE")?  ["--message-format=json"]: []
 //    Set to "debug" to enable logging. Or "release" to make a production build.
     profile = "release"
 }

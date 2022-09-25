@@ -65,7 +65,7 @@ checksum = "b9a8f622bcf6ff3df478e9deba3e03e4e04b300f8e6a139e192c05fa3490afc7"
 [[package]]
 name = "arklib"
 version = "0.1.0"
-source = "git+https://github.com/ARK-Builders/arklib?branch=android-index-rust#24253507f4e100b39f716bd947c68d7ebcfd6c83"
+source = "git+https://github.com/ARK-Builders/arklib?branch=android-index-rust#06b936b037213f8f1be026d853ed39937412cd16"
 dependencies = [
  "anyhow",
  "canonical-path",

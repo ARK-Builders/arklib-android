@@ -1,17 +1,18 @@
 mod android {
-    macro_rules! wrap_error {
-        ($env:expr, $body:expr) => {
-            match $body {
-                Ok(v) => v,
-                Err(e) => {
-                    log::error!("{e}");
-                    // $env.exception_occurred().unwrap()
-                    // $default
-                    panic!()
-                }
-            }
-        };
-    }
+    use crate::wrap_error;
+    // macro_rules! wrap_error {
+    //     ($env:expr, $body:expr) => {
+    //         match $body {
+    //             Ok(v) => v,
+    //             Err(e) => {
+    //                 log::error!("{e}");
+    //                 // $env.exception_occurred().unwrap()
+    //                 // $default
+    //                 panic!()
+    //             }
+    //         }
+    //     };
+    // }
 
     use arklib::{
         id::ResourceId,
@@ -107,6 +108,23 @@ mod android {
         // log::info!("got long, converting to primitive");
         Ok(Some(env.call_method(raw, "longValue", "()J", &[])?.j()?))
     }
+    fn get_interger_field<'a, O, T>(env: JNIEnv<'a>, obj: O, field: T) -> Result<Option<i32>>
+    where
+        O: Into<JObject<'a>>,
+        T: Desc<'a, JFieldID<'a>>,
+    {
+        let raw = env
+            .get_field_unchecked(
+                obj.into(),
+                field,
+                JavaType::Object(signature::INTERGER.to_string()),
+            )?
+            .l()?;
+        if raw.is_null() {
+            return Ok(None);
+        }
+        Ok(Some(env.call_method(raw, "intValue", "()I", &[])?.i()?))
+    }
     fn from_java_resource_meta(env: JNIEnv, meta: JObject) -> Result<ResourceMeta> {
         let rk_ty = "space/taran/arklib/index/ResourceKind";
         let res_meta_cls = "space/taran/arklib/index/ResourceMeta";
@@ -161,9 +179,9 @@ mod android {
                 ResourceKind::Document { pages: _ } => {
                     let cls = format!("{rk_ty}$Document");
                     log::info!("detected document");
-                    let field_id = env.get_field_id(cls, "pages", signature::LONG)?;
+                    let field_id = env.get_field_id(cls, "pages", signature::INTERGER)?;
 
-                    let pages = wrap_error!(env, get_long_field(env, kind, field_id));
+                    let pages = wrap_error!(env, get_interger_field(env, kind, field_id));
 
                     Ok(ResourceKind::Document { pages })
                 }
@@ -260,14 +278,14 @@ mod android {
         let kind = match kind {
             ResourceKind::Document { pages } => {
                 let pages = if let Some(pages) = pages {
-                    let long_cls = env.find_class("java/lang/Long")?;
-                    env.new_object(long_cls, "(J)V", &[JValue::Long(pages)])?
+                    let interger_cls = env.find_class("java/lang/Interger")?;
+                    env.new_object(interger_cls, "(I)V", &[JValue::Int(pages)])?
                 } else {
                     log::info!("page is None, return null");
                     JObject::null()
                 };
                 log::info!("creating kind object");
-                env.new_object(kind_cls, "(Ljava/lang/Long;)V", &[JValue::from(pages)])?
+                env.new_object(kind_cls, "(Ljava/lang/Interger;)V", &[JValue::from(pages)])?
             }
             ResourceKind::Link {
                 title,

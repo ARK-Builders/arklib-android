@@ -1,5 +1,6 @@
 {
   "rust-analyzer.cargo.target": "aarch64-linux-android",
   "rust-analyzer.cargo.buildScripts.overrideCommand": ["../ra.sh"],
-  "rust-analyzer.checkOnSave.overrideCommand": ["../ra.sh"]
+  "rust-analyzer.checkOnSave.overrideCommand": ["../ra.sh"],
+  "java.configuration.updateBuildConfiguration": "automatic"
 }
