@@ -1,4 +1,4 @@
-package space.taran.arklib;
+package space.taran.arklib
 
 import android.graphics.Bitmap
 import java.nio.file.Path
@@ -10,7 +10,7 @@ data class LinkData(
    val imageUrl: String){
    companion object {
      @JvmStatic
-     fun create(title: String, desc: String, url: String, imageUrl: String) : LinkData? = LinkData(title, desc, url, imageUrl)
+     fun create(title: String, desc: String, url: String, imageUrl: String) : LinkData = LinkData(title, desc, url, imageUrl)
   }
 }
 
