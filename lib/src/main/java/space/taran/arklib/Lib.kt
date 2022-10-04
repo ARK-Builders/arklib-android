@@ -1,18 +1,20 @@
-package space.taran.arklib;
+package space.taran.arklib
 
 import android.graphics.Bitmap
+import java.nio.file.Path
 
-public data class LinkData(
+data class LinkData(
    val title: String,
    val desc: String,
    val url: String,
    val imageUrl: String){
    companion object {
      @JvmStatic
-     fun create(title: String, desc: String, url: String, imageUrl: String) : LinkData? = LinkData(title, desc, url, imageUrl)
+     fun create(title: String, desc: String, url: String, imageUrl: String) : LinkData = LinkData(title, desc, url, imageUrl)
   }
 }
 
+private external fun computeIdNative(size: Long, file: String):Long
 private external fun createLinkFileNative(title: String, desc: String, url: String, basePath: String, downloadPreview: Boolean)
 private external fun loadLinkFileNative(file_name: String): String
 private external fun loadLinkPreviewNative(file_name: String): ByteArray?
@@ -20,6 +22,8 @@ private external fun getLinkHashNative(url: String): String
 private external fun fetchLinkDataNative(url: String): LinkData?
 private external fun pdfPreviewGenerateNative(path: String, quality: String): Bitmap
 
+
+fun computeId(size: Long, file: Path) = computeIdNative(size, file.toString())
 
 fun createLinkFile(title: String, desc: String, url: String, basePath: String, downloadPreview: Boolean) {
    return createLinkFileNative(title, desc, url, basePath, downloadPreview)

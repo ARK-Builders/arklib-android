@@ -21,8 +21,9 @@ pub mod android {
     pub extern "C" fn Java_space_taran_arklib_LibKt_initRustLogger(_: JNIEnv, _: JClass) {
         android_logger::init_once(Config::default().with_min_level(Level::Trace));
     }
+
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arknavigator_mvp_model_repo_index_ResourceIdKt_computeIdNative(
+    pub extern "C" fn Java_space_taran_arklib_LibKt_computeIdNative(
         env: JNIEnv,
         _: JClass,
         jni_size: i64,
@@ -42,7 +43,6 @@ pub mod android {
             .crc32
             .into()
     }
-    
 
     #[no_mangle]
     pub extern "C" fn Java_space_taran_arklib_LibKt_getLinkHashNative(env: JNIEnv,
