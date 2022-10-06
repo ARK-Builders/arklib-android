@@ -7,7 +7,7 @@ import junit.framework.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import space.taran.arknavigator.mvp.model.repo.index.computeId
+import space.taran.arknavigator.mvp.model.repo.index.computeID
 import kotlin.io.path.Path
 import kotlin.io.path.fileSize
 import kotlin.io.path.outputStream
@@ -27,6 +27,6 @@ class ResourceIdTest {
             path.outputStream()
         )
 
-        assertEquals(computeId(path.fileSize(), path), 0x342a3d4a)
+        assertEquals(computeID(path.fileSize(), path), 0x342a3d4a)
     }
 }
