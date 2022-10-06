@@ -1,9 +1,9 @@
 package space.taran.arknavigator.mvp.model.repo.index
 
+import space.taran.arklib.ResourceId
+import space.taran.arklib.computeId
 import java.nio.file.Path
 
-typealias ResourceId = Long
-
-fun computeId(size: Long, file: Path): ResourceId {
-    return space.taran.arklib.computeId(size, file)
+fun computeID(size: Long, file: Path): ResourceId {
+    return computeId(size, file)
 }
