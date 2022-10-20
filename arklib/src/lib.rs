@@ -339,4 +339,13 @@ pub mod android {
 
         bitmap.into_inner()
     }
+
+    pub extern "C" fn Java_space_taran_arklib_LibKt_computeCompositeIdNative(
+    env: JNIEnv, _:JClass,
+    hasCollision: jboolean = false, content: JString){
+
+        if(!hasCollision){
+
+        }
+    }
 }

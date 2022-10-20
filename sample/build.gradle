@@ -9,7 +9,7 @@ android {
         viewBinding true
     }
     defaultConfig {
-        applicationId "space.taran.arknavigator"
+        applicationId "space.taran.sample"
         minSdkVersion 26
         targetSdkVersion 31
         versionCode 1

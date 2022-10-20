@@ -1,6 +1,5 @@
-package space.taran.arknavigator
+package space.taran.sample
 
-import android.content.res.AssetManager
 import android.graphics.Bitmap
 import android.os.Environment
 import android.util.Log
@@ -14,7 +13,6 @@ import space.taran.arklib.PreviewQuality
 import space.taran.arklib.pdfPreviewGenerate;
 import java.io.File
 import java.io.FileOutputStream
-import java.io.FileWriter
 import java.util.*
 import kotlin.io.path.*
 
