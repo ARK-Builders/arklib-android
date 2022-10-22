@@ -1,4 +1,4 @@
-package space.taran.arknavigator
+package space.taran.sample
 
 import org.junit.Test
 

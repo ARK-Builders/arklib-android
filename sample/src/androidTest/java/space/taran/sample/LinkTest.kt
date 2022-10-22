@@ -1,4 +1,4 @@
-package space.taran.arknavigator
+package space.taran.sample
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -13,7 +13,6 @@ import space.taran.arklib.getLinkHash
 import space.taran.arklib.loadLinkFile
 import space.taran.arklib.loadLinkPreview
 import space.taran.arklib.fetchLinkData
-import space.taran.arklib.LinkData
 import kotlin.io.path.Path
 import kotlin.io.path.pathString
 

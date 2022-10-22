@@ -1,4 +1,4 @@
-package space.taran.arknavigator
+package space.taran.sample
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -7,7 +7,7 @@ import junit.framework.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import space.taran.arknavigator.mvp.model.repo.index.computeId
+import space.taran.arklib.computeId
 import kotlin.io.path.Path
 import kotlin.io.path.fileSize
 import kotlin.io.path.outputStream

@@ -1,12 +1,8 @@
-package space.taran.arknavigator
+package space.taran.sample
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import space.taran.arklib.computeId
-
+import androidx.appcompat.app.AppCompatActivity
 import space.taran.arklib.initRustLogger
-import java.io.File
-import java.nio.file.Path
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
