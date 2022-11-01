@@ -39,9 +39,10 @@ pub mod android {
         let file_path: &Path = Path::new(&file_name);
         trace!("Received filename: {}", file_path.display());
 
-        arklib::id::ResourceId::compute(file_size.try_into().unwrap(), file_path)
-            .crc32
-            .into()
+        let resourceId = arklib::id::ResourceId::compute(file_size.try_into().unwrap(), file_path);
+        env.new_string(format!("{}-{}", resourceId.crc32, resourceId.file_size))  
+            .expect("Couldn't create java string!")
+            .into_inner()
     }
 
     #[no_mangle]

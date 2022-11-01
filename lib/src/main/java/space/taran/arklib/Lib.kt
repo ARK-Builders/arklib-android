@@ -14,7 +14,7 @@ data class LinkData(
   }
 }
 
-typealias ResourceId = Long
+typealias ResourceId = String
 
 private external fun computeIdNative(size: Long, file: String): ResourceId
 private external fun createLinkFileNative(title: String, desc: String, url: String, basePath: String, downloadPreview: Boolean)
