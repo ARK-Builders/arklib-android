@@ -4,7 +4,6 @@ pub mod android {
     extern crate jni;
 
     use jni::objects::{JClass, JString, JValue, JObject};
-    use jni::sys::jlong;
     use jni::sys::{jint, jobject, jstring, jboolean};
     use jni::JNIEnv;
     use log::{debug, trace, Level};
@@ -28,7 +27,7 @@ pub mod android {
         _: JClass,
         jni_size: i64,
         jni_file_name: JString,
-    ) -> jlong {
+    ) -> jstring {
         let file_size: usize =
             usize::try_from(jni_size).unwrap_or_else(|_| panic!("Failed to parse input size"));
         println!("Received size: {}", file_size);
@@ -40,7 +39,7 @@ pub mod android {
         trace!("Received filename: {}", file_path.display());
 
         let resourceId = arklib::id::ResourceId::compute(file_size.try_into().unwrap(), file_path);
-        env.new_string(format!("{}-{}", resourceId.crc32, resourceId.file_size))  
+        env.new_string(format!("{:x}-{}", resourceId.crc32, resourceId.file_size))  
             .expect("Couldn't create java string!")
             .into_inner()
     }
