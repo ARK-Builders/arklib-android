@@ -4,7 +4,7 @@ pub mod android {
     extern crate jni;
 
     use jni::objects::{JClass, JString, JValue, JObject};
-    use jni::sys::{jint, jobject, jstring, jboolean};
+    use jni::sys::{jint, jobject, jstring, jboolean, jlong};
     use jni::JNIEnv;
     use log::{debug, trace, Level};
     use std::{fs::File, path::{Path}};
@@ -27,7 +27,7 @@ pub mod android {
         _: JClass,
         jni_size: i64,
         jni_file_name: JString,
-    ) -> jstring {
+    ) -> jobject {
         let file_size: usize =
             usize::try_from(jni_size).unwrap_or_else(|_| panic!("Failed to parse input size"));
         println!("Received size: {}", file_size);
@@ -39,9 +39,32 @@ pub mod android {
         trace!("Received filename: {}", file_path.display());
 
         let resourceId = arklib::id::ResourceId::compute(file_size.try_into().unwrap(), file_path);
-        env.new_string(format!("{:x}-{}", resourceId.crc32, resourceId.file_size))  
-            .expect("Couldn't create java string!")
-            .into_inner()
+        let resource_id_cls = env.find_class("space/taran/arklib/ResourceId").unwrap();
+        let create_resource_id_fn = env
+            .get_static_method_id(
+                resource_id_cls,
+                "create",
+                "(Ljava/lang/Long;Ljava/lang/Long;)Lspace/taran/arklib/ResourceId;",
+            )
+            .unwrap();
+        
+        let file_size: jlong = resourceId.file_size as usize as i64;
+        let crc32: jlong = resourceId.crc32 as usize as i64;
+
+        let resource_id = env
+        .call_static_method_unchecked(
+            resource_id_cls,
+            create_resource_id_fn,
+            JavaType::Object(String::from("space/taran/arklib/ResourceId")),
+            &[
+                JValue::from(file_size),
+                JValue::from(crc32),
+            ],
+        )
+        .unwrap()
+        .l()
+        .unwrap();
+        resource_id.into_inner()
     }
 
     #[no_mangle]
