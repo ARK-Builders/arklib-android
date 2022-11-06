@@ -39,21 +39,25 @@ pub mod android {
         trace!("Received filename: {}", file_path.display());
 
         let resourceId = arklib::id::ResourceId::compute(file_size.try_into().unwrap(), file_path);
+        
         let resource_id_cls = env.find_class("space/taran/arklib/ResourceId").unwrap();
+
         let create_resource_id_fn = env
             .get_static_method_id(
                 resource_id_cls,
                 "create",
-                "(Ljava/lang/Long;Ljava/lang/Long;)Lspace/taran/arklib/ResourceId;",
+                "(JJ)Lspace/taran/arklib/ResourceId;",
             )
             .unwrap();
-        
+
+
         let file_size: jlong = resourceId.file_size as usize as i64;
         let crc32: jlong = resourceId.crc32 as usize as i64;
 
+        trace!("after uszie");
         let resource_id = env
         .call_static_method_unchecked(
-            resource_id_cls,
+             resource_id_cls,
             create_resource_id_fn,
             JavaType::Object(String::from("space/taran/arklib/ResourceId")),
             &[
