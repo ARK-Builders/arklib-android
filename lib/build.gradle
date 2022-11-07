@@ -40,8 +40,8 @@ cargo {
     libname = "arklib"
     targets = ["arm64", "x86", "x86_64", "arm"]
     prebuiltToolchains = true
-//    Set to "debug" to enable logging. Or "release" to make a production build.
-    profile = "debug"
+    // Set to "debug" to enable logging. Or "release" to make a production build.
+    profile = "release"
 }
 
 dependencies {

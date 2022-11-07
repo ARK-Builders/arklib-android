@@ -27,7 +27,7 @@ class ResourceIdTest {
             path.outputStream()
         )
         val resourceId = computeId(path.fileSize(), path)
-         assertEquals(resourceId.file_size, path.fileSize())
-         assertEquals(resourceId.crc32, 0x342a3d4a)
+        assertEquals(resourceId.file_size, path.fileSize())
+        assertEquals(resourceId.crc32, 0x342a3d4a)
     }
 }
