@@ -14,7 +14,7 @@ android {
         targetSdkVersion 31
         versionCode 1
         versionName "1.0"
-
+        buildConfigField "boolean", "PdfBenchmark", PdfBenchmark()
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -29,6 +29,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+        bench {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -37,6 +41,7 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+
     
     ndkVersion '24.0.8215888'
 }
@@ -54,4 +59,11 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation "androidx.test:rules:1.4.0"
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    implementation "com.github.barteksc:pdfium-android:1.9.0"
+    implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.20'
+}
+
+def PdfBenchmark() {
+    def value = project.getProperties().get("PdfBenchmark")
+    return value != null ? value : "false"
 }
