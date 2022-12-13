@@ -21,18 +21,19 @@ data class LinkData(
 }
 
 data class ResourceId(
-    val file_size: Long,
+    val dataSize: Long,
     val crc32: Long
 ) {
     companion object {
         @JvmStatic
-        fun create(file_size: Long, crc32: Long): ResourceId =
-            ResourceId(file_size, crc32)
+        fun create(dataSize: Long, crc32: Long): ResourceId =
+            ResourceId(dataSize, crc32)
     }
 }
 
 private external fun computeIdNative(size: Long, file: String): ResourceId
 private external fun createLinkFileNative(
+    root: String,
     title: String,
     desc: String,
     url: String,
@@ -40,8 +41,7 @@ private external fun createLinkFileNative(
     downloadPreview: Boolean
 )
 
-private external fun loadLinkFileNative(file_name: String): String
-private external fun loadLinkPreviewNative(file_name: String): ByteArray?
+private external fun loadLinkFileNative(root: String, file: String): LinkData
 private external fun getLinkHashNative(url: String): String
 private external fun fetchLinkDataNative(url: String): LinkData?
 private external fun pdfPreviewGenerateNative(path: String, quality: String): Bitmap
@@ -50,17 +50,25 @@ private external fun pdfPreviewGenerateNative(path: String, quality: String): Bi
 fun computeId(size: Long, file: Path) = computeIdNative(size, file.toString())
 
 fun createLinkFile(
+    root: Path,
     title: String,
     desc: String,
     url: String,
-    basePath: String,
+    basePath: Path,
     downloadPreview: Boolean
 ) {
-    return createLinkFileNative(title, desc, url, basePath, downloadPreview)
+    return createLinkFileNative(
+        root.toString(),
+        title,
+        desc,
+        url,
+        basePath.toString(),
+        downloadPreview
+    )
 }
 
-fun loadLinkFile(file_name: String): String {
-    return loadLinkFileNative(file_name)
+fun loadLinkFile(root: Path, file: Path): LinkData {
+    return loadLinkFileNative(root.toString(), file.toString())
 }
 
 fun getLinkHash(url: String): String {
@@ -73,10 +81,6 @@ fun fetchLinkData(url: String): LinkData? {
 
 fun pdfPreviewGenerate(path: String, previewQuality: PreviewQuality): Bitmap {
     return pdfPreviewGenerateNative(path, previewQuality.name)
-}
-
-fun loadLinkPreview(file_name: String): ByteArray? {
-    return loadLinkPreviewNative(file_name)
 }
 
 // Initialize Rust Library Logging

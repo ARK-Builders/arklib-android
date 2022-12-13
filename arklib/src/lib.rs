@@ -3,18 +3,19 @@
 pub mod android {
     extern crate jni;
 
-    use jni::objects::{JClass, JString, JValue, JObject};
-    use jni::sys::{jint, jobject, jstring, jboolean, jlong};
+    use jni::objects::{JClass, JObject, JString, JValue};
+    use jni::sys::{jboolean, jint, jlong, jobject, jstring};
     use jni::JNIEnv;
     use log::{debug, trace, Level};
-    use std::{fs::File, path::{Path}};
+    use std::{fs::File, path::Path};
     extern crate android_logger;
     use android_logger::Config;
-    use arklib::pdf::PDFQuality;
+    use arklib::id::ResourceId;
     use arklib::link::Link;
+    use arklib::pdf::PDFQuality;
     use image::EncodableLayout;
-    use url::Url;
     use jni::signature::{JavaType, Primitive};
+    use url::Url;
 
     #[no_mangle]
     pub extern "C" fn Java_space_taran_arklib_LibKt_initRustLogger(_: JNIEnv, _: JClass) {
@@ -28,9 +29,9 @@ pub mod android {
         jni_size: i64,
         jni_file_name: JString,
     ) -> jobject {
-        let file_size: usize =
+        let data_size: usize =
             usize::try_from(jni_size).unwrap_or_else(|_| panic!("Failed to parse input size"));
-        println!("Received size: {}", file_size);
+        println!("Received size: {}", data_size);
         let file_name: String = env
             .get_string(jni_file_name)
             .expect("Failed to parse input file name")
@@ -38,8 +39,8 @@ pub mod android {
         let file_path: &Path = Path::new(&file_name);
         trace!("Received filename: {}", file_path.display());
 
-        let resourceId = arklib::id::ResourceId::compute(file_size.try_into().unwrap(), file_path);
-        
+        let resourceId = ResourceId::compute(data_size.try_into().unwrap(), file_path).unwrap();
+
         let resource_id_cls = env.find_class("space/taran/arklib/ResourceId").unwrap();
 
         let create_resource_id_fn = env
@@ -50,109 +51,119 @@ pub mod android {
             )
             .unwrap();
 
-
-        let file_size: jlong = resourceId.file_size as usize as i64;
+        let data_size: jlong = resourceId.data_size as usize as i64;
         let crc32: jlong = resourceId.crc32 as usize as i64;
 
         trace!("after uszie");
         let resource_id = env
-        .call_static_method_unchecked(
-             resource_id_cls,
-            create_resource_id_fn,
-            JavaType::Object(String::from("space/taran/arklib/ResourceId")),
-            &[
-                JValue::from(file_size),
-                JValue::from(crc32),
-            ],
-        )
-        .unwrap()
-        .l()
-        .unwrap();
+            .call_static_method_unchecked(
+                resource_id_cls,
+                create_resource_id_fn,
+                JavaType::Object(String::from("space/taran/arklib/ResourceId")),
+                &[JValue::from(data_size), JValue::from(crc32)],
+            )
+            .unwrap()
+            .l()
+            .unwrap();
         resource_id.into_inner()
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_getLinkHashNative(env: JNIEnv,
+    pub extern "C" fn Java_space_taran_arklib_LibKt_getLinkHashNative(
+        env: JNIEnv,
         _: JClass,
         jni_url: JString,
     ) -> jstring {
-        let url_str: String = env
-            .get_string(jni_url)
-            .expect("Failed to parse url")
-            .into();
-    
-        let url = Url::parse(url_str.as_str())
-            .expect("Failed to parse url data");
-        let link = Link::new(String::from(""), String::from(""), url);
+        let url_str: String = env.get_string(jni_url).expect("Failed to parse url").into();
 
-        env.new_string(link.format_name())  
+        let url = Url::parse(url_str.as_str()).expect("Failed to parse url data");
+        let link = Link::new(url, String::from(""), Some(String::from("")));
+
+        env.new_string(link.id().unwrap().to_string())
             .expect("Couldn't create java string!")
             .into_inner()
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_loadLinkFileNative(env: JNIEnv,
+    pub extern "C" fn Java_space_taran_arklib_LibKt_loadLinkFileNative(
+        env: JNIEnv,
         _: JClass,
-        jni_file_path: JString,
-    ) -> jstring {
-        let file_path: String = env
-            .get_string(jni_file_path)
-            .expect("Failed to parse input file path")
-            .into();
-
-        let path: &Path = Path::new(&file_path);
-
-        trace!("Received file path: {}", path.display());
-
-        let linkJson = Link::load_json(path).unwrap();
-
-        trace!("Loaded file: {}", linkJson);
-
-        env.new_string(linkJson)
-            .expect("Couldn't create java string!")
-            .into_inner()
-    }
-
-    #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_loadLinkPreviewNative(env: JNIEnv,
-        _: JClass,
+        jni_root: JString,
         jni_file_path: JString,
     ) -> jobject {
+        let link_data_cls = env.find_class("space/taran/arklib/LinkData").unwrap();
+        let create_link_data_fn = env
+            .get_static_method_id(
+                link_data_cls,
+                "create",
+                "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lspace/taran/arklib/LinkData;",
+            )
+            .unwrap();
+
         let file_path: String = env
             .get_string(jni_file_path)
             .expect("Failed to parse input file path")
             .into();
 
+        let root_string: String = env
+            .get_string(jni_root)
+            .expect("Failed to parse root")
+            .into();
+
         let path: &Path = Path::new(&file_path);
+        let root: &Path = Path::new(&root_string);
 
         trace!("Received file path: {}", path.display());
 
-        let linkPreview = Link::load_preview(path);
-        match linkPreview {
-            Ok(preview) => {
-                trace!("Link preview length: {}", preview.len());
-                env.byte_array_from_slice(preview.as_slice())
-                    .expect("Couldn't create java byte array!")
-            },
-            Err(e) => {
-                trace!("Load link preview image: {:?}", e);
-                JObject::null().into_inner()
-            }
-        }
+        let link = Link::load(root, path).unwrap();
+
+        let title = env
+            .new_string(link.meta.title)
+            .expect("Couldn't create java string!")
+            .into_inner();
+
+        let description = env
+            .new_string(link.meta.desc.unwrap_or_default())
+            .expect("Couldn't create java string!")
+            .into_inner();
+
+        let url = env
+            .new_string(link.url)
+            .expect("Couldn't create java string!")
+            .into_inner();
+
+        let image = env
+            .new_string(String::from(""))
+            .expect("Couldn't create java string!")
+            .into_inner();
+
+        let link_data = env
+            .call_static_method_unchecked(
+                link_data_cls,
+                create_link_data_fn,
+                JavaType::Object(String::from("space/taran/arklib/LinkData")),
+                &[
+                    JValue::from(title),
+                    JValue::from(description),
+                    JValue::from(url),
+                    JValue::from(image),
+                ],
+            )
+            .unwrap()
+            .l()
+            .unwrap();
+        link_data.into_inner()
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_fetchLinkDataNative(env: JNIEnv,
+    pub extern "C" fn Java_space_taran_arklib_LibKt_fetchLinkDataNative(
+        env: JNIEnv,
         _: JClass,
         jni_url: JString,
     ) -> jobject {
-        let url_str: String = env
-            .get_string(jni_url)
-            .expect("Failed to parse url")
-            .into();
-    
-        let url = Url::parse(url_str.as_str())
-            .expect("Failed to parse url data");
+        let url_str: String = env.get_string(jni_url).expect("Failed to parse url").into();
+
+        let url = Url::parse(url_str.as_str()).expect("Failed to parse url data");
 
         trace!("Received url: {}", url.as_str());
 
@@ -168,37 +179,41 @@ pub mod android {
                         "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lspace/taran/arklib/LinkData;",
                     )
                     .unwrap();
-                
-                let title = env.new_string(og.title.unwrap_or_default())
+
+                let title = env
+                    .new_string(og.title.unwrap_or_default())
                     .expect("Couldn't create java string!")
                     .into_inner();
-                let description = env.new_string(og.description.unwrap_or_default())
+                let description = env
+                    .new_string(og.description.unwrap_or_default())
                     .expect("Couldn't create java string!")
                     .into_inner();
-                let url = env.new_string(og.url.unwrap_or_default())
+                let url = env
+                    .new_string(og.url.unwrap_or_default())
                     .expect("Couldn't create java string!")
                     .into_inner();
-                let image = env.new_string(og.image.unwrap_or_default())
+                let image = env
+                    .new_string(og.image.unwrap_or_default())
                     .expect("Couldn't create java string!")
                     .into_inner();
 
                 let link_data = env
-                .call_static_method_unchecked(
-                    link_data_cls,
-                    create_link_data_fn,
-                    JavaType::Object(String::from("space/taran/arklib/LinkData")),
-                    &[
-                        JValue::from(title),
-                        JValue::from(description),
-                        JValue::from(url),
-                        JValue::from(image),
-                    ],
-                )
-                .unwrap()
-                .l()
-                .unwrap();
+                    .call_static_method_unchecked(
+                        link_data_cls,
+                        create_link_data_fn,
+                        JavaType::Object(String::from("space/taran/arklib/LinkData")),
+                        &[
+                            JValue::from(title),
+                            JValue::from(description),
+                            JValue::from(url),
+                            JValue::from(image),
+                        ],
+                    )
+                    .unwrap()
+                    .l()
+                    .unwrap();
                 link_data.into_inner()
-            },
+            }
             Err(e) => {
                 trace!("Fetch link preview: {:?}", e);
                 JObject::null().into_inner()
@@ -207,8 +222,10 @@ pub mod android {
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_createLinkFileNative(env: JNIEnv,
+    pub extern "C" fn Java_space_taran_arklib_LibKt_createLinkFileNative(
+        env: JNIEnv,
         _: JClass,
+        jni_root: JString,
         jni_title: JString,
         jni_desc: JString,
         jni_url: JString,
@@ -219,7 +236,7 @@ pub mod android {
             .get_string(jni_title)
             .expect("Failed to parse title")
             .into();
-        
+
         let desc: String = env
             .get_string(jni_desc)
             .expect("Failed to parse description")
@@ -229,26 +246,34 @@ pub mod android {
             .get_string(jni_base_path)
             .expect("Failed to parse input base path")
             .into();
+
+        let root_string: String = env
+            .get_string(jni_root)
+            .expect("Failed to parse root")
+            .into();
+
         let path: &Path = Path::new(&base_path);
+        let root: &Path = Path::new(&root_string);
 
         trace!("Received file path: {}", path.display());
 
-        let url_str: String = env
-            .get_string(jni_url)
-            .expect("Failed to parse url")
-            .into();
+        let url_str: String = env.get_string(jni_url).expect("Failed to parse url").into();
 
         let url = Url::parse(url_str.as_str()).expect("Failed to parse url data");
 
         trace!("Received url: {}", url.as_str());
 
         let download_preview = jni_download_preview != 0;
-            
-        let mut link = Link::new(title, desc, url);
-        let hashedLinkName = link.format_name();
+
+        let mut link = Link::new(url, title, Some(desc));
+        let hashedLinkName = link.id().unwrap().to_string();
         let hashedLinkFileName = format!("{}.link", hashedLinkName);
         trace!("Generated hashed link filename: {}", hashedLinkFileName);
-        link.write_to_path_sync(path.join(hashedLinkFileName), download_preview);
+        link.write_to_path_sync(
+            root,
+            path.join(hashedLinkFileName).as_ref(),
+            download_preview,
+        ).unwrap();
     }
 
     #[no_mangle]

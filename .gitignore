@@ -13,3 +13,6 @@
 *.tab.values.at
 misc.xml
 target
+.cargo
+.vscode
+Cargo.lock
