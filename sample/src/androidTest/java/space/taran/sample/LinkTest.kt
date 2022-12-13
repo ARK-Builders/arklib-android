@@ -32,11 +32,12 @@ class LinkTest {
 
         val url = "https://example.com/"
         val linkHash = getLinkHash(url)
-        val filePath = Path("${appContext.cacheDir}/${linkHash}.link")
+        val rootPath = Path("${appContext.cacheDir}/tmp/")
+        val filePath = Path("${appContext.cacheDir}/tmp/dir1/${linkHash}.link")
         for (downloadPreview in listOf<Boolean>(true, false)){
-            createLinkFile("title", "desc", url, filePath.parent.pathString, downloadPreview)
-            val linkJson = loadLinkFile(filePath.pathString)
-            val linkPreview = loadLinkPreview(filePath.pathString)
+            createLinkFile("title", "desc", url, rootPath, filePath.parent.pathString, downloadPreview)
+            val linkJson = loadLinkFile(rootPath.pathString, filePath.pathString)
+            val linkPreview = loadLinkPreview(rootPath.pathString, filePath.pathString)
             val link = Klaxon().parse<Link>(linkJson)
             assertNotNull(link)
             assertEquals(link?.title, "title")
