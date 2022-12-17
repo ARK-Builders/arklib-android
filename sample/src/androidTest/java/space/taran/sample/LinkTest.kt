@@ -1,56 +1,102 @@
 package space.taran.sample
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
+import android.Manifest
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.rule.ActivityTestRule
-import com.beust.klaxon.Klaxon
-import junit.framework.Assert.*
+import androidx.test.rule.GrantPermissionRule
+import de.mannodermaus.junit5.ActivityScenarioExtension
+import junit.framework.Assert.assertNotNull
 import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.MethodOrderer
+import org.junit.jupiter.api.Order
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.TestMethodOrder
+import org.junit.jupiter.api.extension.RegisterExtension
 import space.taran.arklib.createLinkFile
+import space.taran.arklib.fetchLinkData
 import space.taran.arklib.getLinkHash
 import space.taran.arklib.loadLinkFile
-import space.taran.arklib.loadLinkPreview
-import space.taran.arklib.fetchLinkData
+import space.taran.sample.GrantPermissionExtension.Companion.grant
+import java.nio.file.Path
 import kotlin.io.path.Path
-import kotlin.io.path.pathString
+import kotlin.io.path.exists
 
-data class Link(val title: String, val desc: String, val url: String)
-
-
-@RunWith(AndroidJUnit4::class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class LinkTest {
-    @get:Rule
-    val mainActivityRule = ActivityTestRule(MainActivity::class.java)
+    @JvmField
+    @RegisterExtension
+    val scenarioExtension = ActivityScenarioExtension.launch<MainActivity>()
+
+    @RegisterExtension
+    var permissionExtension = grant(
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+    )
+
+    val url = "https://github.com/ARK-Builders/arklib-android"
 
     @Test
-    fun link_is_created() {
+    @Order(1)
+    fun linkIsCreated() {
+        val root = getRootPath()
+
+        createLinkFile(
+            root,
+            title = "",
+            desc = "",
+            url,
+            root,
+            downloadPreview = true
+        )
+
+        val linkId = getLinkHash(url)
+        assert(root.resolve("$linkId.link").exists())
+        assert(root.resolve(".ark").resolve("meta").resolve(linkId).exists())
+        assert(root.resolve(".ark").resolve("previews").resolve(linkId).exists())
+    }
+
+    @Test
+    @Order(2)
+    fun linkIsFetched() {
+        val linkData = fetchLinkData(url)!!
+        assertNotNull(linkData.url)
+        assertNotNull(linkData.title)
+        assertNotNull(linkData.desc)
+        assertNotNull(linkData.imageUrl)
+    }
+
+    @Test
+    @Order(3)
+    fun linkFileIsLoaded() {
+        val root = getRootPath()
+        val linkId = getLinkHash(url)
+        val linkData = loadLinkFile(root, root.resolve("$linkId.link"))
+        assertNotNull(linkData.url)
+        assertNotNull(linkData.title)
+        assertNotNull(linkData.desc)
+    }
+
+    private fun getRootPath(): Path {
         val appContext = InstrumentationRegistry
             .getInstrumentation()
             .targetContext
 
-        val url = "https://example.com/"
-        val linkHash = getLinkHash(url)
-        val filePath = Path("${appContext.cacheDir}/${linkHash}.link")
-        for (downloadPreview in listOf<Boolean>(true, false)){
-            createLinkFile("title", "desc", url, filePath.parent.pathString, downloadPreview)
-            val linkJson = loadLinkFile(filePath.pathString)
-            val linkPreview = loadLinkPreview(filePath.pathString)
-            val link = Klaxon().parse<Link>(linkJson)
-            assertNotNull(link)
-            assertEquals(link?.title, "title")
-            assertEquals(link?.desc, "desc")
-            assertEquals(link?.url, url)
-            if (downloadPreview){
-                assertNotNull(linkPreview)
-            }else{
-                assertNull(linkPreview)
+        val device = appContext.getExternalFilesDirs(null)
+            .toList()
+            .filterNotNull()
+            .filter { it.exists() }
+            .map {
+                it.toPath().toRealPath()
+                    .takeWhile { part ->
+                        part != Path("Android")
+                    }
+                    .fold(Path("/")) { parent, child ->
+                        parent.resolve(child)
+                    }
             }
-        }
-        val linkData = fetchLinkData(url)
-        assertNotNull(linkData)
-        assertNotNull(linkData?.title)
-        assertFalse(linkData?.title.equals(""))
+            .first()
+
+        return device.resolve("testRoot")
     }
 }
