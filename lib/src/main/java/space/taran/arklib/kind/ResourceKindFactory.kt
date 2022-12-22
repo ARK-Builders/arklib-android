@@ -17,7 +17,7 @@ interface ResourceKindFactory<T : ResourceKind> {
     fun isValid(mimeType: String) = acceptedMimeTypes.contains(mimeType)
     fun isValid(kindCode: Int) = acceptedKindCode.ordinal == kindCode
 
-    fun fromPath(path: Path, meta: ResourceMeta, metadataStorage: MetadataStorage, app: Application? = null): T
+    fun fromPath(path: Path, meta: ResourceMeta, metadataStorage: MetadataStorage): T
     fun fromRoom(extras: Map<MetaExtraTag, String>): T
     fun toRoom(id: ResourceId, kind: T): Map<MetaExtraTag, String?>
 }

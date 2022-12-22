@@ -22,8 +22,7 @@ object DocumentKindFactory : ResourceKindFactory<ResourceKind.Document> {
     override fun fromPath(
         path: Path,
         meta: ResourceMeta,
-        metadataStorage: MetadataStorage,
-        app: Application?
+        metadataStorage: MetadataStorage
     ): ResourceKind.Document {
         if (extension(path) != "pdf") return ResourceKind.Document()
 

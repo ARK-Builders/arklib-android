@@ -16,8 +16,7 @@ object PlainTextKindFactory : ResourceKindFactory<ResourceKind.PlainText> {
     override fun fromPath(
         path: Path,
         meta: ResourceMeta,
-        metadataStorage: MetadataStorage,
-        app: Application?
+        metadataStorage: MetadataStorage
     ) = ResourceKind.PlainText()
 
     override fun fromRoom(extras: Map<MetaExtraTag, String>) =

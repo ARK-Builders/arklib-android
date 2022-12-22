@@ -16,8 +16,7 @@ object LinkKindFactory : ResourceKindFactory<ResourceKind.Link> {
     override fun fromPath(
         path: Path,
         meta: ResourceMeta,
-        metadataStorage: MetadataStorage,
-        app: Application?
+        metadataStorage: MetadataStorage
     ): ResourceKind.Link {
         // TODO: we don't need these lines anymore, but what about the native bindings?
         // val linkJson = loadLinkFile(path.pathString)

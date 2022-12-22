@@ -23,8 +23,7 @@ object ImageKindFactory : ResourceKindFactory<ResourceKind.Image> {
     override fun fromPath(
         path: Path,
         meta: ResourceMeta,
-        metadataStorage: MetadataStorage,
-        app: Application?
+        metadataStorage: MetadataStorage
     ) = ResourceKind.Image()
 
     override fun fromRoom(extras: Map<MetaExtraTag, String>) = ResourceKind.Image()

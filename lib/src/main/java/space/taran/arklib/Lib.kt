@@ -1,7 +1,10 @@
 package space.taran.arklib
 
+import android.app.Application
 import android.graphics.Bitmap
 import java.nio.file.Path
+
+internal lateinit var app: Application
 
 data class LinkData(
    val title: String,
@@ -24,6 +27,14 @@ private external fun getLinkHashNative(url: String): String
 private external fun fetchLinkDataNative(url: String): LinkData?
 private external fun pdfPreviewGenerateNative(path: String, quality: String): Bitmap
 
+/*
+ *  Just to allow for preliminary testing with Navigator
+ *  A better way may be proposed to get application instance
+ *  Navigator should call this function in [Application.onCreate].
+ */
+fun Application.initArkLib() {
+    app = this
+}
 
 fun computeId(size: Long, file: Path) = computeIdNative(size, file.toString())
 

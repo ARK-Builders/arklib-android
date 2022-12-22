@@ -5,15 +5,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import space.taran.arkfilepicker.folders.FoldersRepo
+import space.taran.arkfilepicker.folders.RootAndFav
 import space.taran.arklib.index.PlainResourcesIndex
 import space.taran.arklib.dao.ResourceDao
-import space.taran.arknavigator.mvp.model.repo.FoldersRepo
-import space.taran.arknavigator.mvp.model.repo.RootAndFav
+import space.taran.arklib.index.AggregatedResourcesIndex
 import space.taran.arklib.index.PlainResourcesIndex.Companion.loadResources
 import space.taran.arklib.index.ResourcesIndex
-import space.taran.arknavigator.mvp.model.repo.meta.MetadataStorageRepo
-import space.taran.arknavigator.mvp.model.repo.preview.PreviewStorageRepo
-import space.taran.arknavigator.utils.LogTags.RESOURCES_INDEX
+import space.taran.arklib.meta.MetadataStorageRepo
+import space.taran.arklib.preview.PreviewStorageRepo
+import space.taran.arklib.utils.LogTags.RESOURCES_INDEX
 import java.nio.file.Path
 
 class ResourcesIndexRepo(

@@ -17,8 +17,7 @@ object ArchiveKindFactory : ResourceKindFactory<ResourceKind.Archive> {
     override fun fromPath(
         path: Path,
         meta: ResourceMeta,
-        metadataStorage: MetadataStorage,
-        app: Application?
+        metadataStorage: MetadataStorage
     ) = ResourceKind.Archive()
 
     override fun fromRoom(extras: Map<MetaExtraTag, String>) =

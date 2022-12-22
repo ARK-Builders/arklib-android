@@ -4,6 +4,7 @@ import android.app.Application
 import android.net.Uri
 import android.util.Log
 import space.taran.arklib.ResourceId
+import space.taran.arklib.app
 import space.taran.arklib.index.ResourceMeta
 import space.taran.arklib.meta.MetadataStorage
 import space.taran.arklib.utils.LogTags
@@ -22,8 +23,7 @@ object VideoKindFactory : ResourceKindFactory<ResourceKind.Video> {
 
     override fun fromPath(path: Path,
                           meta: ResourceMeta,
-                          metadataStorage: MetadataStorage,
-                          app: Application?
+                          metadataStorage: MetadataStorage
     ): ResourceKind.Video {
         val retriever = FFmpegMediaMetadataRetriever()
 
