@@ -18,6 +18,10 @@ buildscript {
     }
 }
 
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "$kotlin_version"
+}
+
 allprojects {
     repositories {
         google()
