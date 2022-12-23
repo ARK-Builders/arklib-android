@@ -1,6 +1,6 @@
 package space.taran.arklib.utils
 
-import space.taran.arklib.index.ResourceMeta
+import space.taran.arklib.domain.index.ResourceMeta
 
 data class PartialResult<S, F>(val succeeded: S, val failed: F)
 

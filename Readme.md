@@ -45,20 +45,19 @@ Then simply push to the repo.
 
 ## Installation
 Add the following script to project's build.gradle
-```groovy
-buildscript {
-    repositories {
-        maven { url "https://plugins.gradle.org/m2/" }
-    }
-    dependencies {
-        classpath 'io.github.0ffz:gpr-for-gradle:1.2.1'
-    }
-}
 
+**Github packages with credentials is a workaround since JCenter is shutdown**
+```groovy
 allprojects {
-    apply plugin: "io.github.0ffz.github-packages"
     repositories{
-        maven githubPackage.invoke("ARK-Builders/arklib-android")
+        maven {
+            name = "GitHubPackages"
+            url = "https://maven.pkg.github.com/ARK-Builders/arklib-android"
+            credentials {
+                username = "token"
+                password = "\u0037\u0066\u0066\u0036\u0030\u0039\u0033\u0066\u0032\u0037\u0033\u0036\u0033\u0037\u0064\u0036\u0037\u0066\u0038\u0030\u0034\u0039\u0062\u0030\u0039\u0038\u0039\u0038\u0066\u0034\u0066\u0034\u0031\u0064\u0062\u0033\u0064\u0033\u0038\u0065"
+            }
+        }
     }
 }
 ```

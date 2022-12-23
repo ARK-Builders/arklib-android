@@ -26,7 +26,8 @@ class ResourceIdTest {
         appContext.resources.openRawResource(R.raw.lena).copyTo(
             path.outputStream()
         )
-
-        assertEquals(computeId(path.fileSize(), path), 0x342a3d4a)
+        val resourceId = computeId(path.fileSize(), path)
+        assertEquals(resourceId.dataSize, path.fileSize())
+        assertEquals(resourceId.crc32, 0x342a3d4a)
     }
 }

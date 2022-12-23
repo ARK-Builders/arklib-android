@@ -1,0 +1,44 @@
+package space.taran.arklib.domain.preview.generator
+
+import android.graphics.Bitmap
+import android.net.Uri
+import android.os.ParcelFileDescriptor
+import com.shockwave.pdfium.PdfiumCore
+import space.taran.arklib.app
+import java.nio.file.Path
+
+object PdfPreviewGenerator : PreviewGenerator() {
+    override val acceptedExtensions = setOf("pdf")
+    override val acceptedMimeTypes = setOf("application/pdf")
+
+    override fun generate(path: Path, previewPath: Path, thumbnailPath: Path) {
+        val preview = generatePreview(path)
+        storePreview(previewPath, preview)
+        val thumbnail = resizePreviewToThumbnail(preview)
+        storeThumbnail(thumbnailPath, thumbnail)
+    }
+
+    private fun generatePreview(source: Path): Bitmap {
+        val page = 0
+
+        val finalContext = app
+
+        val pdfiumCore = PdfiumCore(finalContext)
+        val fd: ParcelFileDescriptor? =
+            finalContext
+                .contentResolver
+                .openFileDescriptor(Uri.fromFile(source.toFile()), "r")
+
+        val document = pdfiumCore.newDocument(fd)
+        pdfiumCore.openPage(document, page)
+
+        val width = pdfiumCore.getPageWidthPoint(document, page)
+        val height = pdfiumCore.getPageHeightPoint(document, page)
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+
+        pdfiumCore.renderPageBitmap(document, bitmap, page, 0, 0, width, height)
+        pdfiumCore.closeDocument(document)
+
+        return bitmap
+    }
+}

@@ -45,7 +45,7 @@ cargo {
     libname = "arklib"
     targets = ["arm64", "x86", "x86_64", "arm"]
     prebuiltToolchains = true
-//    Set to "debug" to enable logging. Or "release" to make a production build.
+    // Set to "debug" to enable logging. Or "release" to make a production build.
     profile = "release"
 }
 
@@ -53,7 +53,6 @@ dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4"
     implementation "androidx.room:room-runtime:2.4.2"
     implementation "androidx.room:room-ktx:2.4.2"
     kapt "androidx.room:room-compiler:2.4.2"
@@ -73,6 +72,7 @@ dependencies {
     kapt "com.github.bumptech.glide:compiler:4.11.0"
 
     implementation "com.github.barteksc:pdfium-android:1.9.0"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4"
 }
 
 tasks.whenTaskAdded { task ->
