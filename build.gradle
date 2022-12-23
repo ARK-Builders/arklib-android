@@ -10,7 +10,7 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:7.2.1'
         classpath "org.mozilla.rust-android-gradle:plugin:0.9.3"
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "com.palantir.gradle.gitversion:gradle-git-version:0.15.0"
         classpath 'pl.allegro.tech.build:axion-release-plugin:1.13.14'
         // NOTE: Do not place your application dependencies here; they belong
@@ -18,9 +18,9 @@ buildscript {
     }
 }
 
-plugins {
+/*plugins {
     id "org.jetbrains.kotlin.jvm" version "$kotlin_version"
-}
+}*/
 
 allprojects {
     repositories {
