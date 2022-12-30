@@ -14,7 +14,6 @@ typealias StringPath = String
 @Entity
 data class Resource(
     @PrimaryKey(autoGenerate = false)
-    @TypeConverters(Converters::class)
     val id: ResourceId,
     val root: StringPath,
     val path: StringPath,

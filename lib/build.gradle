@@ -5,6 +5,7 @@ plugins {
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-parcelize'
 apply plugin: 'org.mozilla.rust-android-gradle.rust-android'
 apply plugin: 'maven-publish'
 apply plugin: "com.palantir.git-version"

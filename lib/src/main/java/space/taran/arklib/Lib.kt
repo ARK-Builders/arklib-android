@@ -2,7 +2,9 @@ package space.taran.arklib
 
 import android.app.Application
 import android.graphics.Bitmap
+import android.os.Parcelable
 import androidx.room.TypeConverter
+import kotlinx.parcelize.Parcelize
 import java.nio.file.Path
 
 internal lateinit var app: Application
@@ -24,10 +26,11 @@ data class LinkData(
     }
 }
 
+@Parcelize
 data class ResourceId(
     val dataSize: Long,
     val crc32: Long
-) {
+) : Parcelable {
     companion object {
         @JvmStatic
         fun create(dataSize: Long, crc32: Long): ResourceId =
@@ -37,12 +40,19 @@ data class ResourceId(
 
 class Converters {
     @TypeConverter
-    fun resourceIdToLongArray(id: ResourceId) =
-        arrayOf(id.dataSize, id.crc32)
+    fun stringToResourceId(str: String): ResourceId {
+        val idAry = str.split(":")
+        return ResourceId.create(
+            idAry[0].toLong(),
+            idAry[1].toLong()
+        )
+    }
 
     @TypeConverter
-    fun longArrayToResourceId(array: Array<Long>) =
-        ResourceId.create(array[0], array[1])
+    fun resourceIdToString(id: ResourceId) =
+        id.dataSize.toString()
+            .plus(":")
+            .plus(id.crc32)
 }
 
 private external fun computeIdNative(size: Long, file: String): ResourceId

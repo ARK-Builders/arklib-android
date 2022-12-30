@@ -20,7 +20,6 @@ import space.taran.arklib.ResourceId
 )
 data class ResourceExtra(
     @ColumnInfo(index = true)
-    @TypeConverters(Converters::class)
     val resource: ResourceId,
 
     val ordinal: Int,
