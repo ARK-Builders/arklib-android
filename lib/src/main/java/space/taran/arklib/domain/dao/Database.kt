@@ -5,7 +5,6 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import space.taran.arklib.Converters
 import space.taran.arklib.app
 
 @androidx.room.Database(
@@ -16,7 +15,6 @@ import space.taran.arklib.app
     version = 18,
     exportSchema = false
 )
-@TypeConverters(Converters::class)
 abstract class Database : RoomDatabase() {
     abstract fun resourceDao(): ResourceDao
 

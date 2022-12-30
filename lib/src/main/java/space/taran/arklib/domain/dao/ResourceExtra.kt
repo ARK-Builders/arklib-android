@@ -3,6 +3,8 @@ package space.taran.arklib.domain.dao
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.TypeConverters
+import space.taran.arklib.Converters
 import space.taran.arklib.ResourceId
 
 @Entity(
@@ -18,6 +20,7 @@ import space.taran.arklib.ResourceId
 )
 data class ResourceExtra(
     @ColumnInfo(index = true)
+    @TypeConverters(Converters::class)
     val resource: ResourceId,
 
     val ordinal: Int,
