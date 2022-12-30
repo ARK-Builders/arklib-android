@@ -2,6 +2,7 @@ package space.taran.arklib
 
 import android.app.Application
 import android.graphics.Bitmap
+import androidx.room.TypeConverter
 import java.nio.file.Path
 
 internal lateinit var app: Application
@@ -32,6 +33,16 @@ data class ResourceId(
         fun create(dataSize: Long, crc32: Long): ResourceId =
             ResourceId(dataSize, crc32)
     }
+}
+
+class Converters {
+    @TypeConverter
+    fun resourceIdToLongArray(id: ResourceId) =
+        arrayOf(id.dataSize, id.crc32)
+
+    @TypeConverter
+    fun longArrayToResourceId(array: Array<Long>) =
+        ResourceId.create(array[0], array[1])
 }
 
 private external fun computeIdNative(size: Long, file: String): ResourceId
