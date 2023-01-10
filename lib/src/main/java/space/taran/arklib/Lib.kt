@@ -31,16 +31,9 @@ data class ResourceId(
     val dataSize: Long,
     val crc32: Long
 ) : Parcelable {
-    companion object {
-        @JvmStatic
-        fun create(dataSize: Long, crc32: Long): ResourceId =
-            ResourceId(dataSize, crc32)
-    }
-}
 
-class Converters {
     @TypeConverter
-    fun stringToResourceId(str: String): ResourceId {
+    fun fromString(str: String): ResourceId {
         val idAry = str.split(":")
         return ResourceId.create(
             idAry[0].toLong(),
@@ -49,10 +42,16 @@ class Converters {
     }
 
     @TypeConverter
-    fun resourceIdToString(id: ResourceId) =
+    fun toString(id: ResourceId = this) =
         id.dataSize.toString()
             .plus(":")
             .plus(id.crc32)
+
+    companion object {
+        @JvmStatic
+        fun create(dataSize: Long, crc32: Long): ResourceId =
+            ResourceId(dataSize, crc32)
+    }
 }
 
 private external fun computeIdNative(size: Long, file: String): ResourceId
