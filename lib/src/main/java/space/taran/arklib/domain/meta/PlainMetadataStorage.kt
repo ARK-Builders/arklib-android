@@ -7,7 +7,7 @@ import space.taran.arklib.ResourceId
 import space.taran.arklib.arkFolder
 import space.taran.arklib.arkMetadata
 import space.taran.arklib.domain.index.ResourceMeta
-import space.taran.arklib.domain.index.ResourceKind
+import space.taran.arklib.domain.kind.ResourceKind
 import space.taran.arklib.utils.LogTags.METADATA
 import java.nio.file.Files
 import java.nio.file.Path

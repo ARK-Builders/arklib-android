@@ -1,4 +1,4 @@
-package space.taran.arklib.domain.index
+package space.taran.arklib.domain.kind
 
 import kotlinx.serialization.Serializable
 

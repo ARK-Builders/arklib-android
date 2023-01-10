@@ -4,6 +4,7 @@ import space.taran.arklib.ResourceId
 import space.taran.arklib.computeId
 import space.taran.arklib.domain.dao.ResourceWithExtra
 import space.taran.arklib.domain.kind.GeneralKindFactory
+import space.taran.arklib.domain.kind.ResourceKind
 import space.taran.arklib.domain.meta.MetadataStorage
 import space.taran.arklib.utils.MetaResult
 import space.taran.arklib.utils.extension

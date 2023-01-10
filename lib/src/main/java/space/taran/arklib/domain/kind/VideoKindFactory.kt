@@ -1,16 +1,11 @@
 package space.taran.arklib.domain.kind
 
-import android.app.Application
 import android.net.Uri
 import android.util.Log
 import space.taran.arklib.ResourceId
 import space.taran.arklib.app
-import space.taran.arklib.domain.index.KindCode
-import space.taran.arklib.domain.index.MetaExtraTag
-import space.taran.arklib.domain.index.ResourceKind
 import space.taran.arklib.domain.index.ResourceMeta
 import space.taran.arklib.domain.meta.MetadataStorage
-import space.taran.arklib.utils.LogTags
 import space.taran.arklib.utils.LogTags.PREVIEWS
 import wseemann.media.FFmpegMediaMetadataRetriever
 import java.io.IOException

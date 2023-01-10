@@ -2,9 +2,6 @@ package space.taran.arklib.domain.kind
 
 import space.taran.arklib.ResourceId
 import space.taran.arklib.domain.dao.ResourceExtra
-import space.taran.arklib.domain.index.KindCode
-import space.taran.arklib.domain.index.MetaExtraTag
-import space.taran.arklib.domain.index.ResourceKind
 import space.taran.arklib.domain.index.ResourceMeta
 import space.taran.arklib.domain.meta.MetadataStorage
 import space.taran.arklib.utils.extension

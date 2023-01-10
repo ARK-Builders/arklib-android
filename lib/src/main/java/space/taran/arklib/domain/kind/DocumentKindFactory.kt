@@ -1,13 +1,9 @@
 package space.taran.arklib.domain.kind
 
-import android.app.Application
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import space.taran.arklib.ResourceId
-import space.taran.arklib.domain.index.KindCode
-import space.taran.arklib.domain.index.MetaExtraTag
-import space.taran.arklib.domain.index.ResourceKind
 import space.taran.arklib.domain.index.ResourceMeta
 import space.taran.arklib.domain.meta.MetadataStorage
 import space.taran.arklib.utils.LogTags.RESOURCES_INDEX

@@ -2,9 +2,6 @@ package space.taran.arklib.domain.kind
 
 import kotlinx.serialization.Serializable
 import space.taran.arklib.ResourceId
-import space.taran.arklib.domain.index.KindCode
-import space.taran.arklib.domain.index.MetaExtraTag
-import space.taran.arklib.domain.index.ResourceKind
 import space.taran.arklib.domain.index.ResourceMeta
 import space.taran.arklib.domain.meta.MetadataStorage
 import java.nio.file.Path
