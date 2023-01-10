@@ -2,8 +2,6 @@ package space.taran.arklib.domain.dao
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import androidx.room.TypeConverters
-import space.taran.arklib.Converters
 import space.taran.arklib.ResourceId
 import space.taran.arklib.domain.index.ResourceMeta
 import java.nio.file.Path
