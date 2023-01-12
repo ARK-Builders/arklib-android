@@ -31,23 +31,25 @@ data class ResourceId(
     val dataSize: Long,
     val crc32: Long
 ) : Parcelable {
-
-    @TypeConverter
-    fun fromString(str: String): ResourceId {
-        val idAry = str.split(":")
-        return ResourceId.create(
-            idAry[0].toLong(),
-            idAry[1].toLong()
-        )
-    }
-
-    @TypeConverter
-    fun toString(id: ResourceId = this) =
-        id.dataSize.toString()
-            .plus(":")
-            .plus(id.crc32)
-
     companion object {
+
+        class Converter {
+            @TypeConverter
+            fun fromString(str: String): ResourceId {
+                val idAry = str.split(":")
+                return ResourceId.create(
+                    idAry[0].toLong(),
+                    idAry[1].toLong()
+                )
+            }
+
+            @TypeConverter
+            fun toString(id: ResourceId) =
+                id.dataSize.toString()
+                    .plus(":")
+                    .plus(id.crc32)
+        }
+
         @JvmStatic
         fun create(dataSize: Long, crc32: Long): ResourceId =
             ResourceId(dataSize, crc32)
