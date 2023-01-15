@@ -316,8 +316,7 @@ class PlainResourcesIndex internal constructor(
         pathById.remove(oldId)
         pathById[newResource.id] = path
         dao.updateResource(
-            oldId, newResource.id, newResource.modified.toMillis(),
-            newResource.size
+            oldId, newResource.id, newResource.modified.toMillis()
         )
         dao.updateExtras(oldId, newResource.id)
     }

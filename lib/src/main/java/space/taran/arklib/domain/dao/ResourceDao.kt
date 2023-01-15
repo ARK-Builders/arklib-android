@@ -36,13 +36,11 @@ interface ResourceDao {
     suspend fun updateExtras(oldId: ResourceId, newId: ResourceId)
 
     @Query(
-        "UPDATE Resource set id =:newId, modified =:modified, size=:size " +
-            "where id=:oldId"
+        "UPDATE Resource set id =:newId, modified =:modified where id=:oldId"
     )
     suspend fun updateResource(
         oldId: ResourceId,
         newId: ResourceId,
         modified: Milliseconds,
-        size: Long
     )
 }

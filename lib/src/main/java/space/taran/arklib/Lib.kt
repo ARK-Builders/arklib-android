@@ -33,11 +33,13 @@ data class ResourceId(
 ) : Parcelable {
     companion object {
 
+        const val KEY_VALUE_SEPARATOR = "-"
+
         class Converter {
             @TypeConverter
             fun fromString(str: String): ResourceId {
-                val idAry = str.split(":")
-                return ResourceId.create(
+                val idAry = str.split(KEY_VALUE_SEPARATOR)
+                return create(
                     idAry[0].toLong(),
                     idAry[1].toLong()
                 )
@@ -46,7 +48,7 @@ data class ResourceId(
             @TypeConverter
             fun toString(id: ResourceId) =
                 id.dataSize.toString()
-                    .plus(":")
+                    .plus(KEY_VALUE_SEPARATOR)
                     .plus(id.crc32)
         }
 

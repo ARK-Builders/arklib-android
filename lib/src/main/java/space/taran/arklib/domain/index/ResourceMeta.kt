@@ -18,9 +18,11 @@ data class ResourceMeta(
     val name: String,
     val extension: String,
     val modified: FileTime,
-    val size: Long,
     var kind: ResourceKind?,
 ) {
+
+    fun size() = id.dataSize
+
     companion object {
 
         fun fromPath(path: Path, metadataStorage: MetadataStorage): MetaResult {
@@ -36,7 +38,6 @@ data class ResourceMeta(
                 name = path.fileName.toString(),
                 extension = extension(path),
                 modified = Files.getLastModifiedTime(path),
-                size = size,
                 kind = null
             )
 
@@ -56,7 +57,6 @@ data class ResourceMeta(
                 name = room.resource.name,
                 extension = room.resource.extension,
                 modified = FileTime.fromMillis(room.resource.modified),
-                size = room.resource.size,
                 kind = GeneralKindFactory.fromRoom(room.resource.kind, room.extras)
             )
     }

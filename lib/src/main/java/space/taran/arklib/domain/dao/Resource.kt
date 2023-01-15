@@ -18,7 +18,6 @@ data class Resource(
     val name: String,
     val extension: String,
     val modified: Milliseconds,
-    val size: Long,
     val kind: Int?,
 ) {
     companion object {
@@ -30,7 +29,6 @@ data class Resource(
                 name = meta.name,
                 extension = meta.extension,
                 modified = meta.modified.toMillis(),
-                size = meta.size,
                 kind = meta.kind?.code?.ordinal
             )
     }

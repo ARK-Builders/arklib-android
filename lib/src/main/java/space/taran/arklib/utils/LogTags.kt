@@ -1,8 +1,5 @@
 package space.taran.arklib.utils
 
-// val Any.TAG: String
-//     get() = this::class.java.simpleName
-
 object LogTags {
 
     const val RESOURCES_INDEX: String = "resources-index"
