@@ -1,5 +1,8 @@
-package space.taran.arklib.domain.index
+package space.taran.arklib.domain.kind
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 sealed class ResourceKind(val code: KindCode) {
     class Image : ResourceKind(KindCode.IMAGE)
 
@@ -22,6 +25,11 @@ sealed class ResourceKind(val code: KindCode) {
     class Archive : ResourceKind(KindCode.ARCHIVE)
 }
 
+// These enums are only used to store different kind in one table in Room
 enum class KindCode {
     IMAGE, VIDEO, DOCUMENT, LINK, PLAINTEXT, ARCHIVE
+}
+
+enum class MetaExtraTag {
+    DURATION, WIDTH, HEIGHT, PAGES, TITLE, DESCRIPTION, URL
 }

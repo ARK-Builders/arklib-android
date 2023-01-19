@@ -10,11 +10,12 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import space.taran.arklib.PreviewQuality
-import space.taran.arklib.pdfPreviewGenerate;
+import space.taran.arklib.pdfPreviewGenerate
 import java.io.File
 import java.io.FileOutputStream
-import java.util.*
-import kotlin.io.path.*
+import kotlin.io.path.Path
+import kotlin.io.path.inputStream
+import kotlin.io.path.outputStream
 
 @RunWith(AndroidJUnit4::class)
 class PDFGenTest {
@@ -46,6 +47,5 @@ class PDFGenTest {
         pdfData.compress(Bitmap.CompressFormat.PNG, 100, out);
         out.flush()
         out.close()
-
     }
 }

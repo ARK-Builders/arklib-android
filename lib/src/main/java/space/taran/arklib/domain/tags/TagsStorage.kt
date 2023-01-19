@@ -1,28 +1,28 @@
 package space.taran.arklib.domain.tags
 
-import space.taran.arklib.domain.index.ResourceIdLegacy
+import space.taran.arklib.ResourceId
 
 interface TagsStorage {
 
-    fun contains(id: ResourceIdLegacy): Boolean
+    fun contains(id: ResourceId): Boolean
 
-    fun getTags(id: ResourceIdLegacy): Tags
+    fun getTags(id: ResourceId): Tags
 
-    fun getTags(ids: Iterable<ResourceIdLegacy>): Tags
+    fun getTags(ids: Iterable<ResourceId>): Tags
 
-    fun groupTagsByResources(ids: Iterable<ResourceIdLegacy>): Map<ResourceIdLegacy, Tags> =
+    fun groupTagsByResources(ids: Iterable<ResourceId>): Map<ResourceId, Tags> =
         ids.map { it to getTags(it) }
             .toMap()
 
-    fun setTags(id: ResourceIdLegacy, tags: Tags)
+    fun setTags(id: ResourceId, tags: Tags)
 
-    suspend fun setTagsAndPersist(id: ResourceIdLegacy, tags: Tags)
+    suspend fun setTagsAndPersist(id: ResourceId, tags: Tags)
 
     suspend fun persist()
 
-    fun listUntaggedResources(): Set<ResourceIdLegacy>
+    fun listUntaggedResources(): Set<ResourceId>
 
-    suspend fun cleanup(existing: Collection<ResourceIdLegacy>)
+    suspend fun cleanup(existing: Collection<ResourceId>)
 
-    suspend fun remove(id: ResourceIdLegacy)
+    suspend fun remove(id: ResourceId)
 }

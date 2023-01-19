@@ -1,7 +1,13 @@
 package space.taran.arklib
 
+import android.app.Application
 import android.graphics.Bitmap
+import android.os.Parcelable
+import androidx.room.TypeConverter
+import kotlinx.parcelize.Parcelize
 import java.nio.file.Path
+
+internal lateinit var app: Application
 
 data class LinkData(
     val title: String,
@@ -20,11 +26,37 @@ data class LinkData(
     }
 }
 
+@Parcelize
 data class ResourceId(
     val dataSize: Long,
     val crc32: Long
-) {
+) : Parcelable {
+
+    override fun toString() =
+        dataSize.toString()
+            .plus(KEY_VALUE_SEPARATOR)
+            .plus(crc32)
+
     companion object {
+
+        const val KEY_VALUE_SEPARATOR = "-"
+
+        fun fromString(str: String): ResourceId {
+            val parts = str.split(KEY_VALUE_SEPARATOR)
+                return ResourceId(
+                    parts[0].toLong(),
+                    parts[1].toLong()
+           )
+        }
+
+        class Converter {
+            @TypeConverter
+            fun fromString(str: String) = ResourceId.fromString(str)
+
+            @TypeConverter
+            fun toString(id: ResourceId) = id.toString()
+        }
+
         @JvmStatic
         fun create(dataSize: Long, crc32: Long): ResourceId =
             ResourceId(dataSize, crc32)
@@ -46,6 +78,14 @@ private external fun getLinkHashNative(url: String): String
 private external fun fetchLinkDataNative(url: String): LinkData?
 private external fun pdfPreviewGenerateNative(path: String, quality: String): Bitmap
 
+/*
+ *  Just to allow for preliminary testing with Navigator
+ *  A better way may be proposed to get application instance
+ *  Navigator should call this function in [Application.onCreate].
+ */
+fun Application.initArkLib() {
+    app = this
+}
 
 fun computeId(size: Long, file: Path) = computeIdNative(size, file.toString())
 

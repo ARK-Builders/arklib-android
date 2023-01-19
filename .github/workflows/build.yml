@@ -23,15 +23,12 @@ jobs:
         distribution: 'adopt'
 
     - name: Install latest stable Rust
-      uses: actions-rs/toolchain@v1
-      with:
-          profile: minimal
-          toolchain: stable
+      uses: dtolnay/rust-toolchain@stable
 
-    - uses: Swatinem/rust-cache@v1
+    - uses: Swatinem/rust-cache@v2
 
     - name: Validate Gradle wrapper
-      uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
+      uses: gradle/wrapper-validation-action@v1.0.5
 
     - name: Install Cargo targets
       run: rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
@@ -47,7 +44,7 @@ jobs:
         script: ./gradlew sample:connectedCheck
 
     - name: Publish package
-      uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
+      uses: gradle/gradle-build-action@v2
       with:
         arguments: publish
       env:
