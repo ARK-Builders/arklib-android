@@ -51,13 +51,7 @@ data class ResourceId(
 
         class Converter {
             @TypeConverter
-            fun fromString(str: String): ResourceId {
-                val idAry = str.split(KEY_VALUE_SEPARATOR)
-                return create(
-                    idAry[0].toLong(),
-                    idAry[1].toLong()
-                )
-            }
+            fun fromString(str: String) = ResourceId.fromString(str)
 
             @TypeConverter
             fun toString(id: ResourceId) = id.toString()
