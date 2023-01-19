@@ -31,6 +31,20 @@ data class ResourceId(
     val dataSize: Long,
     val crc32: Long
 ) : Parcelable {
+
+    override fun toString() =
+        dataSize.toString()
+            .plus(KEY_VALUE_SEPARATOR)
+            .plus(crc32)
+
+    fun fromString(str: String): ResourceId {
+        val parts = str.split(KEY_VALUE_SEPARATOR)
+            return ResourceId(
+                parts[0].toLong(),
+                parts[1].toLong()
+       )
+    }
+
     companion object {
 
         const val KEY_VALUE_SEPARATOR = "-"
@@ -46,10 +60,7 @@ data class ResourceId(
             }
 
             @TypeConverter
-            fun toString(id: ResourceId) =
-                id.dataSize.toString()
-                    .plus(KEY_VALUE_SEPARATOR)
-                    .plus(id.crc32)
+            fun toString(id: ResourceId) = id.toString()
         }
 
         @JvmStatic
