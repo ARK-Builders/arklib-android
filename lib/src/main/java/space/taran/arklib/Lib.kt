@@ -37,17 +37,17 @@ data class ResourceId(
             .plus(KEY_VALUE_SEPARATOR)
             .plus(crc32)
 
-    fun fromString(str: String): ResourceId {
-        val parts = str.split(KEY_VALUE_SEPARATOR)
-            return ResourceId(
-                parts[0].toLong(),
-                parts[1].toLong()
-       )
-    }
-
     companion object {
 
         const val KEY_VALUE_SEPARATOR = "-"
+
+        fun fromString(str: String): ResourceId {
+            val parts = str.split(KEY_VALUE_SEPARATOR)
+                return ResourceId(
+                    parts[0].toLong(),
+                    parts[1].toLong()
+           )
+        }
 
         class Converter {
             @TypeConverter
