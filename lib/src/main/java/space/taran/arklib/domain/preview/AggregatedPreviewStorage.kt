@@ -21,7 +21,7 @@ class AggregatedPreviewStorage(
         it.forget(id)
     }
 
-    override fun store(
+    override suspend fun store(
         path: Path,
         meta: ResourceMeta
     ) = shards

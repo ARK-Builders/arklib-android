@@ -1,44 +1,29 @@
 package space.taran.arklib.domain.preview.generator
 
 import android.graphics.Bitmap
-import android.net.Uri
-import android.os.ParcelFileDescriptor
-import com.shockwave.pdfium.PdfiumCore
-import space.taran.arklib.app
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import space.taran.arklib.PreviewQuality
+import space.taran.arklib.pdfPreviewGenerate
 import java.nio.file.Path
 
 object PdfPreviewGenerator : PreviewGenerator() {
     override val acceptedExtensions = setOf("pdf")
     override val acceptedMimeTypes = setOf("application/pdf")
+    private val mutex = Mutex()
 
-    override fun generate(path: Path, previewPath: Path, thumbnailPath: Path) {
-        val preview = generatePreview(path)
+    override suspend fun generate(path: Path, previewPath: Path, thumbnailPath: Path) {
+        // PDF preview generation must be sequential because Rust pdfium-render isn't thread-safe
+        // See https://github.com/ARK-Builders/ARK-Navigator/pull/271
+        val preview = mutex.withLock {
+            generatePreview(path)
+        }
         storePreview(previewPath, preview)
         val thumbnail = resizePreviewToThumbnail(preview)
         storeThumbnail(thumbnailPath, thumbnail)
     }
 
     private fun generatePreview(source: Path): Bitmap {
-        val page = 0
-
-        val finalContext = app
-
-        val pdfiumCore = PdfiumCore(finalContext)
-        val fd: ParcelFileDescriptor? =
-            finalContext
-                .contentResolver
-                .openFileDescriptor(Uri.fromFile(source.toFile()), "r")
-
-        val document = pdfiumCore.newDocument(fd)
-        pdfiumCore.openPage(document, page)
-
-        val width = pdfiumCore.getPageWidthPoint(document, page)
-        val height = pdfiumCore.getPageHeightPoint(document, page)
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-
-        pdfiumCore.renderPageBitmap(document, bitmap, page, 0, 0, width, height)
-        pdfiumCore.closeDocument(document)
-
-        return bitmap
+        return pdfPreviewGenerate(source.toString(), PreviewQuality.MEDIUM)
     }
 }

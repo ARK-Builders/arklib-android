@@ -15,7 +15,7 @@ object TxtPreviewGenerator : PreviewGenerator() {
     override val acceptedExtensions = setOf("txt")
     override val acceptedMimeTypes = setOf("text/plain")
 
-    override fun generate(path: Path, previewPath: Path, thumbnailPath: Path) {
+    override suspend fun generate(path: Path, previewPath: Path, thumbnailPath: Path) {
         val thumbnail = generateThumbnail(path)
         storeThumbnail(thumbnailPath, thumbnail)
     }
