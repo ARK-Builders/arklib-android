@@ -6,8 +6,6 @@ import java.nio.file.Path
 
 interface ResourcesIndex {
 
-    val kindDetectFailedFlow: Flow<Path>
-
     // we pass all known resource ids to a storage because
     // 1) any storage exists globally
     // 2) we maintain only 1 storage per root

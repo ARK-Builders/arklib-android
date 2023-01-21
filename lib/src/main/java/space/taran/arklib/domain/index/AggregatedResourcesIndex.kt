@@ -22,10 +22,6 @@ class AggregatedResourcesIndex(
     private val shards: Collection<PlainResourcesIndex>
 ) : ResourcesIndex {
 
-    override val kindDetectFailedFlow: Flow<Path> = shards.map {
-        it.kindDetectFailedFlow
-    }.merge()
-
     override suspend fun listResources(prefix: Path?): Set<ResourceMeta> =
         shards.flatMap { it.listResources(prefix) }
             .toSet()
