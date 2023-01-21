@@ -10,6 +10,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import space.taran.arklib.ResourceId
+import space.taran.arklib.domain.Message
 import space.taran.arklib.domain.dao.Resource
 import space.taran.arklib.domain.dao.ResourceDao
 import space.taran.arklib.domain.dao.ResourceExtra
@@ -44,11 +45,9 @@ class PlainResourcesIndex internal constructor(
     private val dao: ResourceDao,
     private val previewStorage: PreviewStorage,
     private val metadataStorage: MetadataStorage,
+    private val messageFlow: MutableSharedFlow<Message>,
     resources: Map<Path, ResourceMeta>
 ) : ResourcesIndex {
-    private val _kindDetectFailedFlow: MutableSharedFlow<Path> = MutableSharedFlow()
-
-    override val kindDetectFailedFlow: SharedFlow<Path> = _kindDetectFailedFlow
 
     private val mutex = Mutex()
 
@@ -172,7 +171,7 @@ class PlainResourcesIndex internal constructor(
                         pathById[meta.id] = path
                     }
                     result.onFailure { e ->
-                        _kindDetectFailedFlow.emit(path)
+                        messageFlow.emit(Message.KindDetectFailed(path))
                         Log.d(
                             RESOURCES_INDEX,
                             "Could not detect kind for " +
