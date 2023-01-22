@@ -18,7 +18,7 @@ object VideoPreviewGenerator : PreviewGenerator() {
     override val acceptedMimeTypes: Set<String>
         get() = setOf("video/mp4")
 
-    override fun generate(path: Path, previewPath: Path, thumbnailPath: Path) {
+    override suspend fun generate(path: Path, previewPath: Path, thumbnailPath: Path) {
         val preview = generatePreview(path)
         preview?.let {
             storePreview(previewPath, it)

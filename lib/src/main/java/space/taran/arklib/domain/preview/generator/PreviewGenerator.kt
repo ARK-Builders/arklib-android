@@ -19,7 +19,7 @@ abstract class PreviewGenerator {
     fun isValid(path: Path) = acceptedExtensions.contains(extension(path))
     fun isValid(mimeType: String) = acceptedMimeTypes.contains(mimeType)
 
-    abstract fun generate(path: Path, previewPath: Path, thumbnailPath: Path)
+    abstract suspend fun generate(path: Path, previewPath: Path, thumbnailPath: Path)
 
     protected fun storePreview(path: Path, bitmap: Bitmap) =
         storeImage(path, bitmap)

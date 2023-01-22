@@ -22,7 +22,7 @@ object GeneralPreviewGenerator {
         VideoPreviewGenerator
     )
 
-    fun generate(path: Path, previewPath: Path, thumbnailPath: Path) {
+    suspend fun generate(path: Path, previewPath: Path, thumbnailPath: Path) {
         val generator = findGenerator(path) ?: let {
             Log.d(PREVIEWS, "No generators found for $path")
             return

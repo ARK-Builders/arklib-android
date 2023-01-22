@@ -14,7 +14,7 @@ object ImagePreviewGenerator : PreviewGenerator() {
             "image/webp"
         )
 
-    override fun generate(path: Path, previewPath: Path, thumbnailPath: Path) {
+    override suspend fun generate(path: Path, previewPath: Path, thumbnailPath: Path) {
         val thumbnail = resizePreviewToThumbnail(path)
         storeThumbnail(thumbnailPath, thumbnail)
     }
