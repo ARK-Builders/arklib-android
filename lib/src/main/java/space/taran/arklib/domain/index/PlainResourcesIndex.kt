@@ -3,7 +3,10 @@ package space.taran.arklib.domain.index
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -26,6 +29,11 @@ class UpdatedResources(
     val added: Map<ResourceId, Path>
 )
 
+class ResourceDiff(
+    val deleted: Map<ResourceMeta, Path>,
+    val added: Map<ResourceMeta, Path>
+)
+
 @OptIn(ExperimentalPathApi::class)
 // The index must read from the DAO only during application startup,
 // since DB doesn't change from outside. But we must persist all changes
@@ -40,6 +48,9 @@ class PlainResourcesIndex internal constructor(
 ) : ResourcesIndex {
 
     private val mutex = Mutex()
+    private val mutResourceDiffFlow = MutableSharedFlow<ResourceDiff>()
+
+    val resourceDiffFlow = mutResourceDiffFlow.asSharedFlow()
 
     internal val metaByPath: MutableMap<Path, ResourceMeta> =
         resources.toMutableMap()
