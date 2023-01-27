@@ -1,7 +1,10 @@
 package space.taran.arklib.domain.index
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.shareIn
 import space.taran.arklib.ResourceId
 import java.nio.file.Path
 

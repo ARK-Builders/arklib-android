@@ -1,10 +1,17 @@
 package space.taran.arklib.domain.preview
 
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import space.taran.arklib.ResourceId
 import space.taran.arklib.arkFolder
 import space.taran.arklib.arkPreviews
 import space.taran.arklib.arkThumbnails
+import space.taran.arklib.domain.index.PlainResourcesIndex
 import space.taran.arklib.domain.index.ResourceMeta
 import space.taran.arklib.domain.kind.ImageKindFactory
 import space.taran.arklib.domain.preview.generator.PreviewGenerator
@@ -17,7 +24,11 @@ import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 import kotlin.io.path.notExists
 
-class PlainPreviewStorage(val root: Path) : PreviewStorage {
+class PlainPreviewStorage(
+    val root: Path,
+    private val index: PlainResourcesIndex,
+    private val appScope: CoroutineScope
+) : PreviewStorage {
     private val previewsDir = root.arkFolder().arkPreviews()
     private val thumbnailsDir = root.arkFolder().arkThumbnails()
 
@@ -30,6 +41,15 @@ class PlainPreviewStorage(val root: Path) : PreviewStorage {
     init {
         previewsDir.createDirectories()
         thumbnailsDir.createDirectories()
+        index.resourceDiffFlow.onEach { diff ->
+            appScope.launch(Dispatchers.IO) {
+                diff.added.forEach { (meta, path) ->
+                    launch { store(path, meta) }
+                }
+                diff.deleted.forEach { (meta, _) -> forget(meta.id) }
+            }
+        }.launchIn(appScope + Dispatchers.IO)
+
     }
 
     override fun locate(path: Path, resource: ResourceMeta): PreviewAndThumbnail? {

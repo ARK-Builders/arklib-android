@@ -17,9 +17,7 @@ import javax.inject.Named
 
 class ResourcesIndexRepo(
     private val foldersRepo: FoldersRepo,
-    private val previewStorageRepo: PreviewStorageRepo,
     private val metadataStorageRepo: MetadataStorageRepo,
-    @Named(Constants.DI.MESSAGE_FLOW_NAME)
     private val messageFlow: MutableSharedFlow<Message>,
 ) {
     private val provideMutex = Mutex()
@@ -76,6 +74,15 @@ class ResourcesIndexRepo(
     ): ResourcesIndex = provide(
         RootAndFav(root.toString(), favString = null)
     )
+
+    suspend fun providePlainIndex(root: Path): PlainResourcesIndex =
+        provideMutex.withLock {
+            indexByRoot[root] ?: let {
+                val index = loadFromDatabase(root)
+                indexByRoot[root] = index
+                index
+            }
+        }
 
     suspend fun isIndexed(rootAndFav: RootAndFav): Boolean {
         val roots = foldersRepo.resolveRoots(rootAndFav)
