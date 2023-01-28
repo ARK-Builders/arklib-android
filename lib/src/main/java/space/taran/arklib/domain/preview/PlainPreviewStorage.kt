@@ -46,7 +46,7 @@ class PlainPreviewStorage(
                 diff.added.forEach { (meta, path) ->
                     launch { store(path, meta) }
                 }
-                diff.deleted.forEach { (meta, _) -> forget(meta.id) }
+                diff.deleted.forEach { forget(it) }
             }
         }.launchIn(appScope + Dispatchers.IO)
 
