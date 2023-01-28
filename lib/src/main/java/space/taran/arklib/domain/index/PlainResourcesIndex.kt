@@ -48,9 +48,9 @@ class PlainResourcesIndex internal constructor(
 ) : ResourcesIndex {
 
     private val mutex = Mutex()
-    private val mutResourceDiffFlow = MutableSharedFlow<ResourceDiff>()
+    private val mutUpdatedResourcesFlow = MutableSharedFlow<UpdatedResources>()
 
-    val resourceDiffFlow = mutResourceDiffFlow.asSharedFlow()
+    val resourceDiffFlow = mutUpdatedResourcesFlow.asSharedFlow()
 
     internal val metaByPath: MutableMap<Path, ResourceMeta> =
         resources.toMutableMap()
@@ -194,3 +194,9 @@ class PlainResourcesIndex internal constructor(
             }
         }
 }
+
+private data class UpdatedPaths(
+    val deleted: List<Path>,
+    val updated: List<Path>,
+    val added: List<Path>
+)
