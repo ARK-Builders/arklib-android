@@ -30,10 +30,9 @@ import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.absolutePathString
 import kotlin.system.measureTimeMillis
 
-internal data class Difference(
-    val deleted: List<Path>,
-    val updated: List<Path>,
-    val added: List<Path>
+class UpdatedResources(
+    val deleted: Set<ResourceId>,
+    val added: Map<ResourceId, Path>
 )
 
 @OptIn(ExperimentalPathApi::class)
