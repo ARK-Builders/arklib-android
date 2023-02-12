@@ -2,13 +2,14 @@ package space.taran.arklib.domain.meta
 
 import space.taran.arklib.ResourceId
 import space.taran.arklib.domain.index.ResourceMeta
+import space.taran.arklib.domain.kind.ResourceKind
 import java.nio.file.Path
 
 interface MetadataStorage {
 
-    fun locate(path: Path, resource: ResourceMeta): ResourceMeta
+    fun locateOrGenerateKind(path: Path, meta: ResourceMeta): Result<ResourceKind>
+
+    fun generateKind(path: Path, meta: ResourceMeta): Result<ResourceKind>
 
     fun forget(id: ResourceId)
-
-    fun generate(path: Path, meta: ResourceMeta)
 }

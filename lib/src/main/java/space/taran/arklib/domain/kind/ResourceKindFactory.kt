@@ -1,9 +1,6 @@
 package space.taran.arklib.domain.kind
 
-import space.taran.arklib.ResourceId
-import space.taran.arklib.domain.dao.ResourceExtra
 import space.taran.arklib.domain.index.ResourceMeta
-import space.taran.arklib.domain.meta.MetadataStorage
 import space.taran.arklib.utils.extension
 import space.taran.arklib.utils.getMimeTypeUsingTika
 import java.nio.file.Path
@@ -16,9 +13,7 @@ interface ResourceKindFactory<T : ResourceKind> {
     fun isValid(mimeType: String) = acceptedMimeTypes.contains(mimeType)
     fun isValid(kindCode: Int) = acceptedKindCode.ordinal == kindCode
 
-    fun fromPath(path: Path, meta: ResourceMeta, metadataStorage: MetadataStorage): T
-    fun fromRoom(extras: Map<MetaExtraTag, String>): T
-    fun toRoom(id: ResourceId, kind: T): Map<MetaExtraTag, String?>
+    fun fromPath(path: Path, meta: ResourceMeta): T
 }
 
 object GeneralKindFactory {
@@ -27,49 +22,15 @@ object GeneralKindFactory {
             ImageKindFactory,
             VideoKindFactory,
             DocumentKindFactory,
-            LinkKindFactory,
             PlainTextKindFactory,
             ArchiveKindFactory
         )
 
     fun fromPath(
         path: Path,
-        meta: ResourceMeta,
-        metadataStorage: MetadataStorage
+        meta: ResourceMeta
     ): ResourceKind =
-        findFactory(path)?.fromPath(path, meta, metadataStorage)
-            ?: error("Factory not found")
-
-    fun fromRoom(
-        kindCode: Int?,
-        extras: List<ResourceExtra>
-    ): ResourceKind? {
-        kindCode ?: return null
-
-        val data = extras.associate {
-            MetaExtraTag.values()[it.ordinal] to it.value
-        }
-
-        return factories.find { factory ->
-            factory.isValid(kindCode)
-        }?.fromRoom(data) ?: error("Factory not found")
-    }
-
-    fun toRoom(id: ResourceId, kind: ResourceKind?): List<ResourceExtra> {
-        kind ?: return emptyList()
-
-        val factory = factories.find { factory ->
-            factory.isValid(kind.code.ordinal)
-        } ?: error("Factory not found")
-
-        return (factory as ResourceKindFactory<ResourceKind>)
-            .toRoom(id, kind)
-            .filter { entry ->
-                entry.value != null
-            }.map { entry ->
-                ResourceExtra(id, entry.key.ordinal, entry.value!!)
-            }
-    }
+        findFactory(path)?.fromPath(path, meta) ?: error("Factory not found")
 
     private fun findFactory(path: Path): ResourceKindFactory<ResourceKind>? {
         var factory = factories.find { it.isValid(path) }
