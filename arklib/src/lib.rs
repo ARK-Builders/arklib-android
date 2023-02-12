@@ -3,12 +3,18 @@
 pub mod android {
     extern crate jni;
 
+    use arklib::index::ResourceIndex;
     use jni::objects::{JClass, JObject, JString, JValue};
-    use jni::sys::{jboolean, jint, jlong, jobject, jstring};
+    use jni::sys::{jboolean, jint, jlong, jobject, jstring, JNI_TRUE, JNI_FALSE};
     use jni::JNIEnv;
+    use std::time::{SystemTime, UNIX_EPOCH};
     use log::{debug, trace, Level};
+    use std::collections::HashMap;
+    use std::path::PathBuf;
+    use std::sync::Mutex;
     use std::{fs::File, path::Path};
     extern crate android_logger;
+    use once_cell::sync::Lazy;
     use android_logger::Config;
     use arklib::id::ResourceId;
     use arklib::link::Link;
@@ -273,7 +279,8 @@ pub mod android {
             root,
             path.join(hashedLinkFileName).as_ref(),
             download_preview,
-        ).unwrap();
+        )
+        .unwrap();
     }
 
     #[no_mangle]
@@ -390,5 +397,196 @@ pub mod android {
         .unwrap();
 
         bitmap.into_inner()
+    }
+
+    static ROOT2INDEX: Lazy<Mutex<HashMap<Box<PathBuf>, ResourceIndex>>> = Lazy::new(|| {
+        let m = HashMap::new();
+        Mutex::new(m)
+    });
+
+    #[no_mangle]
+    pub extern "C" fn Java_space_taran_arklib_binding_BindingIndex_loadNative(
+        env: JNIEnv,
+        _: JClass,
+        jni_root: JString,
+    ) -> jboolean {
+        let root_string: String = env
+            .get_string(jni_root)
+            .unwrap()
+            .into();
+
+        let root: PathBuf = PathBuf::from(root_string);
+
+        let loaded = match ResourceIndex::load(&root) {
+            Ok(index) => {
+                ROOT2INDEX.lock().unwrap().insert(Box::new(root), index);
+                JNI_TRUE
+            },
+            Err(_) => JNI_FALSE //ResourceIndex::build(&root).unwrap()
+        };
+
+        loaded
+    }
+
+    #[no_mangle]
+    pub extern "C" fn Java_space_taran_arklib_binding_BindingIndex_buildNative(
+        env: JNIEnv,
+        _: JClass,
+        jni_root: JString,
+    ) {
+        let root_string: String = env
+            .get_string(jni_root)
+            .unwrap()
+            .into();
+
+        let root: PathBuf = PathBuf::from(root_string);
+
+        let index = ResourceIndex::build(&root).unwrap();
+        ROOT2INDEX.lock().unwrap().insert(Box::new(root), index);
+    }
+
+    #[no_mangle]
+    pub extern "C" fn Java_space_taran_arklib_binding_BindingIndex_updateNative(
+        env: JNIEnv,
+        _: JClass,
+        jni_root: JString,
+    ) -> jobject {
+        let root_string: String = env
+            .get_string(jni_root)
+            .unwrap()
+            .into();
+
+        let root: PathBuf = PathBuf::from(root_string);
+
+        let mut binding = ROOT2INDEX.lock().unwrap();
+        let index = binding.get_mut(&root).unwrap();
+
+        let index_update = index.update().unwrap();
+
+        let jni_deleted_hashset = env.new_object("java/util/HashSet", "()V", &[]).unwrap();
+        let jni_added_map = env.new_object("java/util/HashMap", "()V", &[]).unwrap();
+
+        for id in &index_update.deleted {
+            let id = env.new_string(id.to_string()).unwrap().into();
+
+            env.call_method(
+                jni_deleted_hashset,
+                "add",
+                "(Ljava/lang/Object;)Ljava/lang/Object;",
+                &[id]
+            );
+        }
+
+        for (path, id) in &index_update.added {
+            let id = env.new_string(id.to_string()).unwrap().into();
+            let path = env.new_string(path.to_str().unwrap()).unwrap().into();
+            env.call_method(
+                jni_added_map,
+                "put",
+                "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+                &[id, path]
+            );
+        }
+
+        let jni_params_list = env.new_object("java/util/ArrayList", "()V", &[]).unwrap();
+        env.call_method(
+            jni_params_list,
+            "add",
+            "(Ljava/lang/Object;)Z",
+            &[jni_deleted_hashset.into()]
+        );
+        env.call_method(
+            jni_params_list,
+            "add",
+            "(Ljava/lang/Object;)Z",
+            &[jni_added_map.into()]
+        );
+        
+        jni_params_list.into_inner()
+    }
+
+    #[no_mangle]
+    pub extern "C" fn Java_space_taran_arklib_binding_BindingIndex_storeNative(
+        env: JNIEnv,
+        _: JClass,
+        jni_root: JString,
+    ) {
+        let root_string: String = env
+            .get_string(jni_root)
+            .unwrap()
+            .into();
+
+        let root: PathBuf = PathBuf::from(root_string);
+
+        let mut binding = ROOT2INDEX.lock().unwrap();
+        let index = binding.get_mut(&root).unwrap();
+
+        index.store();
+    }
+
+    #[no_mangle]
+    pub extern "C" fn Java_space_taran_arklib_binding_BindingIndex_id2PathNative(
+        env: JNIEnv,
+        _: JClass,
+        jni_root: JString,
+    ) -> jobject {
+        let root_string: String = env
+            .get_string(jni_root)
+            .unwrap()
+            .into();
+
+        let root: PathBuf = PathBuf::from(root_string);
+
+        let binding = ROOT2INDEX.lock().unwrap();
+        let index = binding.get(&root).unwrap();
+
+        let jni_map = env.new_object("java/util/HashMap", "()V", &[]).unwrap();
+
+        for (id, path) in &index.id2path {
+            let id = env.new_string(id.to_string()).unwrap().into();
+            let path = env.new_string(path.to_str().unwrap()).unwrap().into();
+            env.call_method(
+                jni_map,
+                "put",
+                "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+                &[id, path]
+            );
+        }
+
+        jni_map.into_inner()
+    }
+
+    #[no_mangle]
+    pub extern "C" fn Java_space_taran_arklib_binding_BindingIndex_path2idNative(
+        env: JNIEnv,
+        _: JClass,
+        jni_root: JString,
+    ) -> jobject {
+        let root_string: String = env
+            .get_string(jni_root)
+            .unwrap()
+            .into();
+
+        let root: PathBuf = PathBuf::from(root_string);
+
+        let binding = ROOT2INDEX.lock().unwrap();
+        let index = binding.get(&root).unwrap();
+
+        let jni_map = env.new_object("java/util/HashMap", "()V", &[]).unwrap();
+
+        for (path, index_entry) in &index.path2id {
+            let path = env.new_string(path.to_str().unwrap()).unwrap().into();
+            let id = index_entry.id.to_string();
+            let modified_millis = index_entry.modified.duration_since(UNIX_EPOCH).unwrap().as_millis().to_string();
+            let id_to_modified = env.new_string(id + ":" + &modified_millis).unwrap().into();
+            env.call_method(
+                jni_map,
+                "put",
+                "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+                &[path, id_to_modified]
+            );
+        }
+
+        jni_map.into_inner()
     }
 }
