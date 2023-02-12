@@ -1,13 +1,14 @@
 package space.taran.arklib.domain.meta
 
 import android.util.Log
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import space.taran.arklib.ResourceId
 import space.taran.arklib.arkFolder
 import space.taran.arklib.arkMetadata
 import space.taran.arklib.domain.index.ResourceMeta
+import space.taran.arklib.domain.kind.GeneralKindFactory
 import space.taran.arklib.domain.kind.ResourceKind
+import space.taran.arklib.domain.kind.ResourceKindFactory
 import space.taran.arklib.utils.LogTags.METADATA
 import java.nio.file.Files
 import java.nio.file.Path
@@ -15,6 +16,8 @@ import kotlin.io.path.isDirectory
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.createDirectories
 import kotlin.io.path.bufferedReader
+import kotlin.io.path.exists
+import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
 class PlainMetadataStorage(val root: Path) : MetadataStorage {
@@ -27,35 +30,39 @@ class PlainMetadataStorage(val root: Path) : MetadataStorage {
         metaDir.createDirectories()
     }
 
-    override fun locate(path: Path, resource: ResourceMeta): ResourceMeta {
-        val metadata = metaPath(resource.id)
-        if (!Files.exists(metadata)) {
-            Log.w(METADATA, "metadata was not found for resource $resource")
-            // means that we couldn't generate anything for this kind of resource
-            return resource
+    override fun locateOrGenerateKind(
+        path: Path,
+        meta: ResourceMeta
+    ): Result<ResourceKind> {
+        val metadataPath = metaPath(meta.id)
+        if (metadataPath.exists()) {
+            val kind = Json.decodeFromString(
+                ResourceKind.serializer(),
+                metadataPath.readText()
+            )
+            return Result.success(kind)
         }
-        val result = resource.copy()
-        result.kind = Json.decodeFromString(
-            ResourceKind.serializer(),
-            metadata.bufferedReader().use { it.readText() }
-        )
-        return result
+
+        return generateKind(path, meta)
+    }
+
+    override fun generateKind(path: Path, meta: ResourceMeta): Result<ResourceKind> {
+        val metadataPath = metaPath(meta.id)
+        return try {
+            val kind = GeneralKindFactory.fromPath(path, meta)
+            metadataPath.writeText(
+                Json.encodeToString(
+                    ResourceKind.serializer(),
+                    kind
+                )
+            )
+            Result.success(kind)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     override fun forget(id: ResourceId) {
         metaPath(id).deleteIfExists()
-    }
-
-    override fun generate(path: Path, meta: ResourceMeta) {
-        require(!path.isDirectory()) { "Metadata for folders are constant" }
-        val metaPath = metaPath(meta.id)
-
-        if (!Files.exists(metaPath)) {
-            Log.d(
-                METADATA,
-                "Generating metadata for ${meta.id} ($path)"
-            )
-            metaPath.writeText(Json.encodeToString(meta.kind))
-        }
     }
 }

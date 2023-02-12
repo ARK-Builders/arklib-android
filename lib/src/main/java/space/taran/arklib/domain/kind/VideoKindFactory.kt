@@ -19,23 +19,21 @@ object VideoKindFactory : ResourceKindFactory<ResourceKind.Video> {
         setOf("video/mp4")
     override val acceptedKindCode = KindCode.VIDEO
 
-    override fun fromPath(path: Path,
-                          meta: ResourceMeta,
-                          metadataStorage: MetadataStorage
+    override fun fromPath(
+        path: Path,
+        meta: ResourceMeta
     ): ResourceKind.Video {
         val retriever = FFmpegMediaMetadataRetriever()
 
         try {
             retriever.setDataSource(app, Uri.fromFile(path.toFile()))
-        }
-        catch (e: NullPointerException) {
+        } catch (e: NullPointerException) {
             Log.e(
                 PREVIEWS,
                 "Failed to setDataSource for ${path.name}"
             )
             throw NullPointerException("no application instance found")
-        }
-        catch (e: IllegalArgumentException) {
+        } catch (e: IllegalArgumentException) {
             Log.e(PREVIEWS, "Failed to setDataSource for ${path.name}")
             throw IOException("failed to read video file")
         }
@@ -54,21 +52,4 @@ object VideoKindFactory : ResourceKindFactory<ResourceKind.Video> {
 
         return ResourceKind.Video(height, width, duration)
     }
-
-    override fun fromRoom(extras: Map<MetaExtraTag, String>): ResourceKind.Video =
-        ResourceKind.Video(
-            extras[MetaExtraTag.HEIGHT]?.toLong(),
-            extras[MetaExtraTag.WIDTH]?.toLong(),
-            extras[MetaExtraTag.DURATION]?.toLong()
-        )
-
-    override fun toRoom(
-        id: ResourceId,
-        kind: ResourceKind.Video
-    ): Map<MetaExtraTag, String?> =
-        mapOf(
-            MetaExtraTag.HEIGHT to kind.height?.toString(),
-            MetaExtraTag.WIDTH to kind.width?.toString(),
-            MetaExtraTag.DURATION to kind.duration?.toString()
-        )
 }

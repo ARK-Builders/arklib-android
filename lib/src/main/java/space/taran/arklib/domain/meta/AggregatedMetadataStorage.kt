@@ -2,6 +2,7 @@ package space.taran.arklib.domain.meta
 
 import space.taran.arklib.ResourceId
 import space.taran.arklib.domain.index.ResourceMeta
+import space.taran.arklib.domain.kind.ResourceKind
 import space.taran.arklib.domain.meta.MetadataStorage
 import java.nio.file.Path
 
@@ -9,26 +10,21 @@ class AggregatedMetadataStorage(
     private val shards: Collection<PlainMetadataStorage>
 ) : MetadataStorage {
 
-    override fun locate(path: Path, resource: ResourceMeta): ResourceMeta {
-        shards.forEach { shard ->
-            shard.locate(path, resource).let {
-                return it
-            }
+    override fun locateOrGenerateKind(path: Path, meta: ResourceMeta) = shards
+        .find { shard -> path.startsWith(shard.root) }
+        .let {
+            require(it != null) { "At least one of shards must yield success" }
+            it.locateOrGenerateKind(path, meta)
         }
-        return resource
-    }
+
+    override fun generateKind(path: Path, meta: ResourceMeta)= shards
+        .find { shard -> path.startsWith(shard.root) }
+        .let {
+            require(it != null) { "At least one of shards must yield success" }
+            it.generateKind(path, meta)
+        }
 
     override fun forget(id: ResourceId) = shards.forEach {
         it.forget(id)
     }
-
-    override fun generate(
-        path: Path,
-        meta: ResourceMeta
-    ) = shards
-        .find { shard -> path.startsWith(shard.root) }
-        .let {
-            require(it != null) { "At least one of shards must yield success" }
-            it.generate(path, meta)
-        }
 }

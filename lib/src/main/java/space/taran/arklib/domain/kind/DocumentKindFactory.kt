@@ -21,7 +21,6 @@ object DocumentKindFactory : ResourceKindFactory<ResourceKind.Document> {
     override fun fromPath(
         path: Path,
         meta: ResourceMeta,
-        metadataStorage: MetadataStorage
     ): ResourceKind.Document {
         if (extension(path) != "pdf") return ResourceKind.Document()
 
@@ -45,14 +44,4 @@ object DocumentKindFactory : ResourceKindFactory<ResourceKind.Document> {
 
         return ResourceKind.Document(pages)
     }
-
-    override fun fromRoom(extras: Map<MetaExtraTag, String>): ResourceKind.Document =
-        ResourceKind.Document(extras[MetaExtraTag.PAGES]?.toInt())
-
-    override fun toRoom(
-        id: ResourceId,
-        kind: ResourceKind.Document
-    ): Map<MetaExtraTag, String?> = mapOf(
-        MetaExtraTag.PAGES to kind.pages?.toString()
-    )
 }

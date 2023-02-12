@@ -5,6 +5,7 @@ import space.taran.arklib.ResourceId
 import space.taran.arklib.domain.index.ResourceMeta
 import space.taran.arklib.domain.meta.MetadataStorage
 import java.nio.file.Path
+import kotlin.io.path.readText
 
 object LinkKindFactory : ResourceKindFactory<ResourceKind.Link> {
     override val acceptedExtensions = setOf("link")
@@ -14,33 +15,8 @@ object LinkKindFactory : ResourceKindFactory<ResourceKind.Link> {
 
     override fun fromPath(
         path: Path,
-        meta: ResourceMeta,
-        metadataStorage: MetadataStorage
+        meta: ResourceMeta
     ): ResourceKind.Link {
-        // TODO: we don't need these lines anymore, but what about the native bindings?
-        // val linkJson = loadLinkFile(path.pathString)
-        // val link = Json.decodeFromString(JsonLink.serializer(), linkJson)
-
-        return metadataStorage.locate(path, meta)
-            .kind as ResourceKind.Link
+        return ResourceKind.Link()
     }
-
-    override fun fromRoom(extras: Map<MetaExtraTag, String>): ResourceKind.Link =
-        ResourceKind.Link(
-            extras[MetaExtraTag.TITLE],
-            extras[MetaExtraTag.DESCRIPTION],
-            extras[MetaExtraTag.URL]
-        )
-
-    override fun toRoom(
-        id: ResourceId,
-        kind: ResourceKind.Link
-    ): Map<MetaExtraTag, String?> = mapOf(
-        MetaExtraTag.URL to kind.url,
-        MetaExtraTag.TITLE to kind.title,
-        MetaExtraTag.DURATION to kind.description
-    )
 }
-
-@Serializable
-private data class JsonLink(val url: String, val title: String, val desc: String)

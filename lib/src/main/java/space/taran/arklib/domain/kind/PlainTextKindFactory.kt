@@ -15,15 +15,5 @@ object PlainTextKindFactory : ResourceKindFactory<ResourceKind.PlainText> {
     override fun fromPath(
         path: Path,
         meta: ResourceMeta,
-        metadataStorage: MetadataStorage
     ) = ResourceKind.PlainText()
-
-    override fun fromRoom(extras: Map<MetaExtraTag, String>) =
-        ResourceKind.PlainText()
-
-    override fun toRoom(
-        id: ResourceId,
-        kind: ResourceKind.PlainText
-    ): Map<MetaExtraTag, String?> =
-        emptyMap()
 }
