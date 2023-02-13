@@ -422,7 +422,7 @@ pub mod android {
                 ROOT2INDEX.lock().unwrap().insert(Box::new(root), index);
                 JNI_TRUE
             },
-            Err(_) => JNI_FALSE //ResourceIndex::build(&root).unwrap()
+            Err(_) => JNI_FALSE
         };
 
         loaded

@@ -3,7 +3,6 @@ package space.taran.arklib
 import android.app.Application
 import android.graphics.Bitmap
 import android.os.Parcelable
-import androidx.room.TypeConverter
 import kotlinx.parcelize.Parcelize
 import java.nio.file.Path
 
@@ -47,14 +46,6 @@ data class ResourceId(
                     parts[0].toLong(),
                     parts[1].toLong()
            )
-        }
-
-        class Converter {
-            @TypeConverter
-            fun fromString(str: String) = ResourceId.fromString(str)
-
-            @TypeConverter
-            fun toString(id: ResourceId) = id.toString()
         }
 
         @JvmStatic
