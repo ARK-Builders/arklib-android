@@ -6,20 +6,20 @@ data class PartialResult<S, F>(val succeeded: S, val failed: F)
 
 data class MetaResult(
     val meta: ResourceMeta? = null,
-    val exception: Exception? = null
+    val exception: Throwable? = null
 ) {
     inline fun onSuccess(action: (meta: ResourceMeta) -> Unit): MetaResult {
         meta?.let(action)
         return this
     }
 
-    inline fun onFailure(action: (e: Exception) -> Unit): MetaResult {
+    inline fun onFailure(action: (e: Throwable) -> Unit): MetaResult {
         exception?.let(action)
         return this
     }
 
     companion object {
         fun success(meta: ResourceMeta) = MetaResult(meta)
-        fun failure(exception: Exception) = MetaResult(exception = exception)
+        fun failure(exception: Throwable) = MetaResult(exception = exception)
     }
 }

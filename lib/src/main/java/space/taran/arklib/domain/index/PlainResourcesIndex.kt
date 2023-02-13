@@ -4,28 +4,19 @@ import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import space.taran.arklib.ResourceId
+import space.taran.arklib.binding.BindingIndex
 import space.taran.arklib.domain.Message
-import space.taran.arklib.domain.dao.Resource
-import space.taran.arklib.domain.dao.ResourceDao
-import space.taran.arklib.domain.dao.ResourceExtra
-import space.taran.arklib.domain.dao.ResourceWithExtra
-import space.taran.arklib.domain.kind.GeneralKindFactory
 import space.taran.arklib.domain.meta.MetadataStorage
 import space.taran.arklib.domain.preview.PreviewStorage
-import space.taran.arklib.utils.LogTags.METADATA
 import space.taran.arklib.utils.LogTags.PREVIEWS
 import space.taran.arklib.utils.LogTags.RESOURCES_INDEX
-import space.taran.arklib.utils.listChildren
 import space.taran.arklib.utils.withContextAndLock
-import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.absolutePathString
 import kotlin.system.measureTimeMillis
@@ -41,10 +32,10 @@ class UpdatedResources(
 // during application lifecycle into the DAO for the case of any unexpected exit.
 class PlainResourcesIndex internal constructor(
     private val root: Path,
-    private val dao: ResourceDao,
     private val previewStorage: PreviewStorage,
     private val metadataStorage: MetadataStorage,
     private val messageFlow: MutableSharedFlow<Message>,
+    private var nativeIndexBuilded: Boolean,
     resources: Map<Path, ResourceMeta>
 ) : ResourcesIndex {
 
@@ -90,8 +81,48 @@ class PlainResourcesIndex internal constructor(
 
     override suspend fun reindex(): Unit =
         withContextAndLock(Dispatchers.IO, mutex) {
-            reindexRoot(calculateDifference(), metadataStorage)
+            val update = if (nativeIndexBuilded)
+                BindingIndex.update(root)
+            else {
+                BindingIndex.build(root)
+                val added = BindingIndex.id2Path(root)
+                nativeIndexBuilded = true
+                UpdatedResources(deleted = emptySet(), added)
+            }
+            handleUpdate(update)
+
+            BindingIndex.store(root)
         }
+
+    private suspend fun handleUpdate(update: UpdatedResources) {
+        update.deleted.forEach { id ->
+            val path = pathById.remove(id)
+            metaByPath.remove(path)
+            previewStorage.forget(id)
+        }
+
+        update.added.forEach { (id, path) ->
+            val result = ResourceMeta.fromPath(id, path, metadataStorage)
+            result.onSuccess { meta ->
+                metaByPath[path] = meta
+                pathById[id] = path
+            }
+            result.onFailure {
+                messageFlow.emit(Message.KindDetectFailed(path))
+                Log.d(
+                    RESOURCES_INDEX,
+                    "Could not detect kind for " +
+                            path.absolutePathString()
+                )
+            }
+
+        }
+
+        val time2 = measureTimeMillis {
+            providePreviews()
+        }
+        Log.d(PREVIEWS, "previews provided in ${time2}ms")
+    }
 
     // should be only used in AggregatedResourcesIndex
     fun tryGetPath(id: ResourceId): Path? = pathById[id]
@@ -125,134 +156,6 @@ class PlainResourcesIndex internal constructor(
         return path
     }
 
-    internal suspend fun reindexRoot(
-        diff: Difference,
-        metadataStorage: MetadataStorage
-    ) =
-        withContext(Dispatchers.IO) {
-            Log.d(
-                RESOURCES_INDEX,
-                "deleting ${diff.deleted.size} resources from RAM and previews"
-            )
-            diff.deleted.forEach {
-                val id = metaByPath[it]!!.id
-                pathById.remove(id)
-                metaByPath.remove(it)
-                previewStorage.forget(id)
-            }
-
-            val pathsToDelete = diff.deleted + diff.updated
-            Log.d(
-                RESOURCES_INDEX,
-                "deleting ${pathsToDelete.size} resources from Room DB"
-            )
-
-            val chunks = pathsToDelete.chunked(512)
-            Log.d(RESOURCES_INDEX, "splitting into ${chunks.size} chunks")
-            chunks.forEach { paths ->
-                dao.deletePaths(paths.map { it.toString() })
-            }
-
-            val newResources = mutableMapOf<Path, ResourceMeta>()
-            val toInsert = diff.updated + diff.added
-
-            val time0 = measureTimeMillis {
-                populateMetadataStorage()
-            }
-            Log.d(PREVIEWS, "resources metadata storage populated in ${time0}ms")
-
-            val time1 = measureTimeMillis {
-                toInsert.forEach { path ->
-                    val result = ResourceMeta.fromPath(path, metadataStorage)
-                    result.onSuccess { meta ->
-                        newResources[path] = meta
-                        metaByPath[path] = meta
-                        pathById[meta.id] = path
-                    }
-                    result.onFailure { e ->
-                        messageFlow.emit(Message.KindDetectFailed(path))
-                        Log.d(
-                            RESOURCES_INDEX,
-                            "Could not detect kind for " +
-                                path.absolutePathString()
-                        )
-                    }
-                }
-            }
-            Log.d(
-                RESOURCES_INDEX,
-                "new resources metadata retrieved in ${time1}ms"
-            )
-
-            Log.d(
-                RESOURCES_INDEX,
-                "persisting ${newResources.size} updated resources"
-            )
-            persistResources(newResources)
-
-            val time2 = measureTimeMillis {
-                providePreviews()
-            }
-            Log.d(PREVIEWS, "previews provided in ${time2}ms")
-        }
-
-    internal suspend fun calculateDifference(): Difference =
-        withContext(Dispatchers.IO) {
-            val (present, absent) = metaByPath.keys.partition {
-                Files.exists(it)
-            }
-
-            val updated = present
-                .map { it to metaByPath[it]!! }
-                .filter { (path, meta) ->
-                    val timestamp = Files.getLastModifiedTime(path).toMillis()
-
-                    // FileTime might have nanoseconds inside,
-                    // we should provide some threshold
-                    timestamp > meta.modified.toMillis() + 1
-                }
-                .map { (path, _) -> path }
-
-            val added = listAllFiles(root).filter { file ->
-                !metaByPath.containsKey(file)
-            }
-
-            Log.d(
-                RESOURCES_INDEX,
-                "${absent.size} absent, " +
-                    "${updated.size} updated, ${added.size} added"
-            )
-
-            Difference(absent, updated, added)
-        }
-
-    internal suspend fun populateMetadataStorage() =
-        withContext(Dispatchers.IO) {
-            Log.d(
-                METADATA,
-                "generating metadata for ${metaByPath.size} resources"
-            )
-
-            supervisorScope {
-                metaByPath.entries.map { (path: Path, meta: ResourceMeta) ->
-                    async(Dispatchers.IO) {
-                        metadataStorage.generate(path, meta)
-                    } to path
-                }.forEach { (generateTask, path) ->
-                    try {
-                        generateTask.await()
-                    } catch (e: Exception) {
-                        Log.e(
-                            METADATA,
-                            "Failed to generate metadata for id ${
-                            metaByPath[path]?.id
-                            } ($path)"
-                        )
-                    }
-                }
-            }
-        }
-
     internal suspend fun providePreviews() =
         withContext(Dispatchers.IO) {
             Log.d(
@@ -272,7 +175,7 @@ class PlainResourcesIndex internal constructor(
                         Log.e(
                             PREVIEWS,
                             "Failed to generate preview/thumbnail for id ${
-                            metaByPath[path]?.id
+                                metaByPath[path]?.id
                             } ($path)"
                         )
                     }
@@ -280,31 +183,7 @@ class PlainResourcesIndex internal constructor(
             }
         }
 
-    internal suspend fun persistResources(resources: Map<Path, ResourceMeta>) =
-        withContext(Dispatchers.IO) {
-            Log.d(
-                RESOURCES_INDEX,
-                "persisting " +
-                    "${resources.size} resources from root $root"
-            )
-
-            val roomResources = mutableListOf<Resource>()
-            val roomExtra = mutableListOf<ResourceExtra>()
-
-            resources.entries.toList()
-                .forEach {
-                    roomResources.add(Resource.fromMeta(it.value, root, it.key))
-                    roomExtra.addAll(
-                        GeneralKindFactory.toRoom(it.value.id, it.value.kind)
-                    )
-                }
-
-            dao.insertResources(roomResources)
-            dao.insertExtras(roomExtra)
-
-            Log.d(RESOURCES_INDEX, "${resources.size} resources persisted")
-        }
-
+    // todo: update resource in native index
     override suspend fun updateResource(
         oldId: ResourceId,
         path: Path,
@@ -313,36 +192,5 @@ class PlainResourcesIndex internal constructor(
         metaByPath[path] = newResource
         pathById.remove(oldId)
         pathById[newResource.id] = path
-        dao.updateResource(
-            oldId, newResource.id, newResource.modified.toMillis()
-        )
-        dao.updateExtras(oldId, newResource.id)
-    }
-
-    companion object {
-
-        internal fun loadResources(resources: List<ResourceWithExtra>):
-            Map<Path, ResourceMeta> =
-            resources
-                .groupBy { room -> room.resource.path }
-                .mapValues { (_, resources) ->
-                    if (resources.size > 1) {
-                        throw IllegalStateException(
-                            "Index must not have" +
-                                "several resources for the same path"
-                        )
-                    }
-                    ResourceMeta.fromRoom(resources[0])
-                }
-                .mapKeys { (path, _) -> Paths.get(path) }
-
-        internal suspend fun listAllFiles(folder: Path): List<Path> =
-            withContext(Dispatchers.IO) {
-                val (directories, files) = listChildren(folder)
-
-                return@withContext files + directories.flatMap {
-                    listAllFiles(it)
-                }
-            }
     }
 }

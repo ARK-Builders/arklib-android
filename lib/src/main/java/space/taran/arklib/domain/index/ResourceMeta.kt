@@ -1,9 +1,6 @@
 package space.taran.arklib.domain.index
 
 import space.taran.arklib.ResourceId
-import space.taran.arklib.computeId
-import space.taran.arklib.domain.dao.ResourceWithExtra
-import space.taran.arklib.domain.kind.GeneralKindFactory
 import space.taran.arklib.domain.kind.ResourceKind
 import space.taran.arklib.domain.meta.MetadataStorage
 import space.taran.arklib.utils.MetaResult
@@ -24,14 +21,15 @@ data class ResourceMeta(
     fun size() = id.dataSize
 
     companion object {
-
-        fun fromPath(path: Path, metadataStorage: MetadataStorage): MetaResult {
+        fun fromPath(
+            id: ResourceId,
+            path: Path,
+            metadataStorage: MetadataStorage
+        ): MetaResult {
             val size = Files.size(path)
             if (size < 1) {
                 return MetaResult.failure(IOException("Invalid file size"))
             }
-
-            val id = computeId(size, path)
 
             val meta = ResourceMeta(
                 id = id,
@@ -41,23 +39,13 @@ data class ResourceMeta(
                 kind = null
             )
 
-            var kindDetectException: Exception? = null
+            var kindDetectException: Throwable? = null
 
-            try {
-                meta.kind = GeneralKindFactory.fromPath(path, meta, metadataStorage)
-            } catch (e: Exception) {
-                kindDetectException = e
-            }
+            metadataStorage.locateOrGenerateKind(path, meta)
+                .onSuccess { meta.kind = it }
+                .onFailure { kindDetectException = it }
+
             return MetaResult(meta, kindDetectException)
         }
-
-        fun fromRoom(room: ResourceWithExtra): ResourceMeta =
-            ResourceMeta(
-                id = room.resource.id,
-                name = room.resource.name,
-                extension = room.resource.extension,
-                modified = FileTime.fromMillis(room.resource.modified),
-                kind = GeneralKindFactory.fromRoom(room.resource.kind, room.extras)
-            )
     }
 }
