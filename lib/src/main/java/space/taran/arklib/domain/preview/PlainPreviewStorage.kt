@@ -7,12 +7,15 @@ import space.taran.arklib.arkPreviews
 import space.taran.arklib.arkThumbnails
 import space.taran.arklib.domain.index.ResourceMeta
 import space.taran.arklib.domain.kind.ImageKindFactory
+import space.taran.arklib.domain.preview.generator.PreviewGenerator
 import space.taran.arklib.utils.LogTags.PREVIEWS
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteIfExists
+import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
+import kotlin.io.path.notExists
 
 class PlainPreviewStorage(val root: Path) : PreviewStorage {
     private val previewsDir = root.arkFolder().arkPreviews()
@@ -20,6 +23,7 @@ class PlainPreviewStorage(val root: Path) : PreviewStorage {
 
     private fun previewPath(id: ResourceId): Path =
         previewsDir.resolve(id.toString())
+
     private fun thumbnailPath(id: ResourceId): Path =
         thumbnailsDir.resolve(id.toString())
 
@@ -29,15 +33,16 @@ class PlainPreviewStorage(val root: Path) : PreviewStorage {
     }
 
     override fun locate(path: Path, resource: ResourceMeta): PreviewAndThumbnail? {
+        val preview = previewPath(resource.id)
         val thumbnail = thumbnailPath(resource.id)
         if (!Files.exists(thumbnail)) {
             Log.w(PREVIEWS, "thumbnail was not found for resource $resource")
-            if (Files.exists(previewPath(resource.id))) {
+            if (Files.exists(preview)) {
                 throw AssertionError(
                     "Preview exists but thumbnail doesn't"
                 )
             }
-            // means that we couldn't generate anything for this kind of resource
+
             return null
         }
 
@@ -49,7 +54,7 @@ class PlainPreviewStorage(val root: Path) : PreviewStorage {
         }
 
         return PreviewAndThumbnail(
-            preview = previewPath(resource.id),
+            preview = preview,
             thumbnail = thumbnail
         )
     }
@@ -65,34 +70,31 @@ class PlainPreviewStorage(val root: Path) : PreviewStorage {
         val previewPath = previewPath(meta.id)
         val thumbnailPath = thumbnailPath(meta.id)
 
-        if (!imagesExist(path, previewPath, thumbnailPath)) {
-            Log.d(
-                PREVIEWS,
-                "Generating preview/thumbnail for ${meta.id} ($path)"
-            )
-            GeneralPreviewGenerator.generate(path, previewPath, thumbnailPath)
+        if (ImageKindFactory.isValid(path)) {
+            if (thumbnailPath.notExists()) {
+                GeneralPreviewGenerator.generate(path, previewPath, thumbnailPath)
+            }
+            return
         }
-    }
 
-    private fun imagesExist(
-        path: Path,
-        previewPath: Path,
-        thumbnailPath: Path
-    ): Boolean {
         if (Files.exists(previewPath)) {
             if (!Files.exists(thumbnailPath)) {
-                throw AssertionError(
-                    """Thumbnails must always exist
-                            | if corresponding preview exists"""
+                Log.d(
+                    PREVIEWS,
+                    "Generating thumbnail for ${meta.id} ($path)"
                 )
+                val thumbnail =
+                    PreviewGenerator.resizePreviewToThumbnail(previewPath)
+                PreviewGenerator.storeThumbnail(thumbnailPath, thumbnail)
             }
-            return true
+
+            return
         }
 
-        if (ImageKindFactory.isValid(path)) {
-            return Files.exists(thumbnailPath)
-        }
-
-        return false
+        Log.d(
+            PREVIEWS,
+            "Generating preview/thumbnail for ${meta.id} ($path)"
+        )
+        GeneralPreviewGenerator.generate(path, previewPath, thumbnailPath)
     }
 }
