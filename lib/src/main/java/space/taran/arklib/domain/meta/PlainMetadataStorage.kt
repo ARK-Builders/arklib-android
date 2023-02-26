@@ -36,11 +36,12 @@ class PlainMetadataStorage(val root: Path) : MetadataStorage {
     ): Result<ResourceKind> {
         val metadataPath = metaPath(meta.id)
         if (metadataPath.exists()) {
-            val kind = Json.decodeFromString(
-                ResourceKind.serializer(),
-                metadataPath.readText()
-            )
-            return Result.success(kind)
+            readKind(metadataPath)
+                .onSuccess { return Result.success(it) }
+                .onFailure {
+                    metadataPath.deleteIfExists()
+                    return generateKind(path, meta)
+                }
         }
 
         return generateKind(path, meta)
@@ -65,4 +66,32 @@ class PlainMetadataStorage(val root: Path) : MetadataStorage {
     override fun forget(id: ResourceId) {
         metaPath(id).deleteIfExists()
     }
+
+    private fun readKind(metadataPath: Path): Result<ResourceKind> {
+        try {
+            val kind = Json.decodeFromString(
+                ResourceKind.serializer(),
+                metadataPath.readText()
+            )
+            return Result.success(kind)
+        } catch (e: Exception) {
+            Log.w(
+                METADATA,
+                "Can't parse file[$metadataPath] with ResourceKind serializer "
+            )
+        }
+        try {
+            val kind = Json.decodeFromString(
+                ResourceKind.Link.serializer(),
+                metadataPath.readText()
+            )
+            return Result.success(kind)
+        } catch (e: Exception) {
+            Log.w(METADATA, "Can't parse file[$metadataPath] with Link serializer ")
+        }
+
+        return Result.failure(CorruptedKindFile())
+    }
 }
+
+private class CorruptedKindFile : Exception()
