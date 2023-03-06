@@ -49,15 +49,4 @@ class AggregatedResourcesIndex(
     override suspend fun reindex() {
         shards.forEach { it.reindex() }
     }
-
-    override suspend fun updateResource(
-        oldId: ResourceId,
-        path: Path,
-        newResource: ResourceMeta
-    ) {
-        shards.forEach {
-            if (it.contains(oldId))
-                it.updateResource(oldId, path, newResource)
-        }
-    }
 }

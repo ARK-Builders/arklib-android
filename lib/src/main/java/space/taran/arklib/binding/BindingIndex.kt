@@ -16,7 +16,7 @@ object BindingIndex {
     private external fun updateNative(root: String): List<Any>
     fun update(root: Path): UpdatedResources {
         val list = updateNative(root.toString())
-        val deleted = (list[0] as HashSet<String>).map {
+        val deleted = (list[0] as List<String>).map {
             ResourceId.fromString(it)
         }.toSet()
         val added = (list[1] as HashMap<String, String>).map { (id, path) ->

@@ -7,9 +7,7 @@ import java.nio.file.Path
 
 interface MetadataStorage {
 
-    fun locateOrGenerateKind(path: Path, meta: ResourceMeta): Result<ResourceKind>
-
-    fun generateKind(path: Path, meta: ResourceMeta): Result<ResourceKind>
+    fun provideKind(path: Path, meta: ResourceMeta): Result<ResourceKind>
 
     fun forget(id: ResourceId)
 }

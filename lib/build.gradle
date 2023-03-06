@@ -38,13 +38,15 @@ android {
             withSourcesJar()
         }
     }
-    ndkVersion '24.0.8215888'
+    ndkVersion "25.2.9519653"
 }
 
 cargo {
     module  = "../arklib"
     libname = "arklib"
     targets = ["arm64", "x86", "x86_64", "arm"]
+    // speed up local build
+    // targets = ["arm64"]
     prebuiltToolchains = true
     // Set to "debug" to enable logging. Or "release" to make a production build.
     profile = "release"

@@ -415,14 +415,18 @@ pub mod android {
             .unwrap()
             .into();
 
-        let root: PathBuf = PathBuf::from(root_string);
+        let root: PathBuf = PathBuf::from(&root_string);
 
         let loaded = match ResourceIndex::load(&root) {
             Ok(index) => {
+                trace!("index loaded[{}]", &root_string);
                 ROOT2INDEX.lock().unwrap().insert(Box::new(root), index);
                 JNI_TRUE
             },
-            Err(_) => JNI_FALSE
+            Err(e) => {
+                trace!("failed to load index[{}] {}", &root_string, e);
+                JNI_FALSE
+            }
         };
 
         loaded
@@ -463,16 +467,16 @@ pub mod android {
 
         let index_update = index.update().unwrap();
 
-        let jni_deleted_hashset = env.new_object("java/util/HashSet", "()V", &[]).unwrap();
+        let jni_deleted_list = env.new_object("java/util/ArrayList", "()V", &[]).unwrap();
         let jni_added_map = env.new_object("java/util/HashMap", "()V", &[]).unwrap();
 
         for id in &index_update.deleted {
             let id = env.new_string(id.to_string()).unwrap().into();
 
             env.call_method(
-                jni_deleted_hashset,
+                jni_deleted_list,
                 "add",
-                "(Ljava/lang/Object;)Ljava/lang/Object;",
+                "(Ljava/lang/Object;)Z",
                 &[id]
             );
         }
@@ -493,7 +497,7 @@ pub mod android {
             jni_params_list,
             "add",
             "(Ljava/lang/Object;)Z",
-            &[jni_deleted_hashset.into()]
+            &[jni_deleted_list.into()]
         );
         env.call_method(
             jni_params_list,

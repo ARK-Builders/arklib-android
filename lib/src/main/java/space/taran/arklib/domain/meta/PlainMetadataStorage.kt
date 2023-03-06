@@ -1,12 +1,19 @@
 package space.taran.arklib.domain.meta
 
 import android.util.Log
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import space.taran.arklib.ResourceId
 import space.taran.arklib.arkFolder
 import space.taran.arklib.arkMetadata
 import space.taran.arklib.domain.index.ResourceMeta
 import space.taran.arklib.domain.kind.GeneralKindFactory
+import space.taran.arklib.domain.kind.KindCode
 import space.taran.arklib.domain.kind.ResourceKind
 import space.taran.arklib.domain.kind.ResourceKindFactory
 import space.taran.arklib.utils.LogTags.METADATA
@@ -30,16 +37,15 @@ class PlainMetadataStorage(val root: Path) : MetadataStorage {
         metaDir.createDirectories()
     }
 
-    override fun locateOrGenerateKind(
+    override fun provideKind(
         path: Path,
         meta: ResourceMeta
     ): Result<ResourceKind> {
         val metadataPath = metaPath(meta.id)
         if (metadataPath.exists()) {
-            readKind(metadataPath)
+            readKind(path, metadataPath)
                 .onSuccess { return Result.success(it) }
                 .onFailure {
-                    metadataPath.deleteIfExists()
                     return generateKind(path, meta)
                 }
         }
@@ -47,47 +53,89 @@ class PlainMetadataStorage(val root: Path) : MetadataStorage {
         return generateKind(path, meta)
     }
 
-    override fun generateKind(path: Path, meta: ResourceMeta): Result<ResourceKind> {
-        val metadataPath = metaPath(meta.id)
-        return try {
-            val kind = GeneralKindFactory.fromPath(path, meta)
-            metadataPath.writeText(
-                Json.encodeToString(
-                    ResourceKind.serializer(),
-                    kind
-                )
-            )
-            Result.success(kind)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
     override fun forget(id: ResourceId) {
         metaPath(id).deleteIfExists()
     }
 
-    private fun readKind(metadataPath: Path): Result<ResourceKind> {
+    private fun generateKind(path: Path, meta: ResourceMeta): Result<ResourceKind> {
+        val metadataPath = metaPath(meta.id)
+        val kind = try {
+            GeneralKindFactory.fromPath(path, meta)
+        } catch (e: Exception) {
+            return Result.failure(e)
+        }
+
+        val jsonKind = when (kind) {
+            is ResourceKind.Archive -> Json.encodeToString(kind)
+            is ResourceKind.Document -> Json.encodeToString(kind)
+            is ResourceKind.Image -> Json.encodeToString(kind)
+            is ResourceKind.Link -> Json.encodeToString(kind)
+            is ResourceKind.PlainText -> Json.encodeToString(kind)
+            is ResourceKind.Video -> Json.encodeToString(kind)
+        }
+
+        metadataPath.writeText(jsonKind)
+        return Result.success(kind)
+    }
+
+    private fun readKind(path: Path, metadataPath: Path): Result<ResourceKind> {
         try {
-            val kind = Json.decodeFromString(
-                ResourceKind.serializer(),
-                metadataPath.readText()
-            )
+            val jsonElement = Json.parseToJsonElement(metadataPath.readText())
+            val codeJson = jsonElement.jsonObject["code"]!!.jsonPrimitive.content
+
+            val kind = when (KindCode.valueOf(codeJson)) {
+                KindCode.IMAGE ->
+                    Json.decodeFromJsonElement(
+                        ResourceKind.Image.serializer(),
+                        jsonElement
+                    )
+                KindCode.VIDEO ->
+                    Json.decodeFromJsonElement(
+                        ResourceKind.Video.serializer(),
+                        jsonElement
+                    )
+                KindCode.DOCUMENT ->
+                    Json.decodeFromJsonElement(
+                        ResourceKind.Document.serializer(),
+                        jsonElement
+                    )
+                KindCode.LINK -> Json.decodeFromJsonElement(
+                    ResourceKind.Link.serializer(),
+                    jsonElement
+                )
+                KindCode.PLAINTEXT -> Json.decodeFromJsonElement(
+                    ResourceKind.PlainText.serializer(),
+                    jsonElement
+                )
+                KindCode.ARCHIVE -> Json.decodeFromJsonElement(
+                    ResourceKind.Archive.serializer(),
+                    jsonElement
+                )
+            }
             return Result.success(kind)
         } catch (e: Exception) {
             Log.w(
                 METADATA,
-                "Can't parse file[$metadataPath] with ResourceKind serializer "
+                "Can't read kind with ResourceKind serializer for $metadataPath"
             )
         }
         try {
-            val kind = Json.decodeFromString(
-                ResourceKind.Link.serializer(),
+            val nativeLinkJson = Json.decodeFromString(
+                NativeLinkJson.serializer(),
                 metadataPath.readText()
             )
-            return Result.success(kind)
+            return Result.success(
+                ResourceKind.Link(
+                    nativeLinkJson.title,
+                    nativeLinkJson.desc,
+                    path.readText()
+                )
+            )
         } catch (e: Exception) {
-            Log.w(METADATA, "Can't parse file[$metadataPath] with Link serializer ")
+            Log.w(
+                METADATA,
+                "Can't read kind with Native Link serializer for $metadataPath"
+            )
         }
 
         return Result.failure(CorruptedKindFile())
@@ -95,3 +143,6 @@ class PlainMetadataStorage(val root: Path) : MetadataStorage {
 }
 
 private class CorruptedKindFile : Exception()
+
+@Serializable
+private class NativeLinkJson(val title: String, val desc: String)
