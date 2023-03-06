@@ -35,7 +35,7 @@ class PlainResourcesIndex internal constructor(
     private val previewStorage: PreviewStorage,
     private val metadataStorage: MetadataStorage,
     private val messageFlow: MutableSharedFlow<Message>,
-    private var nativeIndexBuilded: Boolean,
+    private var nativeIndexBuilt: Boolean,
     resources: Map<Path, ResourceMeta>
 ) : ResourcesIndex {
 
@@ -81,12 +81,12 @@ class PlainResourcesIndex internal constructor(
 
     override suspend fun reindex(): Unit =
         withContextAndLock(Dispatchers.IO, mutex) {
-            val update = if (nativeIndexBuilded)
+            val update = if (nativeIndexBuilt)
                 BindingIndex.update(root)
             else {
                 BindingIndex.build(root)
                 val added = BindingIndex.id2Path(root)
-                nativeIndexBuilded = true
+                nativeIndexBuilt = true
                 UpdatedResources(deleted = emptySet(), added)
             }
             handleUpdate(update)
@@ -182,15 +182,4 @@ class PlainResourcesIndex internal constructor(
                 }
             }
         }
-
-    // todo: update resource in native index
-    override suspend fun updateResource(
-        oldId: ResourceId,
-        path: Path,
-        newResource: ResourceMeta
-    ) {
-        metaByPath[path] = newResource
-        pathById.remove(oldId)
-        pathById[newResource.id] = path
-    }
 }

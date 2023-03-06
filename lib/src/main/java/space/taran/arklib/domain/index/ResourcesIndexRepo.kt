@@ -25,7 +25,7 @@ class ResourcesIndexRepo(
     private val provideMutex = Mutex()
     private val indexByRoot = mutableMapOf<Path, PlainResourcesIndex>()
 
-    private suspend fun create(
+    private suspend fun load(
         root: Path
     ): PlainResourcesIndex = withContext(Dispatchers.IO) {
         val loaded = BindingIndex.load(root)
@@ -61,7 +61,7 @@ class ResourcesIndexRepo(
         provideMutex.withLock {
             val indexShards = roots.map { root ->
                 indexByRoot[root] ?: let {
-                    val index = create(root)
+                    val index = load(root)
                     indexByRoot[root] = index
                     index
                 }

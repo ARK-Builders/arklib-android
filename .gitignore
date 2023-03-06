@@ -15,4 +15,7 @@ misc.xml
 target
 .cargo
 .vscode
-Cargo.lock
+
+!arklib/.cargo
+arklib/.cargo/*
+!arklib/.cargo/config

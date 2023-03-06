@@ -41,7 +41,7 @@ data class ResourceMeta(
 
             var kindDetectException: Throwable? = null
 
-            metadataStorage.locateOrGenerateKind(path, meta)
+            metadataStorage.provideKind(path, meta)
                 .onSuccess { meta.kind = it }
                 .onFailure { kindDetectException = it }
 

@@ -38,8 +38,9 @@ class PlainPreviewStorage(val root: Path) : PreviewStorage {
         if (!Files.exists(thumbnail)) {
             Log.w(PREVIEWS, "thumbnail was not found for resource $resource")
             if (Files.exists(preview)) {
-                throw AssertionError(
-                    "Preview exists but thumbnail doesn't"
+                Log.e(
+                    PREVIEWS,
+                    "Preview exists but thumbnail doesn't for resource $resource"
                 )
             }
 
