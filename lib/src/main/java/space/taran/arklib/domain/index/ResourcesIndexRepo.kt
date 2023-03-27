@@ -23,6 +23,43 @@ class ResourcesIndexRepo(
     private val provideMutex = Mutex()
     private val indexByRoot = mutableMapOf<Path, PlainResourcesIndex>()
 
+    suspend fun provide(
+        rootAndFav: RootAndFav
+    ): ResourcesIndex = withContext(Dispatchers.IO) {
+        val roots = foldersRepo.resolveRoots(rootAndFav)
+
+        val indexShards = roots.map { root ->
+            providePlainIndex(root)
+        }
+
+        return@withContext AggregatedResourcesIndex(indexShards)
+    }
+
+    suspend fun provide(
+        root: Path,
+    ): ResourcesIndex = provide(
+        RootAndFav(root.toString(), favString = null)
+    )
+
+    suspend fun isIndexed(rootAndFav: RootAndFav): Boolean {
+        val roots = foldersRepo.resolveRoots(rootAndFav)
+        roots.forEach { root ->
+            if (!indexByRoot.contains(root))
+                return false
+        }
+        return true
+    }
+
+    internal suspend fun providePlainIndex(
+        root: Path
+    ): PlainResourcesIndex = provideMutex.withLock {
+        return indexByRoot[root] ?: let {
+            val index = load(root)
+            indexByRoot[root] = index
+            index
+        }
+    }
+
     private suspend fun load(
         root: Path
     ): PlainResourcesIndex = withContext(Dispatchers.IO) {
@@ -43,53 +80,10 @@ class ResourcesIndexRepo(
 
         return@withContext PlainResourcesIndex(
             root,
-            previewStorageRepo.provide(root),
             metadataStorage,
             messageFlow,
             loaded,
             resources
         )
-    }
-
-    suspend fun provide(
-        rootAndFav: RootAndFav
-    ): ResourcesIndex = withContext(Dispatchers.IO) {
-        val roots = foldersRepo.resolveRoots(rootAndFav)
-
-        provideMutex.withLock {
-            val indexShards = roots.map { root ->
-                indexByRoot[root] ?: let {
-                    val index = load(root)
-                    indexByRoot[root] = index
-                    index
-                }
-            }
-
-            return@withContext AggregatedResourcesIndex(indexShards)
-        }
-    }
-
-    suspend fun provide(
-        root: Path,
-    ): ResourcesIndex = provide(
-        RootAndFav(root.toString(), favString = null)
-    )
-
-    suspend fun providePlainIndex(root: Path): PlainResourcesIndex =
-        provideMutex.withLock {
-            indexByRoot[root] ?: let {
-                val index = loadFromDatabase(root)
-                indexByRoot[root] = index
-                index
-            }
-        }
-
-    suspend fun isIndexed(rootAndFav: RootAndFav): Boolean {
-        val roots = foldersRepo.resolveRoots(rootAndFav)
-        roots.forEach { root ->
-            if (!indexByRoot.contains(root))
-                return false
-        }
-        return true
     }
 }

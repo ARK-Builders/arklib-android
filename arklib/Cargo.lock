@@ -56,7 +56,7 @@ checksum = "b9a8f622bcf6ff3df478e9deba3e03e4e04b300f8e6a139e192c05fa3490afc7"
 [[package]]
 name = "arklib"
 version = "0.1.0"
-source = "git+https://github.com/ARK-builders/arklib#7d8c53791276ed32835c253939f8341aa790e09e"
+source = "git+https://github.com/ARK-builders/arklib?rev=03add5a#03add5a4af35e9e9895717af01afa4cfd97ab5c5"
 dependencies = [
  "anyhow",
  "canonical-path",
@@ -65,9 +65,12 @@ dependencies = [
  "flate2",
  "fs_extra",
  "image",
+ "itertools",
  "lazy_static",
  "libloading",
  "log",
+ "once_cell",
+ "pathdiff",
  "pdfium-render",
  "reqwest",
  "scraper",
@@ -94,6 +97,7 @@ dependencies = [
  "jni",
  "log",
  "ndk",
+ "once_cell",
  "openssl",
  "url",
 ]
@@ -958,9 +962,9 @@ dependencies = [
 
 [[package]]
 name = "itertools"
-version = "0.10.3"
+version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9a9d19fa1e79b6215ff29b9d6880b706147f16e9b1dbb1e4e5947b5b02bc5e3"
+checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
 dependencies = [
  "either",
 ]
@@ -1300,9 +1304,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.14.0"
+version = "1.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f7254b99e31cad77da24b08ebf628882739a608578bb1bcdfc1f9c21260d7c0"
+checksum = "b7e5500299e16ebb147ae15a00a942af264cf3688f47923b8fc2cd5858f23ad3"
 
 [[package]]
 name = "opaque-debug"
@@ -1406,6 +1410,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "pathdiff"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8835116a5c179084a830efb3adc117ab007512b535bc1a21c991d3b32a6b44dd"
+
+[[package]]
 name = "pbkdf2"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1419,9 +1429,8 @@ dependencies = [
 
 [[package]]
 name = "pdfium-render"
-version = "0.7.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4361e0e7f86bcb9d38169c0a0e1141e041d2cafc0078e957013434fb87e8677"
+version = "0.7.26"
+source = "git+https://github.com/ajrcarey/pdfium-render?rev=d2559c1#d2559c10d27392cc48e51a55d80fffbe6fc87b5c"
 dependencies = [
  "bindgen",
  "bitflags",
