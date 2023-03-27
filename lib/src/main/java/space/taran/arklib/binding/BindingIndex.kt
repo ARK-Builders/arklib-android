@@ -1,7 +1,7 @@
 package space.taran.arklib.binding
 
 import space.taran.arklib.ResourceId
-import space.taran.arklib.domain.index.UpdatedResources
+import space.taran.arklib.domain.index.UpdatedResourcesId
 import java.nio.file.Path
 import java.nio.file.attribute.FileTime
 import kotlin.io.path.Path
@@ -14,7 +14,7 @@ object BindingIndex {
     fun build(root: Path) = buildNative(root.toString())
 
     private external fun updateNative(root: String): List<Any>
-    fun update(root: Path): UpdatedResources {
+    fun update(root: Path): UpdatedResourcesId {
         val list = updateNative(root.toString())
         val deleted = (list[0] as List<String>).map {
             ResourceId.fromString(it)
@@ -22,7 +22,7 @@ object BindingIndex {
         val added = (list[1] as HashMap<String, String>).map { (id, path) ->
             ResourceId.fromString(id) to Path(path)
         }.toMap()
-        return UpdatedResources(deleted, added)
+        return UpdatedResourcesId(deleted, added)
     }
 
     private external fun storeNative(root: String)

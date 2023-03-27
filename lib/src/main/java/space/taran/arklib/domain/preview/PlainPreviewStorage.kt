@@ -20,7 +20,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteIfExists
-import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 import kotlin.io.path.notExists
 
@@ -41,7 +40,7 @@ class PlainPreviewStorage(
     init {
         previewsDir.createDirectories()
         thumbnailsDir.createDirectories()
-        index.resourceDiffFlow.onEach { diff ->
+        index.updatedResourcesFlow.onEach { diff ->
             appScope.launch(Dispatchers.IO) {
                 diff.added.forEach { (meta, path) ->
                     launch { store(path, meta) }

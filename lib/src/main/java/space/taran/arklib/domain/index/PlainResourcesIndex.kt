@@ -3,9 +3,7 @@ package space.taran.arklib.domain.index
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
@@ -24,13 +22,13 @@ import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.absolutePathString
 import kotlin.system.measureTimeMillis
 
-class UpdatedResources(
+class UpdatedResourcesId(
     val deleted: Set<ResourceId>,
     val added: Map<ResourceId, Path>
 )
 
-class ResourceDiff(
-    val deleted: Map<ResourceMeta, Path>,
+class UpdatedResources(
+    val deleted: Set<ResourceId>,
     val added: Map<ResourceMeta, Path>
 )
 
@@ -40,7 +38,6 @@ class ResourceDiff(
 // during application lifecycle into the DAO for the case of any unexpected exit.
 class PlainResourcesIndex internal constructor(
     private val root: Path,
-    private val previewStorage: PreviewStorage,
     private val metadataStorage: MetadataStorage,
     private val messageFlow: MutableSharedFlow<Message>,
     private var nativeIndexBuilt: Boolean,
@@ -50,7 +47,7 @@ class PlainResourcesIndex internal constructor(
     private val mutex = Mutex()
     private val mutUpdatedResourcesFlow = MutableSharedFlow<UpdatedResources>()
 
-    val resourceDiffFlow = mutUpdatedResourcesFlow.asSharedFlow()
+    val updatedResourcesFlow = mutUpdatedResourcesFlow.asSharedFlow()
 
     internal val metaByPath: MutableMap<Path, ResourceMeta> =
         resources.toMutableMap()
@@ -98,26 +95,21 @@ class PlainResourcesIndex internal constructor(
                 BindingIndex.build(root)
                 val added = BindingIndex.id2Path(root)
                 nativeIndexBuilt = true
-                UpdatedResources(deleted = emptySet(), added)
+                UpdatedResourcesId(deleted = emptySet(), added)
             }
             handleUpdate(update)
 
             BindingIndex.store(root)
         }
 
-    private suspend fun handleUpdate(update: UpdatedResources) {
+    private suspend fun handleUpdate(update: UpdatedResourcesId) {
         update.deleted.forEach { id ->
             val path = pathById.remove(id)
             metaByPath.remove(path)
-            previewStorage.forget(id)
         }
 
-        update.added.forEach { (id, path) ->
+        val addedMeta = update.added.mapNotNull { (id, path) ->
             val result = ResourceMeta.fromPath(id, path, metadataStorage)
-            result.onSuccess { meta ->
-                metaByPath[path] = meta
-                pathById[id] = path
-            }
             result.onFailure {
                 messageFlow.emit(Message.KindDetectFailed(path))
                 Log.d(
@@ -126,13 +118,16 @@ class PlainResourcesIndex internal constructor(
                             path.absolutePathString()
                 )
             }
+            result.onSuccess { meta ->
+                metaByPath[path] = meta
+                pathById[id] = path
+                return@mapNotNull meta to path
+            }
 
-        }
+            null
+        }.toMap()
 
-        val time2 = measureTimeMillis {
-            providePreviews()
-        }
-        Log.d(PREVIEWS, "previews provided in ${time2}ms")
+        mutUpdatedResourcesFlow.emit(UpdatedResources(update.deleted, addedMeta))
     }
 
     // should be only used in AggregatedResourcesIndex
@@ -166,37 +161,4 @@ class PlainResourcesIndex internal constructor(
 
         return path
     }
-
-    internal suspend fun providePreviews() =
-        withContext(Dispatchers.IO) {
-            Log.d(
-                PREVIEWS,
-                "providing previews/thumbnails for ${metaByPath.size} resources"
-            )
-
-            supervisorScope {
-                metaByPath.entries.map { (path: Path, meta: ResourceMeta) ->
-                    async(Dispatchers.IO) {
-                        previewStorage.store(path, meta)
-                    } to path
-                }.forEach { (generateTask, path) ->
-                    try {
-                        generateTask.await()
-                    } catch (e: Exception) {
-                        Log.e(
-                            PREVIEWS,
-                            "Failed to generate preview/thumbnail for id ${
-                                metaByPath[path]?.id
-                            } ($path)"
-                        )
-                    }
-                }
-            }
-        }
 }
-
-private data class UpdatedPaths(
-    val deleted: List<Path>,
-    val updated: List<Path>,
-    val added: List<Path>
-)
