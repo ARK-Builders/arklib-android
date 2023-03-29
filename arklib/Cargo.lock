@@ -90,14 +90,13 @@ name = "arklib-android"
 version = "0.1.0"
 dependencies = [
  "android_logger",
+ "anyhow",
  "arklib",
- "crc32fast",
  "env_logger",
  "image",
  "jni",
  "log",
  "ndk",
- "once_cell",
  "openssl",
  "url",
 ]

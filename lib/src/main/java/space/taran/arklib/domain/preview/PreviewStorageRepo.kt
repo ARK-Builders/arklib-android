@@ -3,14 +3,12 @@ package space.taran.arklib.domain.preview
 import kotlinx.coroutines.CoroutineScope
 import space.taran.arkfilepicker.folders.FoldersRepo
 import space.taran.arkfilepicker.folders.RootAndFav
-import space.taran.arklib.app
-import space.taran.arklib.domain.index.PlainResourcesIndex
-import space.taran.arklib.domain.index.ResourcesIndexRepo
+import space.taran.arklib.domain.index.ResourceIndexRepo
 import java.nio.file.Path
 
 class PreviewStorageRepo(
     private val foldersRepo: FoldersRepo,
-    private val indexRepo: ResourcesIndexRepo,
+    private val indexRepo: ResourceIndexRepo,
     private val appScope: CoroutineScope
 ) {
     private val storageByRoot = mutableMapOf<Path, PlainPreviewStorage>()

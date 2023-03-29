@@ -3,8 +3,6 @@ package space.taran.arklib.domain.preview
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -16,9 +14,9 @@ import space.taran.arklib.ResourceId
 import space.taran.arklib.arkFolder
 import space.taran.arklib.arkPreviews
 import space.taran.arklib.arkThumbnails
-import space.taran.arklib.domain.index.PlainResourcesIndex
-import space.taran.arklib.domain.index.ResourceMeta
-import space.taran.arklib.domain.kind.ImageKindFactory
+import space.taran.arklib.domain.index.PlainIndex
+import space.taran.arklib.domain.index.Resource
+import space.taran.arklib.domain.kind.ImageMetadataFactory
 import space.taran.arklib.domain.preview.generator.PreviewGenerator
 import space.taran.arklib.utils.LogTags.PREVIEWS
 import java.nio.file.Files
@@ -30,7 +28,7 @@ import kotlin.io.path.notExists
 
 class PlainPreviewStorage(
     val root: Path,
-    private val index: PlainResourcesIndex,
+    private val index: PlainIndex,
     private val appScope: CoroutineScope
 ) : PreviewStorage {
     private val previewsDir = root.arkFolder().arkPreviews()
@@ -52,7 +50,7 @@ class PlainPreviewStorage(
 
     override val indexingFlow = _indexingFlow.asStateFlow()
 
-    override fun locate(path: Path, resource: ResourceMeta): PreviewAndThumbnail? {
+    override fun locate(path: Path, resource: Resource): PreviewAndThumbnail? {
         val preview = previewPath(resource.id)
         val thumbnail = thumbnailPath(resource.id)
         if (!Files.exists(thumbnail)) {
@@ -67,7 +65,7 @@ class PlainPreviewStorage(
             return null
         }
 
-        if (ImageKindFactory.isValid(path)) {
+        if (ImageMetadataFactory.isValid(path)) {
             return PreviewAndThumbnail(
                 preview = path, // using the resource itself as its preview
                 thumbnail = thumbnail
@@ -85,13 +83,13 @@ class PlainPreviewStorage(
         thumbnailPath(id).deleteIfExists()
     }
 
-    override suspend fun store(path: Path, meta: ResourceMeta) {
+    override suspend fun store(path: Path, resource: Resource) {
         require(!path.isDirectory()) { "Previews for folders are constant" }
 
-        val previewPath = previewPath(meta.id)
-        val thumbnailPath = thumbnailPath(meta.id)
+        val previewPath = previewPath(resource.id)
+        val thumbnailPath = thumbnailPath(resource.id)
 
-        if (ImageKindFactory.isValid(path)) {
+        if (ImageMetadataFactory.isValid(path)) {
             if (thumbnailPath.notExists()) {
                 GeneralPreviewGenerator.generate(path, previewPath, thumbnailPath)
             }
@@ -102,7 +100,7 @@ class PlainPreviewStorage(
             if (!Files.exists(thumbnailPath)) {
                 Log.d(
                     PREVIEWS,
-                    "Generating thumbnail for ${meta.id} ($path)"
+                    "Generating thumbnail for ${resource.id} ($path)"
                 )
                 val thumbnail =
                     PreviewGenerator.resizePreviewToThumbnail(previewPath)
@@ -114,7 +112,7 @@ class PlainPreviewStorage(
 
         Log.d(
             PREVIEWS,
-            "Generating preview/thumbnail for ${meta.id} ($path)"
+            "Generating preview/thumbnail for ${resource.id} ($path)"
         )
         GeneralPreviewGenerator.generate(path, previewPath, thumbnailPath)
     }
