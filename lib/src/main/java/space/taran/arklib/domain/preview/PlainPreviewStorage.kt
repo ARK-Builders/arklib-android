@@ -3,8 +3,13 @@ package space.taran.arklib.domain.preview
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import space.taran.arklib.ResourceId
@@ -31,6 +36,8 @@ class PlainPreviewStorage(
     private val previewsDir = root.arkFolder().arkPreviews()
     private val thumbnailsDir = root.arkFolder().arkThumbnails()
 
+    private val _indexingFlow = MutableStateFlow(false)
+
     private fun previewPath(id: ResourceId): Path =
         previewsDir.resolve(id.toString())
 
@@ -40,16 +47,10 @@ class PlainPreviewStorage(
     init {
         previewsDir.createDirectories()
         thumbnailsDir.createDirectories()
-        index.updatedResourcesFlow.onEach { diff ->
-            appScope.launch(Dispatchers.IO) {
-                diff.added.forEach { (meta, path) ->
-                    launch { store(path, meta) }
-                }
-                diff.deleted.forEach { forget(it) }
-            }
-        }.launchIn(appScope + Dispatchers.IO)
-
+        initUpdatedResourcesListener()
     }
+
+    override val indexingFlow = _indexingFlow.asStateFlow()
 
     override fun locate(path: Path, resource: ResourceMeta): PreviewAndThumbnail? {
         val preview = previewPath(resource.id)
@@ -116,5 +117,19 @@ class PlainPreviewStorage(
             "Generating preview/thumbnail for ${meta.id} ($path)"
         )
         GeneralPreviewGenerator.generate(path, previewPath, thumbnailPath)
+    }
+
+    private fun initUpdatedResourcesListener() {
+        index.updatedResourcesFlow.onEach { diff ->
+            appScope.launch(Dispatchers.IO) {
+                _indexingFlow.emit(true)
+                val jobs = diff.added.map { (meta, path) ->
+                    launch { store(path, meta) }
+                }
+                diff.deleted.forEach { forget(it) }
+                jobs.joinAll()
+                _indexingFlow.emit(false)
+            }
+        }.launchIn(appScope + Dispatchers.IO)
     }
 }

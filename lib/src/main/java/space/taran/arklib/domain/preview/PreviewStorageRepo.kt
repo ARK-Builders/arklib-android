@@ -28,7 +28,7 @@ class PreviewStorageRepo(
             }
         }
 
-        return AggregatedPreviewStorage(shards)
+        return AggregatedPreviewStorage(shards, appScope)
     }
 
     suspend fun provide(root: Path): PreviewStorage =
