@@ -1,35 +1,34 @@
 package space.taran.arklib.domain.kind
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 
 @Serializable
-sealed class ResourceKind(val code: KindCode) {
+sealed class Metadata(val code: KindCode) {
     @Serializable
-    class Image : ResourceKind(KindCode.IMAGE)
+    class Image : Metadata(KindCode.IMAGE)
 
     @Serializable
     class Video(
         val height: Long? = null,
         val width: Long? = null,
         val duration: Long? = null
-    ) : ResourceKind(KindCode.VIDEO)
+    ) : Metadata(KindCode.VIDEO)
 
     @Serializable
-    class Document(val pages: Int? = null) : ResourceKind(KindCode.DOCUMENT)
+    class Document(val pages: Int? = null) : Metadata(KindCode.DOCUMENT)
 
     @Serializable
     class Link(
         val title: String? = null,
         val description: String? = null,
         val url: String? = null
-    ) : ResourceKind(KindCode.LINK)
+    ) : Metadata(KindCode.LINK)
 
     @Serializable
-    class PlainText : ResourceKind(KindCode.PLAINTEXT)
+    class PlainText : Metadata(KindCode.PLAINTEXT)
 
     @Serializable
-    class Archive : ResourceKind(KindCode.ARCHIVE)
+    class Archive : Metadata(KindCode.ARCHIVE)
 }
 
 enum class KindCode {

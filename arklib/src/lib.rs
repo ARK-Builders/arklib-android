@@ -3,25 +3,27 @@
 pub mod android {
     extern crate jni;
 
-    use arklib::index::ResourceIndex;
-    use jni::objects::{JClass, JObject, JString, JValue};
-    use jni::sys::{jboolean, jint, jlong, jobject, jstring, JNI_TRUE, JNI_FALSE};
-    use jni::JNIEnv;
-    use std::time::{SystemTime, UNIX_EPOCH};
-    use log::{debug, trace, Level};
-    use std::collections::HashMap;
-    use std::path::PathBuf;
-    use std::sync::Mutex;
-    use std::{fs::File, path::Path};
-    extern crate android_logger;
-    use once_cell::sync::Lazy;
-    use android_logger::Config;
+    use arklib;
     use arklib::id::ResourceId;
+    use arklib::index::ResourceIndex;
     use arklib::link::Link;
     use arklib::pdf::PDFQuality;
+
+    use std::path::PathBuf;
+    use std::sync::{Arc, RwLock};
+    use std::{fs::File, path::Path};
+
+    use anyhow::Error;
     use image::EncodableLayout;
-    use jni::signature::{JavaType, Primitive};
+    use log::{debug, trace, Level};
     use url::Url;
+
+    use jni::objects::{JClass, JObject, JString, JValue};
+    use jni::signature::{JavaType, Primitive};
+    use jni::sys::{jboolean, jint, jlong, jobject, jstring, JNI_FALSE, JNI_TRUE};
+    use jni::JNIEnv;
+    extern crate android_logger;
+    use android_logger::Config;
 
     #[no_mangle]
     pub extern "C" fn Java_space_taran_arklib_LibKt_initRustLogger(_: JNIEnv, _: JClass) {
@@ -399,54 +401,24 @@ pub mod android {
         bitmap.into_inner()
     }
 
-    static ROOT2INDEX: Lazy<Mutex<HashMap<Box<PathBuf>, ResourceIndex>>> = Lazy::new(|| {
-        let m = HashMap::new();
-        Mutex::new(m)
-    });
-
     #[no_mangle]
     pub extern "C" fn Java_space_taran_arklib_binding_BindingIndex_loadNative(
         env: JNIEnv,
         _: JClass,
         jni_root: JString,
     ) -> jboolean {
-        let root_string: String = env
-            .get_string(jni_root)
-            .unwrap()
-            .into();
+        match provide_index(env, jni_root) {
+            Ok(_) => {
+                trace!("index provided");
 
-        let root: PathBuf = PathBuf::from(&root_string);
-
-        let loaded = match ResourceIndex::load(&root) {
-            Ok(index) => {
-                trace!("index loaded[{}]", &root_string);
-                ROOT2INDEX.lock().unwrap().insert(Box::new(root), index);
                 JNI_TRUE
-            },
-            Err(e) => {
-                trace!("failed to load index[{}] {}", &root_string, e);
+            }
+            Err(err) => {
+                trace!("failed to load index: {}", err);
+
                 JNI_FALSE
             }
-        };
-
-        loaded
-    }
-
-    #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_binding_BindingIndex_buildNative(
-        env: JNIEnv,
-        _: JClass,
-        jni_root: JString,
-    ) {
-        let root_string: String = env
-            .get_string(jni_root)
-            .unwrap()
-            .into();
-
-        let root: PathBuf = PathBuf::from(root_string);
-
-        let index = ResourceIndex::build(&root).unwrap();
-        ROOT2INDEX.lock().unwrap().insert(Box::new(root), index);
+        }
     }
 
     #[no_mangle]
@@ -455,41 +427,36 @@ pub mod android {
         _: JClass,
         jni_root: JString,
     ) -> jobject {
-        let root_string: String = env
-            .get_string(jni_root)
-            .unwrap()
-            .into();
-
-        let root: PathBuf = PathBuf::from(root_string);
-
-        let mut binding = ROOT2INDEX.lock().unwrap();
-        let index = binding.get_mut(&root).unwrap();
-
-        let index_update = index.update().unwrap();
+        let result = match provide_index(env, jni_root) {
+            Ok(rwlock) => {
+                let mut index = rwlock.write().unwrap();
+                index.update().unwrap()
+            }
+            Err(err) => {
+                panic!("couldn't provide index {}", err)
+            }
+        };
 
         let jni_deleted_list = env.new_object("java/util/ArrayList", "()V", &[]).unwrap();
         let jni_added_map = env.new_object("java/util/HashMap", "()V", &[]).unwrap();
 
-        for id in &index_update.deleted {
+        for id in &result.deleted {
             let id = env.new_string(id.to_string()).unwrap().into();
 
-            env.call_method(
-                jni_deleted_list,
-                "add",
-                "(Ljava/lang/Object;)Z",
-                &[id]
-            );
+            env.call_method(jni_deleted_list, "add", "(Ljava/lang/Object;)Z", &[id])
+                .unwrap();
         }
 
-        for (path, id) in &index_update.added {
+        for (path, id) in &result.added {
             let id = env.new_string(id.to_string()).unwrap().into();
             let path = env.new_string(path.to_str().unwrap()).unwrap().into();
             env.call_method(
                 jni_added_map,
                 "put",
                 "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-                &[id, path]
-            );
+                &[id, path],
+            )
+            .unwrap();
         }
 
         let jni_params_list = env.new_object("java/util/ArrayList", "()V", &[]).unwrap();
@@ -497,15 +464,17 @@ pub mod android {
             jni_params_list,
             "add",
             "(Ljava/lang/Object;)Z",
-            &[jni_deleted_list.into()]
-        );
+            &[jni_deleted_list.into()],
+        )
+        .unwrap();
         env.call_method(
             jni_params_list,
             "add",
             "(Ljava/lang/Object;)Z",
-            &[jni_added_map.into()]
-        );
-        
+            &[jni_added_map.into()],
+        )
+        .unwrap();
+
         jni_params_list.into_inner()
     }
 
@@ -515,17 +484,9 @@ pub mod android {
         _: JClass,
         jni_root: JString,
     ) {
-        let root_string: String = env
-            .get_string(jni_root)
-            .unwrap()
-            .into();
-
-        let root: PathBuf = PathBuf::from(root_string);
-
-        let mut binding = ROOT2INDEX.lock().unwrap();
-        let index = binding.get_mut(&root).unwrap();
-
-        index.store();
+        let rwlock = provide_index_readonly(env, jni_root);
+        let index = rwlock.read().unwrap();
+        index.store().unwrap();
     }
 
     #[no_mangle]
@@ -534,15 +495,8 @@ pub mod android {
         _: JClass,
         jni_root: JString,
     ) -> jobject {
-        let root_string: String = env
-            .get_string(jni_root)
-            .unwrap()
-            .into();
-
-        let root: PathBuf = PathBuf::from(root_string);
-
-        let binding = ROOT2INDEX.lock().unwrap();
-        let index = binding.get(&root).unwrap();
+        let rwlock = provide_index_readonly(env, jni_root);
+        let index = rwlock.read().unwrap();
 
         let jni_map = env.new_object("java/util/HashMap", "()V", &[]).unwrap();
 
@@ -553,44 +507,28 @@ pub mod android {
                 jni_map,
                 "put",
                 "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-                &[id, path]
-            );
+                &[id, path],
+            )
+            .unwrap();
         }
 
         jni_map.into_inner()
     }
 
-    #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_binding_BindingIndex_path2idNative(
-        env: JNIEnv,
-        _: JClass,
-        jni_root: JString,
-    ) -> jobject {
-        let root_string: String = env
-            .get_string(jni_root)
-            .unwrap()
-            .into();
+    fn provide_index(env: JNIEnv, jni_root: JString) -> Result<Arc<RwLock<ResourceIndex>>, Error> {
+        let root_string: String = env.get_string(jni_root).unwrap().into();
+        trace!("providing index for root {}", &root_string);
 
         let root: PathBuf = PathBuf::from(root_string);
+        arklib::provide_index(&root)
+    }
 
-        let binding = ROOT2INDEX.lock().unwrap();
-        let index = binding.get(&root).unwrap();
-
-        let jni_map = env.new_object("java/util/HashMap", "()V", &[]).unwrap();
-
-        for (path, index_entry) in &index.path2id {
-            let path = env.new_string(path.to_str().unwrap()).unwrap().into();
-            let id = index_entry.id.to_string();
-            let modified_millis = index_entry.modified.duration_since(UNIX_EPOCH).unwrap().as_millis().to_string();
-            let id_to_modified = env.new_string(id + ":" + &modified_millis).unwrap().into();
-            env.call_method(
-                jni_map,
-                "put",
-                "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-                &[path, id_to_modified]
-            );
+    fn provide_index_readonly(env: JNIEnv, jni_root: JString) -> Arc<RwLock<ResourceIndex>> {
+        match provide_index(env, jni_root) {
+            Ok(rwlock) => rwlock,
+            Err(err) => {
+                panic!("couldn't provide index {}", err)
+            }
         }
-
-        jni_map.into_inner()
     }
 }

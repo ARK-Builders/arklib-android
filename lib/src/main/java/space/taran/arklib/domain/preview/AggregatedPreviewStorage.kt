@@ -1,16 +1,12 @@
 package space.taran.arklib.domain.preview
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.zip
 import space.taran.arklib.ResourceId
-import space.taran.arklib.app
-import space.taran.arklib.domain.index.ResourceMeta
+import space.taran.arklib.domain.index.Resource
 import java.nio.file.Path
 
 class AggregatedPreviewStorage(
@@ -26,7 +22,7 @@ class AggregatedPreviewStorage(
 
     override val indexingFlow = _indexingFlow.asStateFlow()
 
-    override fun locate(path: Path, resource: ResourceMeta): PreviewAndThumbnail? {
+    override fun locate(path: Path, resource: Resource): PreviewAndThumbnail? {
         shards.forEach { shard ->
             shard.locate(path, resource)?.let {
                 return it
@@ -41,12 +37,12 @@ class AggregatedPreviewStorage(
 
     override suspend fun store(
         path: Path,
-        meta: ResourceMeta
+        resource: Resource
     ) = shards
         .find { shard -> path.startsWith(shard.root) }
         .let {
             require(it != null) { "At least one of shards must yield success" }
-            it.store(path, meta)
+            it.store(path, resource)
         }
 
     private fun initShardsIndexingListener() {

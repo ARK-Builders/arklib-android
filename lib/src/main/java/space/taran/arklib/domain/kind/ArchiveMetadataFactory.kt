@@ -1,11 +1,9 @@
 package space.taran.arklib.domain.kind
 
-import space.taran.arklib.ResourceId
-import space.taran.arklib.domain.index.ResourceMeta
-import space.taran.arklib.domain.meta.MetadataStorage
+import space.taran.arklib.domain.index.Resource
 import java.nio.file.Path
 
-object ArchiveKindFactory : ResourceKindFactory<ResourceKind.Archive> {
+object ArchiveMetadataFactory : MetadataFactory<Metadata.Archive> {
     override val acceptedExtensions: Set<String> =
         setOf("zip", "7z", "rar", "tar.gz", "tar.xz")
 
@@ -13,8 +11,8 @@ object ArchiveKindFactory : ResourceKindFactory<ResourceKind.Archive> {
         get() = setOf("application/zip")
     override val acceptedKindCode = KindCode.ARCHIVE
 
-    override fun fromPath(
+    override fun compute(
         path: Path,
-        meta: ResourceMeta,
-    ) = ResourceKind.Archive()
+        resource: Resource,
+    ) = Metadata.Archive()
 }

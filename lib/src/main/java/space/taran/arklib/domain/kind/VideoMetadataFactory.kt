@@ -2,27 +2,25 @@ package space.taran.arklib.domain.kind
 
 import android.net.Uri
 import android.util.Log
-import space.taran.arklib.ResourceId
 import space.taran.arklib.app
-import space.taran.arklib.domain.index.ResourceMeta
-import space.taran.arklib.domain.meta.MetadataStorage
+import space.taran.arklib.domain.index.Resource
 import space.taran.arklib.utils.LogTags.PREVIEWS
 import wseemann.media.FFmpegMediaMetadataRetriever
 import java.io.IOException
 import java.nio.file.Path
 import kotlin.io.path.name
 
-object VideoKindFactory : ResourceKindFactory<ResourceKind.Video> {
+object VideoMetadataFactory : MetadataFactory<Metadata.Video> {
     override val acceptedExtensions: Set<String> =
         setOf("mp4", "avi", "mkv", "mov", "wmv", "flv", "webm", "ts", "mpg")
     override val acceptedMimeTypes: Set<String> =
         setOf("video/mp4")
     override val acceptedKindCode = KindCode.VIDEO
 
-    override fun fromPath(
+    override fun compute(
         path: Path,
-        meta: ResourceMeta
-    ): ResourceKind.Video {
+        resource: Resource
+    ): Metadata.Video {
         val retriever = FFmpegMediaMetadataRetriever()
 
         try {
@@ -50,6 +48,6 @@ object VideoKindFactory : ResourceKindFactory<ResourceKind.Video> {
 
         retriever.release()
 
-        return ResourceKind.Video(height, width, duration)
+        return Metadata.Video(height, width, duration)
     }
 }

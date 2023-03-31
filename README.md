@@ -4,6 +4,7 @@ An arklib wrapper for Android.
 
 ## Prerequisites
 
+- Rust toolchain
 - Kotlin toolchain
 - Android SDK + NDK r24 (latest)
 
@@ -23,7 +24,15 @@ Connect to a device or setup an AVD and check the functionality.
 ./gradlew appmock:connectedCheck
 ```
 
-## Build
+## Build Rust
+
+For checking if Rust code compiles without problems, you can use this command:
+
+```sh
+./gradlew cargoBuild
+```
+
+## Build AAR
 
 Before make a release build, ensure you have set `profile = "release"` in cargo config.
 
