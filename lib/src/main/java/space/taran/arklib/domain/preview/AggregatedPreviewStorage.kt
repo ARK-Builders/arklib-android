@@ -14,13 +14,13 @@ class AggregatedPreviewStorage(
     private val appScope: CoroutineScope
 ) : PreviewStorage {
 
-    private val _indexingFlow = MutableStateFlow(false)
+    private val _inProgress = MutableStateFlow(false)
 
     init {
         initShardsIndexingListener()
     }
 
-    override val inProgress = _indexingFlow.asStateFlow()
+    override val inProgress = _inProgress.asStateFlow()
 
     override fun locate(path: Path, resource: Resource): PreviewAndThumbnail? {
         shards.forEach { shard ->
@@ -50,7 +50,7 @@ class AggregatedPreviewStorage(
 
         shards.forEach { shard ->
             shard.inProgress.onEach {
-                _indexingFlow.emit(anyShardIndexing())
+                _inProgress.emit(anyShardIndexing())
             }.launchIn(appScope)
         }
     }

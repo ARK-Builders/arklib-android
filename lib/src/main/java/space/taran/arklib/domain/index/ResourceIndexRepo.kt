@@ -13,7 +13,7 @@ class ResourceIndexRepo(
         rootAndFav: RootAndFav
     ): ResourceIndex = withContext(Dispatchers.IO) {
         val roots = foldersRepo.resolveRoots(rootAndFav)
-        val shards = roots.map { RootIndex(it) }
+        val shards = roots.map { RootIndex.provide(it) }
 
         return@withContext IndexAggregation(shards)
     }

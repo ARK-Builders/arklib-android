@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import space.taran.arklib.ResourceId
 import space.taran.arklib.binding.BindingIndex
 import space.taran.arklib.binding.RawUpdates
@@ -38,7 +39,17 @@ data class NewResource(val path: Path, val resource: Resource)
  * See also [IndexAggregation] and [IndexProjection].
  */
 @OptIn(ExperimentalPathApi::class)
-class RootIndex(val path: Path): ResourceIndex {
+class RootIndex
+    private constructor(val path: Path): ResourceIndex {
+
+    companion object {
+        suspend fun provide(path: Path): RootIndex {
+            val result = RootIndex(path)
+            result.init()
+
+            return result
+        }
+    }
 
     private val mutex = Mutex()
     private val mutUpdates = MutableSharedFlow<ResourceUpdates>()
@@ -72,31 +83,33 @@ class RootIndex(val path: Path): ResourceIndex {
         return ResourceUpdates(deleted, added)
     }
 
-    init {
-        if (!BindingIndex.load(path)) {
-            Log.e(
-                RESOURCES_INDEX,
-                "Couldn't provide index from $path"
-            )
-            throw NotImplementedError()
-        }
-
-        //id2path should be used in order to filter-out duplicates
-        //path2id could contain several paths for the same id
-        BindingIndex.id2path(path)
-            .forEach { (id, path) ->
-                Resource.compute(id, path)
-                    .onFailure { error ->
-                        Log.e(
-                            RESOURCES_INDEX,
-                            "Couldn't compute resource by path $path: $error"
-                        )
-                    }
-                    .onSuccess { resource ->
-                        pathById[id] = path
-                        resourceById[id] = resource
-                    }
+    suspend fun init() {
+        withContext(Dispatchers.IO) {
+            if (!BindingIndex.load(path)) {
+                Log.e(
+                    RESOURCES_INDEX,
+                    "Couldn't provide index from $path"
+                )
+                throw NotImplementedError()
             }
+
+            //id2path should be used in order to filter-out duplicates
+            //path2id could contain several paths for the same id
+            BindingIndex.id2path(path)
+                .forEach { (id, path) ->
+                    Resource.compute(id, path)
+                        .onFailure { error ->
+                            Log.e(
+                                RESOURCES_INDEX,
+                                "Couldn't compute resource by path $path: $error"
+                            )
+                        }
+                        .onSuccess { resource ->
+                            pathById[id] = path
+                            resourceById[id] = resource
+                        }
+                }
+        }
     }
 
     override val roots: Set<RootIndex> = setOf(this)

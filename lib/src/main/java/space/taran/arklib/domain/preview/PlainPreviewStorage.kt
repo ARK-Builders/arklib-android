@@ -31,7 +31,7 @@ class PlainPreviewStorage(
     private val previewsDir = root.arkFolder().arkPreviews()
     private val thumbnailsDir = root.arkFolder().arkThumbnails()
 
-    private val mutInProgress = MutableStateFlow(false)
+    private val _inProgress = MutableStateFlow(false)
 
     private fun previewPath(id: ResourceId): Path =
         previewsDir.resolve(id.toString())
@@ -45,7 +45,7 @@ class PlainPreviewStorage(
         initUpdatedResourcesListener()
     }
 
-    override val inProgress = mutInProgress.asStateFlow()
+    override val inProgress = _inProgress.asStateFlow()
 
     override fun locate(path: Path, resource: Resource): PreviewAndThumbnail? {
         val preview = previewPath(resource.id)
@@ -117,7 +117,7 @@ class PlainPreviewStorage(
     private fun initUpdatedResourcesListener() {
         updates.onEach { diff ->
             appScope.launch(Dispatchers.IO) {
-                mutInProgress.emit(true)
+                _inProgress.emit(true)
 
                 val jobs = diff.added.map { (_, added) ->
                     launch { store(added.path, added.resource) }
@@ -125,7 +125,7 @@ class PlainPreviewStorage(
                 diff.deleted.forEach { (id, _) -> forget(id) }
 
                 jobs.joinAll()
-                mutInProgress.emit(false)
+                _inProgress.emit(false)
             }
         }.launchIn(appScope + Dispatchers.IO)
     }
