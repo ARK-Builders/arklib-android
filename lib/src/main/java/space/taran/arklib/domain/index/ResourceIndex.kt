@@ -7,6 +7,8 @@ import java.nio.file.Path
 
 interface ResourceIndex {
 
+    val roots: Set<RootIndex>
+
     val updates: Flow<ResourceUpdates>
 
     suspend fun updateAll()

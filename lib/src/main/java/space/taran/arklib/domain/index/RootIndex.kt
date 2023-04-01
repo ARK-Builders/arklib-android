@@ -33,12 +33,12 @@ data class NewResource(val path: Path, val resource: Resource)
  * 2) a mounting point in resource space,
  *    i.e. total resource space is a union of resources
  *    from all root folders.
- * @param root A path to the root folder.
+ * @param path A path to the root folder.
  *
  * See also [IndexAggregation] and [IndexProjection].
  */
 @OptIn(ExperimentalPathApi::class)
-class RootIndex(val root: Path): ResourceIndex {
+class RootIndex(val path: Path): ResourceIndex {
 
     private val mutex = Mutex()
     private val mutUpdates = MutableSharedFlow<ResourceUpdates>()
@@ -73,17 +73,17 @@ class RootIndex(val root: Path): ResourceIndex {
     }
 
     init {
-        if (!BindingIndex.load(root)) {
+        if (!BindingIndex.load(path)) {
             Log.e(
                 RESOURCES_INDEX,
-                "Couldn't provide index from $root"
+                "Couldn't provide index from $path"
             )
             throw NotImplementedError()
         }
 
         //id2path should be used in order to filter-out duplicates
         //path2id could contain several paths for the same id
-        BindingIndex.id2path(root)
+        BindingIndex.id2path(path)
             .forEach { (id, path) ->
                 Resource.compute(id, path)
                     .onFailure { error ->
@@ -99,12 +99,14 @@ class RootIndex(val root: Path): ResourceIndex {
             }
     }
 
+    override val roots: Set<RootIndex> = setOf(this)
+
     override val updates = mutUpdates.asSharedFlow()
 
     override suspend fun updateAll(): Unit =
         withContextAndLock(Dispatchers.IO, mutex) {
-            val raw: RawUpdates = BindingIndex.update(root)
-            BindingIndex.store(root)
+            val raw: RawUpdates = BindingIndex.update(path)
+            BindingIndex.store(path)
 
             val updates: ResourceUpdates = wrap(raw)
 

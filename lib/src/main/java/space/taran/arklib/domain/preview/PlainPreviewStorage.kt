@@ -3,10 +3,7 @@ package space.taran.arklib.domain.preview
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
@@ -14,8 +11,8 @@ import space.taran.arklib.ResourceId
 import space.taran.arklib.arkFolder
 import space.taran.arklib.arkPreviews
 import space.taran.arklib.arkThumbnails
-import space.taran.arklib.domain.index.RootIndex
 import space.taran.arklib.domain.index.Resource
+import space.taran.arklib.domain.index.ResourceUpdates
 import space.taran.arklib.domain.kind.ImageMetadataFactory
 import space.taran.arklib.domain.preview.generator.PreviewGenerator
 import space.taran.arklib.utils.LogTags.PREVIEWS
@@ -28,13 +25,13 @@ import kotlin.io.path.notExists
 
 class PlainPreviewStorage(
     val root: Path,
-    private val index: RootIndex,
+    private val updates: Flow<ResourceUpdates>,
     private val appScope: CoroutineScope
 ) : PreviewStorage {
     private val previewsDir = root.arkFolder().arkPreviews()
     private val thumbnailsDir = root.arkFolder().arkThumbnails()
 
-    private val _indexingFlow = MutableStateFlow(false)
+    private val mutInProgress = MutableStateFlow(false)
 
     private fun previewPath(id: ResourceId): Path =
         previewsDir.resolve(id.toString())
@@ -48,7 +45,7 @@ class PlainPreviewStorage(
         initUpdatedResourcesListener()
     }
 
-    override val indexingFlow = _indexingFlow.asStateFlow()
+    override val inProgress = mutInProgress.asStateFlow()
 
     override fun locate(path: Path, resource: Resource): PreviewAndThumbnail? {
         val preview = previewPath(resource.id)
@@ -118,15 +115,17 @@ class PlainPreviewStorage(
     }
 
     private fun initUpdatedResourcesListener() {
-        index.updatedResourcesFlow.onEach { diff ->
+        updates.onEach { diff ->
             appScope.launch(Dispatchers.IO) {
-                _indexingFlow.emit(true)
-                val jobs = diff.added.map { (meta, path) ->
-                    launch { store(path, meta) }
+                mutInProgress.emit(true)
+
+                val jobs = diff.added.map { (_, added) ->
+                    launch { store(added.path, added.resource) }
                 }
-                diff.deleted.forEach { forget(it) }
+                diff.deleted.forEach { (id, _) -> forget(id) }
+
                 jobs.joinAll()
-                _indexingFlow.emit(false)
+                mutInProgress.emit(false)
             }
         }.launchIn(appScope + Dispatchers.IO)
     }

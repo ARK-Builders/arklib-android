@@ -20,7 +20,7 @@ class AggregatedPreviewStorage(
         initShardsIndexingListener()
     }
 
-    override val indexingFlow = _indexingFlow.asStateFlow()
+    override val inProgress = _indexingFlow.asStateFlow()
 
     override fun locate(path: Path, resource: Resource): PreviewAndThumbnail? {
         shards.forEach { shard ->
@@ -46,10 +46,10 @@ class AggregatedPreviewStorage(
         }
 
     private fun initShardsIndexingListener() {
-        fun anyShardIndexing() = shards.map { it.indexingFlow.value }.contains(true)
+        fun anyShardIndexing() = shards.map { it.inProgress.value }.contains(true)
 
         shards.forEach { shard ->
-            shard.indexingFlow.onEach {
+            shard.inProgress.onEach {
                 _indexingFlow.emit(anyShardIndexing())
             }.launchIn(appScope)
         }

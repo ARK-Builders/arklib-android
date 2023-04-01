@@ -27,6 +27,8 @@ class IndexProjection(
     private val root: RootIndex,
     private val predicate: ResourcePredicate): ResourceIndex {
 
+    override val roots: Set<RootIndex> = setOf(root)
+
     override val updates: Flow<ResourceUpdates> = root.updates
         .mapNotNull { updates ->
             val deleted = updates.deleted.filterValues { lost ->

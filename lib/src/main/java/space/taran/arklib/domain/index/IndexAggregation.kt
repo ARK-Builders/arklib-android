@@ -22,6 +22,8 @@ class IndexAggregation(
     private val shards: Collection<RootIndex>
 ) : ResourceIndex {
 
+    override val roots: Set<RootIndex> = shards.toSet()
+
     override val updates: Flow<ResourceUpdates> = shards
         .map { it.updates }
         .asIterable()
