@@ -1,16 +1,20 @@
 package space.taran.arklib.binding
 
 import space.taran.arklib.ResourceId
-import space.taran.arklib.domain.index.UpdatedResourcesId
 import java.nio.file.Path
 import kotlin.io.path.Path
+
+class RawUpdates(
+    val deleted: Set<ResourceId>,
+    val added: Map<ResourceId, Path>
+)
 
 object BindingIndex {
     private external fun loadNative(root: String): Boolean
     fun load(root: Path): Boolean = loadNative(root.toString())
 
     private external fun updateNative(root: String): List<Any>
-    fun update(root: Path): UpdatedResourcesId {
+    fun update(root: Path): RawUpdates {
         val list = updateNative(root.toString())
         val deleted = (list[0] as List<String>).map {
             ResourceId.fromString(it)
@@ -18,7 +22,7 @@ object BindingIndex {
         val added = (list[1] as HashMap<String, String>).map { (id, path) ->
             ResourceId.fromString(id) to Path(path)
         }.toMap()
-        return UpdatedResourcesId(deleted, added)
+        return RawUpdates(deleted, added)
     }
 
     private external fun storeNative(root: String)

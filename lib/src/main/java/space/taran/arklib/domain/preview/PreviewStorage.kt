@@ -7,7 +7,7 @@ import java.nio.file.Path
 
 interface PreviewStorage {
 
-    val indexingFlow: StateFlow<Boolean>
+    val inProgress: StateFlow<Boolean>
 
     fun locate(path: Path, resource: Resource): PreviewAndThumbnail?
 
