@@ -14,7 +14,7 @@ import space.taran.arklib.ResourceId
 import space.taran.arklib.arkFolder
 import space.taran.arklib.arkPreviews
 import space.taran.arklib.arkThumbnails
-import space.taran.arklib.domain.index.PlainIndex
+import space.taran.arklib.domain.index.RootIndex
 import space.taran.arklib.domain.index.Resource
 import space.taran.arklib.domain.kind.ImageMetadataFactory
 import space.taran.arklib.domain.preview.generator.PreviewGenerator
@@ -28,7 +28,7 @@ import kotlin.io.path.notExists
 
 class PlainPreviewStorage(
     val root: Path,
-    private val index: PlainIndex,
+    private val index: RootIndex,
     private val appScope: CoroutineScope
 ) : PreviewStorage {
     private val previewsDir = root.arkFolder().arkPreviews()
