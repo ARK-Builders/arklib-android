@@ -490,7 +490,7 @@ pub mod android {
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_binding_BindingIndex_id2PathNative(
+    pub extern "C" fn Java_space_taran_arklib_binding_BindingIndex_id2pathNative(
         env: JNIEnv,
         _: JClass,
         jni_root: JString,
