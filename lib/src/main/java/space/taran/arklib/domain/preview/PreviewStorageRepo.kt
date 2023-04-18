@@ -24,7 +24,7 @@ class PreviewStorageRepo(private val appScope: CoroutineScope) {
 
     fun provide(root: RootIndex): PlainPreviewStorage =
         storageByRoot[root.path] ?: PlainPreviewStorage(
-            root.path, root.updates, appScope
+            root, appScope
         ).also {
             storageByRoot[root.path] = it
         }

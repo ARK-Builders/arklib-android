@@ -11,8 +11,10 @@ import space.taran.arklib.ResourceId
 import space.taran.arklib.arkFolder
 import space.taran.arklib.arkPreviews
 import space.taran.arklib.arkThumbnails
+import space.taran.arklib.domain.index.NewResource
 import space.taran.arklib.domain.index.Resource
 import space.taran.arklib.domain.index.ResourceUpdates
+import space.taran.arklib.domain.index.RootIndex
 import space.taran.arklib.domain.kind.ImageMetadataFactory
 import space.taran.arklib.domain.preview.generator.PreviewGenerator
 import space.taran.arklib.utils.LogTags.PREVIEWS
@@ -24,10 +26,11 @@ import kotlin.io.path.isDirectory
 import kotlin.io.path.notExists
 
 class PlainPreviewStorage(
-    val root: Path,
-    private val updates: Flow<ResourceUpdates>,
+    private val index: RootIndex,
     private val appScope: CoroutineScope
 ) : PreviewStorage {
+    val root = index.path
+
     private val previewsDir = root.arkFolder().arkPreviews()
     private val thumbnailsDir = root.arkFolder().arkThumbnails()
 
@@ -43,6 +46,7 @@ class PlainPreviewStorage(
         previewsDir.createDirectories()
         thumbnailsDir.createDirectories()
         initUpdatedResourcesListener()
+        initKnownResources()
     }
 
     override val inProgress = _inProgress.asStateFlow()
@@ -114,19 +118,30 @@ class PlainPreviewStorage(
         GeneralPreviewGenerator.generate(path, previewPath, thumbnailPath)
     }
 
-    private fun initUpdatedResourcesListener() {
-        updates.onEach { diff ->
-            appScope.launch(Dispatchers.IO) {
-                _inProgress.emit(true)
+    private fun generate(resources: Collection<NewResource>) {
+        appScope.launch(Dispatchers.IO) {
+            _inProgress.emit(true)
 
-                val jobs = diff.added.map { (_, added) ->
-                    launch { store(added.path, added.resource) }
-                }
-                diff.deleted.forEach { (id, _) -> forget(id) }
-
-                jobs.joinAll()
-                _inProgress.emit(false)
+            val jobs = resources.map { added ->
+                launch { store(added.path, added.resource) }
             }
+
+            jobs.joinAll()
+            _inProgress.emit(false)
+        }
+    }
+
+    private fun initUpdatedResourcesListener() {
+        index.updates.onEach { diff ->
+            generate(diff.added.values)
+
+            diff.deleted.forEach { (id, _) -> forget(id) }
         }.launchIn(appScope + Dispatchers.IO)
+    }
+
+    private fun initKnownResources() {
+        appScope.launch(Dispatchers.IO) {
+            generate(index.asAdded())
+        }
     }
 }

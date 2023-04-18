@@ -147,4 +147,11 @@ class RootIndex
     override suspend fun getPath(id: ResourceId): Path? = mutex.withLock {
         return pathById[id]
     }
+
+    // used by storages to initialize state
+    internal suspend fun asAdded(): Set<NewResource> = mutex.withLock {
+        return resourceById.map { (id, resource) ->
+            NewResource(pathById[id]!!, resource)
+        }.toSet()
+    }
 }

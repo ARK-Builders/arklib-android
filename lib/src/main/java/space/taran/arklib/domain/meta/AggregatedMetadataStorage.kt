@@ -8,6 +8,7 @@ class AggregatedMetadataStorage(
     private val shards: Collection<PlainMetadataStorage>
 ) : MetadataStorage {
 
+    //todo: is it used?
     override fun provideMetadata(path: Path, resource: Resource) = shards
         .find { shard -> path.startsWith(shard.root) }
         .let {

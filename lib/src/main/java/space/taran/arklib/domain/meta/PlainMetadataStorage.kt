@@ -21,6 +21,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
+//todo: handle updates
 class PlainMetadataStorage(val root: Path) : MetadataStorage {
     private val metaDir = root.arkFolder().arkMetadata()
 
