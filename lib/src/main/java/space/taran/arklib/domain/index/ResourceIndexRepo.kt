@@ -23,10 +23,10 @@ class ResourceIndexRepo(
 
             if (rootAndFav.fav != null) {
                 val rootPath = rootAndFav.root!!
-                val fullPath = rootPath.resolve(rootAndFav.fav!!)
+                val favoritePath = rootPath.resolve(rootAndFav.fav!!)
 
                 return@withContext IndexProjection(index) { _, path ->
-                    fullPath.startsWith(path)
+                    path.startsWith(favoritePath)
                 }
             } else {
                 return@withContext index
