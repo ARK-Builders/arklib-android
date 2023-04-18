@@ -2,6 +2,7 @@ package space.taran.arklib.domain.preview
 
 import kotlinx.coroutines.CoroutineScope
 import space.taran.arklib.domain.index.ResourceIndex
+import space.taran.arklib.domain.index.RootIndex
 import java.nio.file.Path
 
 class PreviewStorageRepo(private val appScope: CoroutineScope) {
@@ -12,21 +13,19 @@ class PreviewStorageRepo(private val appScope: CoroutineScope) {
         val roots = index.roots
 
         return if (roots.size > 1) {
-            val shards = roots.map { root ->
-                storageByRoot[root.path] ?: PlainPreviewStorage(
-                    root.path, root.updates, appScope
-                ).also {
-                    storageByRoot[root.path] = it
-                }
-            }
+            val shards = roots.map { provide(it) }
 
             AggregatedPreviewStorage(shards, appScope)
         } else {
             val root = roots.iterator().next()
-            val storage = PlainPreviewStorage(root.path, root.updates, appScope)
-
-            storageByRoot[root.path] = storage
-            storage
+            provide(root)
         }
     }
+
+    fun provide(root: RootIndex): PlainPreviewStorage =
+        storageByRoot[root.path] ?: PlainPreviewStorage(
+            root.path, root.updates, appScope
+        ).also {
+            storageByRoot[root.path] = it
+        }
 }
