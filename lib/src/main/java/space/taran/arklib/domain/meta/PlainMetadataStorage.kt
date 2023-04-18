@@ -1,6 +1,11 @@
 package space.taran.arklib.domain.meta
 
 import android.util.Log
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -9,52 +14,72 @@ import kotlinx.serialization.json.jsonPrimitive
 import space.taran.arklib.ResourceId
 import space.taran.arklib.arkFolder
 import space.taran.arklib.arkMetadata
+import space.taran.arklib.domain.index.NewResource
 import space.taran.arklib.domain.index.Resource
+import space.taran.arklib.domain.index.RootIndex
 import space.taran.arklib.domain.kind.GeneralMetadataFactory
 import space.taran.arklib.domain.kind.KindCode
 import space.taran.arklib.domain.kind.Metadata
 import space.taran.arklib.utils.LogTags.METADATA
+import java.lang.IllegalStateException
 import java.nio.file.Path
-import kotlin.io.path.deleteIfExists
-import kotlin.io.path.createDirectories
-import kotlin.io.path.exists
-import kotlin.io.path.readText
-import kotlin.io.path.writeText
+import kotlin.io.path.*
 
-//todo: handle updates
-class PlainMetadataStorage(val root: Path) : MetadataStorage {
-    private val metaDir = root.arkFolder().arkMetadata()
+class PlainMetadataStorage(
+    private val index: RootIndex,
+    private val appScope: CoroutineScope
+) : MetadataStorage {
+    val root = index.path
 
-    private fun metaPath(id: ResourceId): Path =
-        metaDir.resolve(id.toString())
+    private val metadataDir = root.arkFolder().arkMetadata()
+
+    private val _inProgress = MutableStateFlow(false)
+
+    private fun metadataPath(id: ResourceId): Path =
+        metadataDir.resolve(id.toString())
 
     init {
-        metaDir.createDirectories()
+        metadataDir.createDirectories()
+        initUpdatedResourcesListener()
+        initKnownResources()
     }
 
-    override fun provideMetadata(
-        path: Path,
-        resource: Resource
-    ): Result<Metadata> {
-        val metadataPath = metaPath(resource.id)
-        if (metadataPath.exists()) {
-            readKind(path, metadataPath)
-                .onSuccess { return Result.success(it) }
-                .onFailure {
-                    return generateMetadata(path, resource)
-                }
+    override val inProgress = _inProgress.asStateFlow()
+
+    override fun locate(path: Path, resource: Resource): Result<Metadata> {
+        val metadataPath = metadataPath(resource.id)
+        if (!metadataPath.exists()) {
+            return Result.failure(
+                IllegalStateException("Metadata for $path doesn't exist")
+            )
         }
 
-        return generateMetadata(path, resource)
+        return readKind(metadataPath)
     }
 
     override fun forget(id: ResourceId) {
-        metaPath(id).deleteIfExists()
+        metadataPath(id).deleteIfExists()
     }
 
-    private fun generateMetadata(path: Path, resource: Resource): Result<Metadata> {
-        val metadataPath = metaPath(resource.id)
-        return GeneralMetadataFactory.compute(path, resource)
+    private fun generate(resources: Collection<NewResource>) {
+        appScope.launch(Dispatchers.IO) {
+            _inProgress.emit(true)
+
+            val jobs = resources.map { added ->
+                launch { generate(added.path, added.resource) }
+            }
+
+            jobs.joinAll()
+            _inProgress.emit(false)
+        }
+    }
+
+    private fun generate(path: Path, resource: Resource) {
+        require(!path.isDirectory()) { "Folders are not allowed here" }
+
+        val metadataPath = metadataPath(resource.id)
+
+        GeneralMetadataFactory.compute(path, resource)
             .onSuccess { metadata ->
                 val jsonKind = when (metadata) {
                     is Metadata.Archive -> Json.encodeToString(metadata)
@@ -67,9 +92,15 @@ class PlainMetadataStorage(val root: Path) : MetadataStorage {
 
                 metadataPath.writeText(jsonKind)
             }
+            .onFailure {
+                Log.e(
+                    METADATA,
+                    "Failed to generate metadata for $path"
+                )
+            }
     }
 
-    private fun readKind(path: Path, metadataPath: Path): Result<Metadata> {
+    private fun readKind(metadataPath: Path): Result<Metadata> {
         try {
             val jsonElement = Json.parseToJsonElement(metadataPath.readText())
             val codeJson = jsonElement.jsonObject["code"]!!.jsonPrimitive.content
@@ -119,7 +150,6 @@ class PlainMetadataStorage(val root: Path) : MetadataStorage {
                 Metadata.Link(
                     nativeLinkJson.title,
                     nativeLinkJson.desc,
-                    path.readText()
                 )
             )
         } catch (e: Exception) {
@@ -129,11 +159,25 @@ class PlainMetadataStorage(val root: Path) : MetadataStorage {
             )
         }
 
-        return Result.failure(CorruptedKindFile())
+        return Result.failure(
+            IllegalStateException("Failed to parse metadata from $metadataPath")
+        )
+    }
+
+    private fun initUpdatedResourcesListener() {
+        index.updates.onEach { diff ->
+            generate(diff.added.values)
+
+            diff.deleted.forEach { (id, _) -> forget(id) }
+        }.launchIn(appScope + Dispatchers.IO)
+    }
+
+    private fun initKnownResources() {
+        appScope.launch(Dispatchers.IO) {
+            generate(index.asAdded())
+        }
     }
 }
-
-private class CorruptedKindFile : Exception()
 
 @Serializable
 private class NativeLinkJson(val title: String, val desc: String)

@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import space.taran.arklib.ResourceId
 import space.taran.arklib.domain.index.Resource
+import java.lang.IllegalStateException
 import java.nio.file.Path
 
 class AggregatedPreviewStorage(
@@ -22,28 +23,18 @@ class AggregatedPreviewStorage(
 
     override val inProgress = _inProgress.asStateFlow()
 
-    override fun locate(path: Path, resource: Resource): PreviewAndThumbnail? {
-        shards.forEach { shard ->
-            shard.locate(path, resource)?.let {
-                return it
-            }
+    override fun locate(path: Path, resource: Resource) = shards
+        .find { shard -> path.startsWith(shard.root) }
+        .let {
+            if (it == null) return@let Result.failure(
+                IllegalStateException("Shard must be in the aggregation")
+            )
+            it.locate(path, resource)
         }
-        return null
-    }
 
     override fun forget(id: ResourceId) = shards.forEach {
         it.forget(id)
     }
-
-    override suspend fun store(
-        path: Path,
-        resource: Resource
-    ) = shards
-        .find { shard -> path.startsWith(shard.root) }
-        .let {
-            require(it != null) { "At least one of shards must yield success" }
-            it.store(path, resource)
-        }
 
     private fun initShardsIndexingListener() {
         fun anyShardIndexing() = shards.map { it.inProgress.value }.contains(true)

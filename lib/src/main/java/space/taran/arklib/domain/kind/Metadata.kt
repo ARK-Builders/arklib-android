@@ -20,8 +20,7 @@ sealed class Metadata(val code: KindCode) {
     @Serializable
     class Link(
         val title: String? = null,
-        val description: String? = null,
-        val url: String? = null
+        val description: String? = null
     ) : Metadata(KindCode.LINK)
 
     @Serializable

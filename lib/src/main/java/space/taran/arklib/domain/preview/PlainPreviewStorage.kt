@@ -13,17 +13,14 @@ import space.taran.arklib.arkPreviews
 import space.taran.arklib.arkThumbnails
 import space.taran.arklib.domain.index.NewResource
 import space.taran.arklib.domain.index.Resource
-import space.taran.arklib.domain.index.ResourceUpdates
 import space.taran.arklib.domain.index.RootIndex
 import space.taran.arklib.domain.kind.ImageMetadataFactory
 import space.taran.arklib.domain.preview.generator.PreviewGenerator
 import space.taran.arklib.utils.LogTags.PREVIEWS
+import java.io.FileNotFoundException
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.io.path.createDirectories
-import kotlin.io.path.deleteIfExists
-import kotlin.io.path.isDirectory
-import kotlin.io.path.notExists
+import kotlin.io.path.*
 
 class PlainPreviewStorage(
     private val index: RootIndex,
@@ -51,10 +48,10 @@ class PlainPreviewStorage(
 
     override val inProgress = _inProgress.asStateFlow()
 
-    override fun locate(path: Path, resource: Resource): PreviewAndThumbnail? {
+    override fun locate(path: Path, resource: Resource): Result<PreviewAndThumbnail> {
         val preview = previewPath(resource.id)
         val thumbnail = thumbnailPath(resource.id)
-        if (!Files.exists(thumbnail)) {
+        if (!thumbnail.exists()) {
             Log.w(PREVIEWS, "thumbnail was not found for resource $resource")
             if (Files.exists(preview)) {
                 Log.e(
@@ -63,20 +60,20 @@ class PlainPreviewStorage(
                 )
             }
 
-            return null
+            return Result.failure(FileNotFoundException(path.toString()))
         }
 
-        if (ImageMetadataFactory.isValid(path)) {
-            return PreviewAndThumbnail(
+        val result = if (ImageMetadataFactory.isValid(path)) {
+            PreviewAndThumbnail(
                 preview = path, // using the resource itself as its preview
                 thumbnail = thumbnail
             )
-        }
-
-        return PreviewAndThumbnail(
+        } else PreviewAndThumbnail(
             preview = preview,
             thumbnail = thumbnail
         )
+
+        return Result.success(result)
     }
 
     override fun forget(id: ResourceId) {
@@ -84,8 +81,21 @@ class PlainPreviewStorage(
         thumbnailPath(id).deleteIfExists()
     }
 
-    override suspend fun store(path: Path, resource: Resource) {
-        require(!path.isDirectory()) { "Previews for folders are constant" }
+    private fun generate(resources: Collection<NewResource>) {
+        appScope.launch(Dispatchers.IO) {
+            _inProgress.emit(true)
+
+            val jobs = resources.map { added ->
+                launch { generate(added.path, added.resource) }
+            }
+
+            jobs.joinAll()
+            _inProgress.emit(false)
+        }
+    }
+
+    private suspend fun generate(path: Path, resource: Resource) {
+        require(!path.isDirectory()) { "Folders are not allowed here" }
 
         val previewPath = previewPath(resource.id)
         val thumbnailPath = thumbnailPath(resource.id)
@@ -116,19 +126,6 @@ class PlainPreviewStorage(
             "Generating preview/thumbnail for ${resource.id} ($path)"
         )
         GeneralPreviewGenerator.generate(path, previewPath, thumbnailPath)
-    }
-
-    private fun generate(resources: Collection<NewResource>) {
-        appScope.launch(Dispatchers.IO) {
-            _inProgress.emit(true)
-
-            val jobs = resources.map { added ->
-                launch { store(added.path, added.resource) }
-            }
-
-            jobs.joinAll()
-            _inProgress.emit(false)
-        }
     }
 
     private fun initUpdatedResourcesListener() {

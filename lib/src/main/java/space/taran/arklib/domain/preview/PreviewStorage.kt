@@ -9,9 +9,8 @@ interface PreviewStorage {
 
     val inProgress: StateFlow<Boolean>
 
-    fun locate(path: Path, resource: Resource): PreviewAndThumbnail?
+    fun locate(path: Path, resource: Resource): Result<PreviewAndThumbnail>
 
     fun forget(id: ResourceId)
 
-    suspend fun store(path: Path, resource: Resource)
 }
