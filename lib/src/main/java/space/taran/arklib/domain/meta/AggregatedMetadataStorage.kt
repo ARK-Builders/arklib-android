@@ -1,17 +1,13 @@
 package space.taran.arklib.domain.meta
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import space.taran.arklib.ResourceId
-import space.taran.arklib.domain.index.Resource
 import java.lang.IllegalStateException
 import java.nio.file.Path
 
 class AggregatedMetadataStorage(
-    private val shards: Collection<PlainMetadataStorage>,
+    private val shards: Collection<RootMetadataStorage>,
     private val appScope: CoroutineScope
 ) : MetadataStorage {
 
@@ -21,18 +17,23 @@ class AggregatedMetadataStorage(
         initShardsIndexingListener()
     }
 
+    override val updates: Flow<MetadataUpdate> = shards
+        .map { it.updates }
+        .asIterable()
+        .merge()
+
     override val inProgress = _inProgress.asStateFlow()
 
-    override fun locate(path: Path, resource: Resource) = shards
+    override fun locate(path: Path, id: ResourceId): Result<Metadata> = shards
         .find { shard -> path.startsWith(shard.root) }
         .let {
             if (it == null) return@let Result.failure(
                 IllegalStateException("Shard must be in the aggregation")
             )
-            it.locate(path, resource)
+            it.locate(path, id)
         }
 
-    override fun forget(id: ResourceId) = shards.forEach {
+    override suspend fun forget(id: ResourceId) = shards.forEach {
         it.forget(id)
     }
 

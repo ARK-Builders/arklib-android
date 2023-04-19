@@ -3,17 +3,24 @@ package space.taran.arklib.domain.preview
 import kotlinx.coroutines.CoroutineScope
 import space.taran.arklib.domain.index.ResourceIndex
 import space.taran.arklib.domain.index.RootIndex
+import space.taran.arklib.domain.meta.MetadataStorageRepo
+import space.taran.arklib.domain.meta.RootMetadataStorage
 import java.nio.file.Path
 
-class PreviewStorageRepo(private val appScope: CoroutineScope) {
-    private val storageByRoot = mutableMapOf<Path, PlainPreviewStorage>()
+class PreviewStorageRepo(
+    private val appScope: CoroutineScope,
+    private val metadataStorageRepo: MetadataStorageRepo) {
 
-    //todo: deduplicate (similar code in MetadataStorageRepo)
+    private val storageByRoot = mutableMapOf<Path, RootPreviewStorage>()
+
     fun provide(index: ResourceIndex): PreviewStorage {
         val roots = index.roots
 
         return if (roots.size > 1) {
-            val shards = roots.map { provide(it) }
+            val shards = roots.map {
+                val metadataStorage = metadataStorageRepo.provide(it)
+                provide(it, metadataStorage)
+            }
 
             AggregatedPreviewStorage(shards, appScope)
         } else {
@@ -22,9 +29,13 @@ class PreviewStorageRepo(private val appScope: CoroutineScope) {
         }
     }
 
-    fun provide(root: RootIndex): PlainPreviewStorage =
-        storageByRoot[root.path] ?: PlainPreviewStorage(
-            root, appScope
+    fun provide(
+        root: RootIndex,
+        metadataStorage: RootMetadataStorage
+    ): RootPreviewStorage =
+
+        storageByRoot[root.path] ?: RootPreviewStorage(
+            root.path, metadataStorage, appScope
         ).also {
             storageByRoot[root.path] = it
         }

@@ -14,16 +14,6 @@ import space.taran.arklib.utils.LogTags
 import space.taran.arklib.utils.LogTags.RESOURCES_INDEX
 import space.taran.arklib.utils.withContextAndLock
 import java.nio.file.Path
-import kotlin.io.path.ExperimentalPathApi
-
-class ResourceUpdates (
-    val deleted: Map<ResourceId, LostResource>,
-    val added: Map<ResourceId, NewResource>
-)
-
-data class LostResource(val path: Path, val resource: Resource)
-
-data class NewResource(val path: Path, val resource: Resource)
 
 /**
  * [RootIndex] is a type of index backed by storage file.
@@ -38,7 +28,6 @@ data class NewResource(val path: Path, val resource: Resource)
  *
  * See also [IndexAggregation] and [IndexProjection].
  */
-@OptIn(ExperimentalPathApi::class)
 class RootIndex
     private constructor(val path: Path): ResourceIndex {
 
@@ -52,7 +41,7 @@ class RootIndex
     }
 
     private val mutex = Mutex()
-    private val mutUpdates = MutableSharedFlow<ResourceUpdates>()
+    private val _updates = MutableSharedFlow<ResourceUpdates>()
 
     private val resourceById: MutableMap<ResourceId, Resource> = mutableMapOf()
     private val pathById: MutableMap<ResourceId, Path> = mutableMapOf()
@@ -114,7 +103,7 @@ class RootIndex
 
     override val roots: Set<RootIndex> = setOf(this)
 
-    override val updates = mutUpdates.asSharedFlow()
+    override val updates = _updates.asSharedFlow()
 
     override suspend fun updateAll(): Unit =
         withContextAndLock(Dispatchers.IO, mutex) {
@@ -133,7 +122,7 @@ class RootIndex
                 pathById[id] = added.path
             }
 
-            mutUpdates.emit(updates)
+            _updates.emit(updates)
         }
 
     override suspend fun allResources(): Set<Resource> = mutex.withLock {

@@ -11,4 +11,6 @@ object LogTags {
     const val IMAGES: String = "images"
 
     const val GLIDE: String = "glide"
+
+    const val TIKA: String = "tika"
 }

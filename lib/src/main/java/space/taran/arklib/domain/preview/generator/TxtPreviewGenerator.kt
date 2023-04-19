@@ -8,48 +8,53 @@ import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import space.taran.arklib.app
-import java.io.FileReader
+import space.taran.arklib.domain.meta.Kind
+import space.taran.arklib.domain.meta.Metadata
+import space.taran.arklib.domain.preview.Preview
+import space.taran.arklib.domain.preview.PreviewGenerator
 import java.nio.file.Path
+import kotlin.io.path.readLines
 
-object TxtPreviewGenerator : PreviewGenerator() {
-    override val acceptedExtensions = setOf("txt")
-    override val acceptedMimeTypes = setOf("text/plain")
+object TxtPreviewGenerator : PreviewGenerator {
 
-    override suspend fun generate(path: Path, previewPath: Path, thumbnailPath: Path) {
-        val thumbnail = generateThumbnail(path)
-        storeThumbnail(thumbnailPath, thumbnail)
+    override fun isValid(path: Path, meta: Metadata): Boolean {
+        return meta.kind == Kind.PLAINTEXT
     }
+
+    override suspend fun generate(path: Path, meta: Metadata): Result<Preview> =
+        generateBitmap(path).map {
+            Preview(it, onlyThumbnail = true)
+        }
 
     // it is padding in preview image
     private val padding = 2f * app.resources.displayMetrics.density
 
-    private fun generateThumbnail(source: Path): Bitmap {
-        val fr = FileReader(source.toFile())
+    private fun generateBitmap(path: Path): Result<Bitmap> {
+        val lines = path.readLines()
+        val text = lines.take(10).joinToString("\n")
+
         val textPaint = TextPaint()
         textPaint.isAntiAlias = true
         textPaint.textSize = 5f
         textPaint.color = -0x1000000
 
-        val numberOfLines = fr.readLines()
-        val text = if (numberOfLines.size > 10)
-            numberOfLines.subList(0, 10).joinToString("\n")
-        else numberOfLines.subList(0, numberOfLines.size).joinToString("\n")
+        val bitmap = Bitmap.createBitmap(
+            Preview.THUMBNAIL_SIZE,
+            Preview.THUMBNAIL_SIZE,
+            Bitmap.Config.ARGB_8888
+        )
+
         val staticLayout = StaticLayout.Builder.obtain(
             text,
             0,
             text.length,
             textPaint,
             // right is padding in preview image
-            THUMBNAIL_SIZE - (padding.toInt())
+            Preview.THUMBNAIL_SIZE - (padding.toInt())
         ).setAlignment(Layout.Alignment.ALIGN_NORMAL)
             .setLineSpacing(5f, 0.9f)
             .setIncludePad(true)
             .build()
-        val bitmap = Bitmap.createBitmap(
-            THUMBNAIL_SIZE,
-            THUMBNAIL_SIZE,
-            Bitmap.Config.ARGB_8888
-        )
 
         val canvas = Canvas(bitmap)
         val paint = Paint()
@@ -60,6 +65,7 @@ object TxtPreviewGenerator : PreviewGenerator() {
         canvas.translate(padding, padding) // Left top padding in preview image.
         staticLayout.draw(canvas)
         canvas.restore()
-        return bitmap
+
+        return Result.success(bitmap)
     }
 }

@@ -1,5 +1,6 @@
 package space.taran.arklib.utils
 
+import android.util.Log
 import org.apache.tika.Tika
 import java.nio.file.Files
 import java.nio.file.Path
@@ -15,6 +16,15 @@ fun extension(path: Path): String {
     return path.extension.lowercase()
 }
 
-fun getMimeTypeUsingTika(path: Path): String? {
-    return Tika().detect(Files.newInputStream(path))
+fun detectMimeType(path: Path): String? {
+    Log.d(LogTags.TIKA, "invoking Apache Tika to detect MIME type")
+    val mime = Tika().detect(Files.newInputStream(path))
+
+    if (mime == null) {
+        Log.w(LogTags.TIKA, "can't detect MIME type for $path")
+    } else {
+        Log.d(LogTags.TIKA, "$path is detected as $mime")
+    }
+
+    return mime
 }

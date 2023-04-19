@@ -1,7 +1,6 @@
 package space.taran.arklib.domain.index
 
 import space.taran.arklib.ResourceId
-import space.taran.arklib.domain.kind.Metadata
 import space.taran.arklib.utils.extension
 import java.io.IOException
 import java.nio.file.Files
@@ -13,7 +12,6 @@ data class Resource(
     val name: String,
     val extension: String,
     val modified: FileTime,
-    var metadata: Metadata?,
 ) {
 
     fun size() = id.dataSize
@@ -32,8 +30,7 @@ data class Resource(
                 id = id,
                 name = path.fileName.toString(),
                 extension = extension(path),
-                modified = Files.getLastModifiedTime(path),
-                metadata = null
+                modified = Files.getLastModifiedTime(path)
             ))
         }
     }

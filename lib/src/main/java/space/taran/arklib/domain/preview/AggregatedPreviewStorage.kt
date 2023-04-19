@@ -6,12 +6,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import space.taran.arklib.ResourceId
-import space.taran.arklib.domain.index.Resource
 import java.lang.IllegalStateException
 import java.nio.file.Path
 
 class AggregatedPreviewStorage(
-    private val shards: Collection<PlainPreviewStorage>,
+    private val shards: Collection<RootPreviewStorage>,
     private val appScope: CoroutineScope
 ) : PreviewStorage {
 
@@ -23,13 +22,13 @@ class AggregatedPreviewStorage(
 
     override val inProgress = _inProgress.asStateFlow()
 
-    override fun locate(path: Path, resource: Resource) = shards
+    override fun locate(path: Path, id: ResourceId): Result<PreviewLocator> = shards
         .find { shard -> path.startsWith(shard.root) }
         .let {
             if (it == null) return@let Result.failure(
                 IllegalStateException("Shard must be in the aggregation")
             )
-            it.locate(path, resource)
+            it.locate(path, id)
         }
 
     override fun forget(id: ResourceId) = shards.forEach {
