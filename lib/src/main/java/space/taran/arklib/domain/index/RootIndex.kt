@@ -73,7 +73,7 @@ class RootIndex
     }
 
     suspend fun init() {
-        withContext(Dispatchers.IO) {
+        withContextAndLock(Dispatchers.IO, mutex) {
             if (!BindingIndex.load(path)) {
                 Log.e(
                     RESOURCES_INDEX,
