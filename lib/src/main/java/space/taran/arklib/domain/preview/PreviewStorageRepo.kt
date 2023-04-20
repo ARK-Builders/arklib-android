@@ -25,7 +25,8 @@ class PreviewStorageRepo(
             AggregatedPreviewStorage(shards, appScope)
         } else {
             val root = roots.iterator().next()
-            provide(root)
+            val metadataStorage = metadataStorageRepo.provide(root)
+            provide(root, metadataStorage)
         }
     }
 
@@ -33,7 +34,6 @@ class PreviewStorageRepo(
         root: RootIndex,
         metadataStorage: RootMetadataStorage
     ): RootPreviewStorage =
-
         storageByRoot[root.path] ?: RootPreviewStorage(
             root.path, metadataStorage, appScope
         ).also {
