@@ -10,9 +10,9 @@ class ResourceIndexRepo(
     private val foldersRepo: FoldersRepo,
 ) {
     suspend fun provide(
-        rootAndFav: RootAndFav
+        folders: RootAndFav
     ): ResourceIndex = withContext(Dispatchers.IO) {
-        val roots = foldersRepo.resolveRoots(rootAndFav)
+        val roots = foldersRepo.resolveRoots(folders)
 
         if (roots.size > 1) {
             val shards = roots.map { RootIndex.provide(it) }
@@ -21,9 +21,9 @@ class ResourceIndexRepo(
             val root = roots.iterator().next()
             val index = RootIndex.provide(root)
 
-            if (rootAndFav.fav != null) {
-                val rootPath = rootAndFav.root!!
-                val favoritePath = rootPath.resolve(rootAndFav.fav!!)
+            if (folders.fav != null) {
+                val rootPath = folders.root!!
+                val favoritePath = rootPath.resolve(folders.fav!!)
 
                 return@withContext IndexProjection(index) { _, path ->
                     path.startsWith(favoritePath)

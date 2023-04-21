@@ -7,36 +7,38 @@ import android.util.Log
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import space.taran.arklib.app
+import space.taran.arklib.domain.meta.Kind
+import space.taran.arklib.domain.meta.Metadata
+import space.taran.arklib.domain.preview.Preview
+import space.taran.arklib.domain.preview.PreviewGenerator
 import java.nio.file.Path
 import kotlin.io.path.name
 import space.taran.arklib.utils.LogTags.PREVIEWS
 import wseemann.media.FFmpegMediaMetadataRetriever
 
-object VideoPreviewGenerator : PreviewGenerator() {
-    override val acceptedExtensions: Set<String> =
-        setOf("mp4", "avi", "mkv", "mov", "wmv", "flv", "webm", "ts", "mpg")
-    override val acceptedMimeTypes: Set<String>
-        get() = setOf("video/mp4")
+object VideoPreviewGenerator : PreviewGenerator {
 
-    override suspend fun generate(path: Path, previewPath: Path, thumbnailPath: Path) {
-        val preview = generatePreview(path)
-        preview?.let {
-            storePreview(previewPath, it)
-            val thumbnail = resizePreviewToThumbnail(it)
-            storeThumbnail(thumbnailPath, thumbnail)
-        }
+    override fun isValid(path: Path, meta: Metadata): Boolean {
+        return meta.kind == Kind.VIDEO
     }
 
-    private fun generatePreview(path: Path): Bitmap? {
+    override suspend fun generate(path: Path, meta: Metadata): Result<Preview> =
+        generateBitmap(path, (meta as Metadata.Video).duration).map {
+            Preview(it, onlyThumbnail = false)
+        }
+
+    private fun generateBitmap(path: Path, durationMillis: Long?): Result<Bitmap> {
+        val timeMicros = (durationMillis ?: 10000) / 1000 / 2
+
         val retriever = FFmpegMediaMetadataRetriever()
-        var mainBitmap: Bitmap? = null
+
         try {
             retriever.setDataSource(app, Uri.fromFile(path.toFile()))
             // Trying 3 ways to get preview image for video.
             // 1. using FFmpegMediaMetadataRetriever
             // 2. using MediaMetadataRetriever
             // 3. using Glide
-            mainBitmap = retriever.frameAtTime ?: let {
+            val mainBitmap = retriever.frameAtTime ?: let {
                 MediaMetadataRetriever().let { mediaMetadataRetriever ->
                     try {
                         mediaMetadataRetriever.setDataSource(
@@ -47,11 +49,12 @@ object VideoPreviewGenerator : PreviewGenerator() {
                             PREVIEWS, "Failed to setDataSource for ${path.name}"
                         )
                     }
+
                     var bitmap: Bitmap? = mediaMetadataRetriever.frameAtTime
                     if (bitmap != null) {
                         val tempBitmap: Bitmap? = mediaMetadataRetriever
                             .getFrameAtTime(
-                                4000000,
+                                timeMicros,
                                 MediaMetadataRetriever.OPTION_CLOSEST_SYNC
                             )
                         if (tempBitmap != null) {
@@ -64,25 +67,22 @@ object VideoPreviewGenerator : PreviewGenerator() {
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
                     .submit().get()
             }
-            if (mainBitmap != null) {
-                val bitmap: Bitmap? = retriever.getFrameAtTime(
-                    4000000,
-                    FFmpegMediaMetadataRetriever.OPTION_CLOSEST_SYNC
-                )
-                if (bitmap != null) {
-                    mainBitmap = bitmap
-                }
-            }
 
             if (mainBitmap != null) {
-                Log.i("Thumbnail", "Extracted frame")
-            } else {
-                Log.e("Thumbnail", "Failed to extract frame")
+                val bitmap: Bitmap? = retriever.getFrameAtTime(
+                    timeMicros,
+                    FFmpegMediaMetadataRetriever.OPTION_CLOSEST_SYNC
+                )
+
+                if (bitmap != null) {
+                    return Result.success(bitmap)
+                }
             }
+            return Result.success(mainBitmap)
         } catch (e: IllegalArgumentException) {
-            Log.e(PREVIEWS, "Failed to setDataSource for ${path.name}")
+            return Result.failure(e)
+        } finally {
+            retriever.release()
         }
-        retriever.release()
-        return mainBitmap
     }
 }

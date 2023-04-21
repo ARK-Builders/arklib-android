@@ -22,3 +22,13 @@ interface ResourceIndex {
     suspend fun allIds(): Set<ResourceId> =
         allResources().map { it.id }.toSet()
 }
+
+
+class ResourceUpdates(
+    val deleted: Map<ResourceId, LostResource>,
+    val added: Map<ResourceId, NewResource>
+)
+
+data class LostResource(val path: Path, val resource: Resource)
+
+data class NewResource(val path: Path, val resource: Resource)

@@ -1,13 +1,23 @@
 package space.taran.arklib.domain.meta
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import space.taran.arklib.ResourceId
-import space.taran.arklib.domain.index.Resource
-import space.taran.arklib.domain.kind.Metadata
 import java.nio.file.Path
 
 interface MetadataStorage {
 
-    fun provideMetadata(path: Path, resource: Resource): Result<Metadata>
+    val inProgress: StateFlow<Boolean>
 
-    fun forget(id: ResourceId)
+    val updates: Flow<MetadataUpdate>
+
+    fun locate(path: Path, id: ResourceId): Result<Metadata>
+
+    suspend fun forget(id: ResourceId)
+}
+
+
+sealed class MetadataUpdate {
+    data class Deleted(val id: ResourceId): MetadataUpdate()
+    data class Added(val id: ResourceId, val path: Path, val metadata: Metadata): MetadataUpdate()
 }
