@@ -44,7 +44,6 @@ class RootMetadataStorage(
 
     override val updates = _updates.asSharedFlow()
 
-    //todo: add caching
     fun locate(id: ResourceId): Result<Metadata> {
         val metadataPath = metadataPath(id)
         if (!metadataPath.exists()) {

@@ -41,10 +41,9 @@ object DocumentMetadataGenerator: MetadataGenerator {
             )
         }
 
-        //todo: count pages for other document types too
-
+        var parcelFileDescriptor: ParcelFileDescriptor? = null;
         return try {
-            val parcelFileDescriptor = ParcelFileDescriptor.open(
+            parcelFileDescriptor = ParcelFileDescriptor.open(
                 path.toFile(),
                 ParcelFileDescriptor.MODE_READ_ONLY
             )
@@ -58,6 +57,8 @@ object DocumentMetadataGenerator: MetadataGenerator {
             )
         } catch (e: FileNotFoundException) {
             Result.failure(FileNotFoundException(path.toString()))
+        } finally {
+            parcelFileDescriptor?.close()
         }
     }
 

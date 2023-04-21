@@ -27,7 +27,6 @@ object VideoPreviewGenerator : PreviewGenerator {
             Preview(it, onlyThumbnail = false)
         }
 
-    //todo: check this code
     private fun generateBitmap(path: Path, durationMillis: Long?): Result<Bitmap> {
         val timeMicros = (durationMillis ?: 10000) / 1000 / 2
 

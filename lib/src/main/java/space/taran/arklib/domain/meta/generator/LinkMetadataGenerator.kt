@@ -14,5 +14,5 @@ object LinkMetadataGenerator: MetadataGenerator {
         get() = setOf()
 
     override fun generate(path: Path, resource: Resource): Result<Metadata> =
-        Result.success(Metadata.Link()) // todo: implement
+        Result.success(Metadata.Link())
 }

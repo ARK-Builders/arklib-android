@@ -9,7 +9,6 @@ interface MetadataStorage {
 
     val inProgress: StateFlow<Boolean>
 
-    // todo: do we need apps subscribe to it?
     val updates: Flow<MetadataUpdate>
 
     fun locate(path: Path, id: ResourceId): Result<Metadata>

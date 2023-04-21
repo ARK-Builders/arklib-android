@@ -83,8 +83,9 @@ class RootIndex
                 throw UnknownError()
             }
 
-            // todo: this should be done in Rust arklib during provision
-            // when index instance is already created
+            // when index instance is already created,
+            // right now, we do the updating twice
+            // if the index is created
 
             // when the index is initialized,
             // we should not have subscribers yet

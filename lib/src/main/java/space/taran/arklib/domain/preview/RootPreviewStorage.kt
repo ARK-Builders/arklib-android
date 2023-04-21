@@ -52,7 +52,8 @@ class RootPreviewStorage(
         locate(id).getOrThrow().erase()
     }
 
-    //todo: add caching
+    // always successful, if corresponding metadata exists
+    // `result.status` can be `ABSENT` and should be checked by consumer
     private suspend fun locate(id: ResourceId): Result<PreviewLocator> {
         return metadataStorage
             .locate(id)
@@ -62,12 +63,6 @@ class RootPreviewStorage(
                     PreviewLocator(root, id, image)
                 } else {
                     PreviewLocator(root, id)
-                }
-
-                if (locator.status == PreviewStatus.ABSENT) {
-                    return Result.failure(
-                        FileNotFoundException(locator.thumbnail().toString())
-                    )
                 }
 
                 return Result.success(locator)
@@ -89,8 +84,8 @@ class RootPreviewStorage(
                     PreviewGenerator.generate(path, update.metadata)
                         .onSuccess { locator.store(it) }
                         .onFailure {
-                            Log.e(PREVIEWS, "Failed to generate preview for $path")
-                            Log.e(PREVIEWS, it.toString())
+                            Log.w(PREVIEWS, "Failed to generate preview for $path")
+                            Log.w(PREVIEWS, it.toString())
                         }
                 }
             }.join()

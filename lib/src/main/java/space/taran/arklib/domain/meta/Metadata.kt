@@ -6,14 +6,6 @@ enum class Kind {
     IMAGE, VIDEO, DOCUMENT, LINK, PLAINTEXT, ARCHIVE
 }
 
-// TODO: SHOULD WE SEPARATE PROPERTIES AND METADATA?
-// PROPERTIES:
-//     generated deterministically from a resource
-//     allowed to be lost
-// METADATA:
-//     defined by user
-//     not allowed to be lost
-
 // used for JSON parsing, must be the same as name
 // of the `Metadata` constructor field
 const val KIND: String = "kind"

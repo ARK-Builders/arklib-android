@@ -6,7 +6,7 @@ import space.taran.arklib.domain.meta.MetadataGenerator
 import java.nio.file.Path
 
 object ImageMetadataGenerator: MetadataGenerator {
-    //todo: check if HEIC works
+
     override val acceptedExtensions: Set<String>
         get() = setOf("bmp", "gif", "ico", "jpg", "jpeg",
             "png", "svg", "tif", "tiff",
