@@ -14,6 +14,10 @@ enum class Kind {
 //     defined by user
 //     not allowed to be lost
 
+// used for JSON parsing, must be the same as name
+// of the `Metadata` constructor field
+const val KIND: String = "kind"
+
 @Serializable
 sealed class Metadata(val kind: Kind) {
     @Serializable

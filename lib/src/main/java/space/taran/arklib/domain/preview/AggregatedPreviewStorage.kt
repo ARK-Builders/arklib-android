@@ -22,16 +22,19 @@ class AggregatedPreviewStorage(
 
     override val inProgress = _inProgress.asStateFlow()
 
-    override fun locate(path: Path, id: ResourceId): Result<PreviewLocator> = shards
-        .find { shard -> path.startsWith(shard.root) }
-        .let {
-            if (it == null) return@let Result.failure(
-                IllegalStateException("Shard must be in the aggregation")
-            )
-            it.locate(path, id)
-        }
+    override suspend fun locate(
+        path: Path,
+        id: ResourceId): Result<PreviewLocator> =
+        shards
+            .find { shard -> path.startsWith(shard.root) }
+            .let {
+                if (it == null) return@let Result.failure(
+                    IllegalStateException("Shard must be in the aggregation")
+                )
+                it.locate(path, id)
+            }
 
-    override fun forget(id: ResourceId) = shards.forEach {
+    override suspend fun forget(id: ResourceId) = shards.forEach {
         it.forget(id)
     }
 

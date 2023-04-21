@@ -35,7 +35,7 @@ class PreviewStorageRepo(
         metadataStorage: RootMetadataStorage
     ): RootPreviewStorage =
         storageByRoot[root.path] ?: RootPreviewStorage(
-            root.path, metadataStorage, appScope
+            root.path, root, metadataStorage, appScope
         ).also {
             storageByRoot[root.path] = it
         }

@@ -10,7 +10,8 @@ import space.taran.arklib.ResourceId
 import space.taran.arklib.arkFolder
 import space.taran.arklib.arkPreviews
 import space.taran.arklib.arkThumbnails
-import space.taran.arklib.domain.meta.Metadata
+import space.taran.arklib.domain.index.RootIndex
+import space.taran.arklib.domain.meta.Kind
 import space.taran.arklib.domain.meta.MetadataUpdate
 import space.taran.arklib.domain.meta.RootMetadataStorage
 import space.taran.arklib.utils.LogTags.PREVIEWS
@@ -20,6 +21,7 @@ import kotlin.io.path.*
 
 class RootPreviewStorage(
     val root: Path,
+    private val index: RootIndex,
     private val metadataStorage: RootMetadataStorage,
     private val appScope: CoroutineScope
 ): PreviewStorage {
@@ -30,6 +32,7 @@ class RootPreviewStorage(
     private val _inProgress = MutableStateFlow(false)
 
     init {
+        Log.d(PREVIEWS, "Initializing previews storage for root $root")
         previewsDir.createDirectories()
         thumbnailsDir.createDirectories()
         initUpdatedResourcesListener()
@@ -42,22 +45,33 @@ class RootPreviewStorage(
 
     override val inProgress = _inProgress.asStateFlow()
 
-    override fun locate(path: Path, id: ResourceId): Result<PreviewLocator> =
+    override suspend fun locate(path: Path, id: ResourceId): Result<PreviewLocator> =
         locate(id)
 
-    override fun forget(id: ResourceId) {
+    override suspend fun forget(id: ResourceId) {
         locate(id).getOrThrow().erase()
     }
 
-    private fun locate(id: ResourceId): Result<PreviewLocator> {
-        val locator = PreviewLocator(root, id)
-        if (locator.status == PreviewStatus.ABSENT) {
-            return Result.failure(
-                FileNotFoundException(locator.thumbnail().toString())
-            )
-        }
+    //todo: add caching
+    private suspend fun locate(id: ResourceId): Result<PreviewLocator> {
+        return metadataStorage
+            .locate(id)
+            .map {
+                val locator = if (it.kind == Kind.IMAGE) {
+                    val image: Path = index.getPath(id)!!
+                    PreviewLocator(root, id, image)
+                } else {
+                    PreviewLocator(root, id)
+                }
 
-        return Result.success(locator)
+                if (locator.status == PreviewStatus.ABSENT) {
+                    return Result.failure(
+                        FileNotFoundException(locator.thumbnail().toString())
+                    )
+                }
+
+                return Result.success(locator)
+            }
     }
 
     private fun generate(update: MetadataUpdate.Added) {
@@ -65,25 +79,24 @@ class RootPreviewStorage(
             _inProgress.emit(true)
 
             launch {
-                generate(update.id, update.path, update.metadata)
+                val id = update.id
+                val locator = PreviewLocator(root, id)
+
+                if (locator.status == PreviewStatus.ABSENT) {
+                    Log.d(PREVIEWS, "Generating preview for $id")
+
+                    val path = update.path
+                    PreviewGenerator.generate(path, update.metadata)
+                        .onSuccess { locator.store(it) }
+                        .onFailure {
+                            Log.e(PREVIEWS, "Failed to generate preview for $path")
+                            Log.e(PREVIEWS, it.toString())
+                        }
+                }
             }.join()
 
             _inProgress.emit(false)
         }
-    }
-
-    private suspend fun generate(id: ResourceId, path: Path, meta: Metadata) {
-        val locator = PreviewLocator(root, id)
-        if (locator.status != PreviewStatus.ABSENT) {
-            return
-        }
-
-        PreviewGenerator.generate(path, meta)
-            .onSuccess { locator.store(it) }
-            .onFailure {
-                Log.e(PREVIEWS, "Failed to generate preview for $path")
-                Log.e(PREVIEWS, it.toString())
-            }
     }
 
     private fun initUpdatedResourcesListener() {

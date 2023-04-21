@@ -3,7 +3,7 @@ package space.taran.arklib.domain.meta
 import android.util.Log
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -34,6 +34,7 @@ class RootMetadataStorage(
         metadataDir.resolve(id.toString())
 
     init {
+        Log.d(METADATA, "Initializing metadata storage for root $root")
         metadataDir.createDirectories()
         initUpdatedResourcesListener()
         initKnownResources()
@@ -43,15 +44,8 @@ class RootMetadataStorage(
 
     override val updates = _updates.asSharedFlow()
 
-    override fun locate(path: Path, id: ResourceId): Result<Metadata> =
-        locate(id)
-
-    override suspend fun forget(id: ResourceId) {
-        _updates.emit(MetadataUpdate.Deleted(id))
-        metadataPath(id).deleteIfExists()
-    }
-
-    private fun locate(id: ResourceId): Result<Metadata> {
+    //todo: add caching
+    fun locate(id: ResourceId): Result<Metadata> {
         val metadataPath = metadataPath(id)
         if (!metadataPath.exists()) {
             return Result.failure(
@@ -62,7 +56,18 @@ class RootMetadataStorage(
         return readMetadata(metadataPath)
     }
 
+    override fun locate(path: Path, id: ResourceId): Result<Metadata> =
+        locate(id)
+
+    override suspend fun forget(id: ResourceId) {
+        _updates.emit(MetadataUpdate.Deleted(id))
+        metadataPath(id).deleteIfExists()
+    }
+
     private fun generate(resources: Collection<NewResource>) {
+        val amount = resources.size
+        Log.i(METADATA, "Checking metadata for $amount known resources in $root")
+
         appScope.launch(Dispatchers.IO) {
             _inProgress.emit(true)
 
@@ -77,11 +82,14 @@ class RootMetadataStorage(
 
     private suspend fun generate(path: Path, resource: Resource) {
         require(!path.isDirectory()) { "Folders are not allowed here" }
+        Log.d(METADATA,
+            "Generating metadata for resource ${resource.id} by path $path")
 
         val locator = metadataPath(resource.id)
 
-        MetadataGenerator.generate(path, resource)
-            .map { metadata ->
+        MetadataGenerator
+            .generate(path, resource)
+            .onSuccess { metadata ->
                 val json = when (metadata) {
                     is Metadata.Archive -> Json.encodeToString(metadata)
                     is Metadata.Document -> Json.encodeToString(metadata)
@@ -94,78 +102,54 @@ class RootMetadataStorage(
                 locator.writeText(json)
                 _updates.emit(MetadataUpdate.Added(resource.id, path, metadata))
             }
-            .onFailure {
-                Log.e(METADATA, "Failed to generate metadata for $path")
-            }
+            .getOrThrow()
     }
 
     private fun readMetadata(path: Path): Result<Metadata> {
-        try {
-            val jsonElement = Json.parseToJsonElement(path.readText())
-            val codeJson = jsonElement.jsonObject["code"]!!.jsonPrimitive.content
+        Log.d(METADATA, "Reading metadata from $path")
 
-            val kind = when (Kind.valueOf(codeJson)) {
+        try {
+            val json = Json.parseToJsonElement(path.readText())
+            val kind = json.jsonObject[KIND]!!.jsonPrimitive.content
+
+            val metadata = when (Kind.valueOf(kind)) {
                 Kind.IMAGE ->
                     Json.decodeFromJsonElement(
                         Metadata.Image.serializer(),
-                        jsonElement
+                        json
                     )
                 Kind.VIDEO ->
                     Json.decodeFromJsonElement(
                         Metadata.Video.serializer(),
-                        jsonElement
+                        json
                     )
                 Kind.DOCUMENT ->
                     Json.decodeFromJsonElement(
                         Metadata.Document.serializer(),
-                        jsonElement
+                        json
                     )
                 Kind.LINK -> Json.decodeFromJsonElement(
                     Metadata.Link.serializer(),
-                    jsonElement
+                    json
                 )
                 Kind.PLAINTEXT -> Json.decodeFromJsonElement(
                     Metadata.PlainText.serializer(),
-                    jsonElement
+                    json
                 )
                 Kind.ARCHIVE -> Json.decodeFromJsonElement(
                     Metadata.Archive.serializer(),
-                    jsonElement
+                    json
                 )
             }
-            return Result.success(kind)
-        } catch (e: Exception) {
-            Log.w(
-                METADATA,
-                "Can't read kind with ResourceKind serializer for $path"
-            )
-        }
 
-        //todo: why do we need this?
-        try {
-            val nativeLinkJson = Json.decodeFromString(
-                NativeLinkJson.serializer(),
-                path.readText()
-            )
-            return Result.success(
-                Metadata.Link(
-                    nativeLinkJson.title,
-                    nativeLinkJson.desc,
-                )
-            )
-        } catch (e: Exception) {
-            Log.w(
-                METADATA,
-                "Can't read kind with Native Link serializer for $path"
-            )
+            return Result.success(metadata)
+        } catch (e: SerializationException) {
+            return Result.failure(e)
         }
-
-        return Result.failure(
-            IllegalStateException("Failed to parse metadata from $path")
-        )
     }
 
     private fun initUpdatedResourcesListener() {
+        Log.d(METADATA, "Listening for updates in the index")
         index.updates.onEach { diff ->
             generate(diff.added.values)
 
@@ -182,6 +166,3 @@ class RootMetadataStorage(
         }
     }
 }
-
-@Serializable
-private class NativeLinkJson(val title: String, val desc: String)

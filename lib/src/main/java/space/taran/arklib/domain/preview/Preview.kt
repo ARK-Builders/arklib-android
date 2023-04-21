@@ -1,6 +1,7 @@
 package space.taran.arklib.domain.preview
 
 import android.graphics.Bitmap
+import android.util.Log
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -57,9 +58,14 @@ enum class PreviewStatus {
 
 class PreviewLocator(
     private val root: Path,
-    private val id: ResourceId) {
+    private val id: ResourceId,
+    private val fullscreen: Path? = null) {
 
-    fun fullscreen(): Path = previewsDir.resolve(id.toString())
+    private val previewsDir = root.arkFolder().arkPreviews()
+    private val thumbnailsDir = root.arkFolder().arkThumbnails()
+
+    fun fullscreen(): Path = fullscreen ?: previewsDir.resolve(id.toString())
+
     fun thumbnail(): Path = thumbnailsDir.resolve(id.toString())
 
     var status: PreviewStatus = PreviewStatus.ABSENT
@@ -102,11 +108,11 @@ class PreviewLocator(
 
     fun erase() {
         thumbnail().deleteIfExists()
-        fullscreen().deleteIfExists()
-    }
 
-    private val previewsDir = root.arkFolder().arkPreviews()
-    private val thumbnailsDir = root.arkFolder().arkThumbnails()
+        if (fullscreen == null) {
+            fullscreen().deleteIfExists()
+        }
+    }
 
     private fun storeImage(target: Path, bitmap: Bitmap) {
         Files.newOutputStream(target).use { out ->

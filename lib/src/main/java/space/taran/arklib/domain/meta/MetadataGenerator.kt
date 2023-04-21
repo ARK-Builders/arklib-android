@@ -19,12 +19,12 @@ interface MetadataGenerator {
     fun generate(path: Path, resource: Resource): Result<Metadata>
 
     fun isValid(path: Path): Boolean {
-        if (DocumentMetadataGenerator.acceptedExtensions.contains(extension(path))) {
+        if (acceptedExtensions.contains(extension(path))) {
             return true
         }
 
         val mimeType = detectMimeType(path) ?: return false
-        return DocumentMetadataGenerator.acceptedMimeTypes.contains(mimeType)
+        return acceptedMimeTypes.contains(mimeType)
     }
 
     companion object {

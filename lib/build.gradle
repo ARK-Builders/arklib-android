@@ -87,6 +87,7 @@ publishing {
         release(MavenPublication) {
             groupId = "space.taran"
             artifactId = "arklib"
+            version = "0.1.0"
 
             afterEvaluate {
                 from components.release
