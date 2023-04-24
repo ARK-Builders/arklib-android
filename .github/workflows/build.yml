@@ -35,25 +35,6 @@ jobs:
 
     - name: Build with Gradle
       run: ./gradlew lib:assemble
-      
-    - name: Publish package
-      uses: gradle/gradle-build-action@v2
-      with:
-        arguments: publish
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Publish Debug
-      uses: actions/upload-artifact@v3
-      with:
-        name: debug-lib
-        path: ./lib/build/outputs/aar/lib-debug.aar
-
-    - name: Publish Release
-      uses: actions/upload-artifact@v3
-      with:
-        name: release-lib
-        path: ./lib/build/outputs/aar/lib-release.aar
 
   test:
     needs: build
