@@ -6,7 +6,6 @@ import space.taran.arklib.domain.preview.generator.ImagePreviewGenerator
 import space.taran.arklib.domain.preview.generator.PdfPreviewGenerator
 import space.taran.arklib.domain.preview.generator.TxtPreviewGenerator
 import space.taran.arklib.domain.preview.generator.VideoPreviewGenerator
-import space.taran.arklib.utils.LogTags
 import java.nio.file.Path
 import kotlin.system.measureTimeMillis
 

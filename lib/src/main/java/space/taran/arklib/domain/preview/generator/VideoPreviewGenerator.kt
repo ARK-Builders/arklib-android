@@ -13,7 +13,6 @@ import space.taran.arklib.domain.preview.Preview
 import space.taran.arklib.domain.preview.PreviewGenerator
 import java.nio.file.Path
 import kotlin.io.path.name
-import space.taran.arklib.utils.LogTags.PREVIEWS
 import wseemann.media.FFmpegMediaMetadataRetriever
 
 object VideoPreviewGenerator : PreviewGenerator {
@@ -46,7 +45,7 @@ object VideoPreviewGenerator : PreviewGenerator {
                         )
                     } catch (e: IllegalArgumentException) {
                         Log.e(
-                            PREVIEWS, "Failed to setDataSource for ${path.name}"
+                            LOG_PREFIX, "Failed to setDataSource for ${path.name}"
                         )
                     }
 

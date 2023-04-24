@@ -32,7 +32,7 @@ class PDFGenTest {
         appContext.resources.openRawResource(R.raw.test).copyTo(
             path.outputStream()
         )
-        Log.i("PDFGen","Calling PDF Native Renderer")
+        Log.i(LOG_PREFIX,"Calling PDF Native Renderer")
 
         val pdfData = pdfPreviewGenerate(path.toString(), PreviewQuality.LOW)
         path.inputStream().close()
@@ -42,10 +42,13 @@ class PDFGenTest {
 
         val picDir = appContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         val pic = File(picDir, "test.png")
-        Log.i("PDFGen", pic.path)
+        Log.i(LOG_PREFIX, pic.path)
         val out = FileOutputStream(pic)
         pdfData.compress(Bitmap.CompressFormat.PNG, 100, out);
         out.flush()
         out.close()
     }
+
 }
+
+private const val LOG_PREFIX: String = "Test: PDF"

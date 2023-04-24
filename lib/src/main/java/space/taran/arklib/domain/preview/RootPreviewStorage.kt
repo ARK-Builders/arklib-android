@@ -14,8 +14,6 @@ import space.taran.arklib.domain.index.RootIndex
 import space.taran.arklib.domain.meta.Kind
 import space.taran.arklib.domain.meta.MetadataUpdate
 import space.taran.arklib.domain.meta.RootMetadataStorage
-import space.taran.arklib.utils.LogTags.PREVIEWS
-import java.io.FileNotFoundException
 import java.nio.file.Path
 import kotlin.io.path.*
 
@@ -32,7 +30,7 @@ class RootPreviewStorage(
     private val _inProgress = MutableStateFlow(false)
 
     init {
-        Log.d(PREVIEWS, "Initializing previews storage for root $root")
+        Log.d(LOG_PREFIX, "Initializing previews storage for root $root")
         previewsDir.createDirectories()
         thumbnailsDir.createDirectories()
         initUpdatedResourcesListener()
@@ -78,14 +76,14 @@ class RootPreviewStorage(
                 val locator = PreviewLocator(root, id)
 
                 if (locator.status == PreviewStatus.ABSENT) {
-                    Log.d(PREVIEWS, "Generating preview for $id")
+                    Log.d(LOG_PREFIX, "Generating preview for $id")
 
                     val path = update.path
                     PreviewGenerator.generate(path, update.metadata)
                         .onSuccess { locator.store(it) }
                         .onFailure {
-                            Log.w(PREVIEWS, "Failed to generate preview for $path")
-                            Log.w(PREVIEWS, it.toString())
+                            Log.w(LOG_PREFIX, "Failed to generate preview for $path")
+                            Log.w(LOG_PREFIX, it.toString())
                         }
                 }
             }.join()

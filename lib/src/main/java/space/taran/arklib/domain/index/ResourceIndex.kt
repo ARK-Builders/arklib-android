@@ -32,3 +32,5 @@ class ResourceUpdates(
 data class LostResource(val path: Path, val resource: Resource)
 
 data class NewResource(val path: Path, val resource: Resource)
+
+internal const val LOG_PREFIX: String = "[index]"

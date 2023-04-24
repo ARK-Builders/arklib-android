@@ -21,8 +21,6 @@ import com.ortiz.touchview.TouchImageView
 import space.taran.arklib.app
 import space.taran.arklib.R
 import space.taran.arklib.ResourceId
-import space.taran.arklib.utils.LogTags.GLIDE
-import space.taran.arklib.utils.LogTags.IMAGES
 import java.nio.file.Path
 
 object ImageUtils {
@@ -79,7 +77,7 @@ object ImageUtils {
         placeHolder: Int,
         view: ImageView
     ) {
-        Log.d(IMAGES, "loading image $image")
+        Log.d(LOG_PREFIX, "loading image $image")
 
         Glide.with(view.context)
             .load(image?.toFile())
@@ -97,7 +95,7 @@ object ImageUtils {
             isFirstResource: Boolean
         ): Boolean {
             Log.d(
-                GLIDE,
+                LOG_PREFIX,
                 "load failed with message: ${
                 e?.message
                 } for target of type: ${
@@ -116,3 +114,5 @@ object ImageUtils {
         ) = false
     }
 }
+
+private const val LOG_PREFIX: String = "[images]"

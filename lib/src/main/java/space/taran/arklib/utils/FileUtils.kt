@@ -17,14 +17,16 @@ fun extension(path: Path): String {
 }
 
 fun detectMimeType(path: Path): String? {
-    Log.d(LogTags.TIKA, "invoking Apache Tika to detect MIME type")
+    Log.d(LOG_PREFIX, "invoking Apache Tika to detect MIME type")
     val mime = Tika().detect(Files.newInputStream(path))
 
     if (mime == null) {
-        Log.w(LogTags.TIKA, "can't detect MIME type for $path")
+        Log.w(LOG_PREFIX, "can't detect MIME type for $path")
     } else {
-        Log.d(LogTags.TIKA, "$path is detected as $mime")
+        Log.d(LOG_PREFIX, "$path is detected as $mime")
     }
 
     return mime
 }
+
+private const val LOG_PREFIX: String = "[files]"

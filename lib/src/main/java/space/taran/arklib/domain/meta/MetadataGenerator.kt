@@ -3,7 +3,6 @@ package space.taran.arklib.domain.meta
 import android.util.Log
 import space.taran.arklib.domain.index.Resource
 import space.taran.arklib.domain.meta.generator.*
-import space.taran.arklib.utils.LogTags
 import space.taran.arklib.utils.detectMimeType
 import space.taran.arklib.utils.extension
 import java.nio.file.Path
@@ -41,7 +40,7 @@ interface MetadataGenerator {
             val time = measureTimeMillis {
                 result = generator.generate(path, resource)
             }
-            Log.d(LogTags.METADATA, "Metadata generated for $path in $time ms")
+            Log.d(LOG_PREFIX, "Metadata generated for $path in $time ms")
             return result!!
         }
 

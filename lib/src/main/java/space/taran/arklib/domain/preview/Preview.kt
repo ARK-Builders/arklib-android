@@ -124,3 +124,5 @@ class PreviewLocator(
         }
     }
 }
+
+internal const val LOG_PREFIX: String = "[previews]"

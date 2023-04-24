@@ -14,7 +14,6 @@ import space.taran.arklib.arkMetadata
 import space.taran.arklib.domain.index.NewResource
 import space.taran.arklib.domain.index.Resource
 import space.taran.arklib.domain.index.RootIndex
-import space.taran.arklib.utils.LogTags.METADATA
 import java.lang.IllegalStateException
 import java.nio.file.Path
 import kotlin.io.path.*
@@ -34,7 +33,7 @@ class RootMetadataStorage(
         metadataDir.resolve(id.toString())
 
     init {
-        Log.d(METADATA, "Initializing metadata storage for root $root")
+        Log.d(LOG_PREFIX, "Initializing metadata storage for root $root")
         metadataDir.createDirectories()
         initUpdatedResourcesListener()
         initKnownResources()
@@ -65,7 +64,7 @@ class RootMetadataStorage(
 
     private fun generate(resources: Collection<NewResource>) {
         val amount = resources.size
-        Log.i(METADATA, "Checking metadata for $amount known resources in $root")
+        Log.i(LOG_PREFIX, "Checking metadata for $amount known resources in $root")
 
         appScope.launch(Dispatchers.IO) {
             _inProgress.emit(true)
@@ -81,7 +80,7 @@ class RootMetadataStorage(
 
     private suspend fun generate(path: Path, resource: Resource) {
         require(!path.isDirectory()) { "Folders are not allowed here" }
-        Log.d(METADATA,
+        Log.d(LOG_PREFIX,
             "Generating metadata for resource ${resource.id} by path $path")
 
         val locator = metadataPath(resource.id)
@@ -105,7 +104,7 @@ class RootMetadataStorage(
     }
 
     private fun readMetadata(path: Path): Result<Metadata> {
-        Log.d(METADATA, "Reading metadata from $path")
+        Log.d(LOG_PREFIX, "Reading metadata from $path")
 
         try {
             val json = Json.parseToJsonElement(path.readText())
@@ -148,7 +147,7 @@ class RootMetadataStorage(
     }
 
     private fun initUpdatedResourcesListener() {
-        Log.d(METADATA, "Listening for updates in the index")
+        Log.d(LOG_PREFIX, "Listening for updates in the index")
         index.updates.onEach { diff ->
             generate(diff.added.values)
 

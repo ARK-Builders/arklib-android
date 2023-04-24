@@ -40,3 +40,5 @@ sealed class Metadata(val kind: Kind) {
     @Serializable
     class Archive: Metadata(Kind.ARCHIVE)
 }
+
+internal const val LOG_PREFIX: String = "[metadata]"

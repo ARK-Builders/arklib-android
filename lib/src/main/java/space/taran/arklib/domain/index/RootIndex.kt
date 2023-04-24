@@ -45,7 +45,7 @@ class RootIndex
     private val pathById: MutableMap<ResourceId, Path> = mutableMapOf()
 
     private fun wrap(update: RawUpdates): ResourceUpdates {
-        Log.d(RESOURCES_INDEX, "Wrapping raw updates from arklib")
+        Log.d(LOG_PREFIX, "Wrapping raw updates from arklib")
 
         val deleted = update.deleted.associateWith { id ->
             val path = pathById[id]!!
@@ -59,7 +59,7 @@ class RootIndex
                 val resource: Resource = Resource.compute(id, path)
                     .onFailure { error ->
                         Log.e(
-                            RESOURCES_INDEX,
+                            LOG_PREFIX,
                             "Couldn't compute resource by path $path: $error"
                         )
 
@@ -73,11 +73,11 @@ class RootIndex
     }
 
     suspend fun init() {
-        Log.i(RESOURCES_INDEX, "Initializing new index for root $path")
+        Log.i(LOG_PREFIX, "Initializing new index for root $path")
         withContextAndLock(Dispatchers.IO, mutex) {
             if (!BindingIndex.load(path)) {
                 Log.e(
-                    RESOURCES_INDEX,
+                    LOG_PREFIX,
                     "Couldn't provide index from $path"
                 )
                 throw UnknownError()
@@ -101,7 +101,7 @@ class RootIndex
                 .forEach { (id, path) ->
                     Resource.compute(id, path)
                         .onFailure { error ->
-                            Log.e(RESOURCES_INDEX, error.toString())
+                            Log.e(LOG_PREFIX, error.toString())
                         }
                         .onSuccess { resource ->
                             pathById[id] = path
@@ -119,7 +119,7 @@ class RootIndex
 
     override suspend fun updateAll(): Unit =
         withContextAndLock(Dispatchers.IO, mutex) {
-            Log.i(RESOURCES_INDEX, "Updating the index of root $path")
+            Log.i(LOG_PREFIX, "Updating the index of root $path")
 
             val raw: RawUpdates = BindingIndex.update(path)
             BindingIndex.store(path)
@@ -165,14 +165,14 @@ class RootIndex
         val pathsN = pathById.values.size
         val resourcesN = resourceById.values.size
 
-        Log.d(RESOURCES_INDEX, "There are $idsN1 ids in paths map")
-        Log.d(RESOURCES_INDEX, "There are $idsN2 ids in resources map")
-        Log.i(RESOURCES_INDEX, "There are $pathsN paths in the index")
-        Log.i(RESOURCES_INDEX, "There are $resourcesN resources in the index")
+        Log.d(LOG_PREFIX, "There are $idsN1 ids in paths map")
+        Log.d(LOG_PREFIX, "There are $idsN2 ids in resources map")
+        Log.i(LOG_PREFIX, "There are $pathsN paths in the index")
+        Log.i(LOG_PREFIX, "There are $resourcesN resources in the index")
 
         val duplicatesN = pathsN - resourcesN
         if (duplicatesN > 0) {
-            Log.w(RESOURCES_INDEX, "There are $duplicatesN duplicates in the root")
+            Log.w(LOG_PREFIX, "There are $duplicatesN duplicates in the root")
         }
 
         if (idsN1 != idsN2) {
