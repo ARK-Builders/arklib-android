@@ -85,3 +85,5 @@ object VideoPreviewGenerator : PreviewGenerator {
         }
     }
 }
+
+private const val LOG_PREFIX: String = "[previews/video]"

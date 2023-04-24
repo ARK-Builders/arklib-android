@@ -9,7 +9,6 @@ import kotlinx.coroutines.sync.withLock
 import space.taran.arklib.ResourceId
 import space.taran.arklib.binding.BindingIndex
 import space.taran.arklib.binding.RawUpdates
-import space.taran.arklib.utils.LogTags.RESOURCES_INDEX
 import space.taran.arklib.utils.withContextAndLock
 import java.nio.file.Path
 

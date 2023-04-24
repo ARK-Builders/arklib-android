@@ -51,4 +51,4 @@ class PDFGenTest {
 
 }
 
-private const val LOG_PREFIX: String = "Test: PDF"
+private const val LOG_PREFIX: String = "[test/pdf]"

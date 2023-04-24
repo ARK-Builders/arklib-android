@@ -1,4 +1,4 @@
-name: Release the app
+name: Release the lib
 
 on:
   push:
