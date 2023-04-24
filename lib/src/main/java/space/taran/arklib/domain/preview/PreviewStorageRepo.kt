@@ -8,7 +8,7 @@ import space.taran.arklib.domain.meta.RootMetadataStorage
 import java.nio.file.Path
 
 class PreviewStorageRepo(
-    private val appScope: CoroutineScope,
+    private val scope: CoroutineScope,
     private val metadataStorageRepo: MetadataStorageRepo) {
 
     private val storageByRoot = mutableMapOf<Path, RootPreviewStorage>()
@@ -22,7 +22,7 @@ class PreviewStorageRepo(
                 provide(it, metadataStorage)
             }
 
-            AggregatedPreviewStorage(shards, appScope)
+            AggregatedPreviewStorage(shards, scope)
         } else {
             val root = roots.iterator().next()
             val metadataStorage = metadataStorageRepo.provide(root)
@@ -35,7 +35,7 @@ class PreviewStorageRepo(
         metadataStorage: RootMetadataStorage
     ): RootPreviewStorage =
         storageByRoot[root.path] ?: RootPreviewStorage(
-            root.path, root, metadataStorage, appScope
+            scope, root, metadataStorage
         ).also {
             storageByRoot[root.path] = it
         }

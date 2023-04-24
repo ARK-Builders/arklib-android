@@ -1,11 +1,32 @@
 package space.taran.arklib.utils
 
-import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.apache.tika.Tika
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.extension
 import kotlin.io.path.listDirectoryEntries
+
+suspend fun listAllFiles(folder: Path): List<Path> =
+    withContext(Dispatchers.IO) {
+        val (directories, files) = listChildren(folder)
+
+        return@withContext files + directories.flatMap {
+            listAllFiles(it)
+        }
+    }
+
+suspend fun deleteRecursively(folder: Path) =
+    withContext(Dispatchers.IO) {
+        folder.toFile()
+            .walk(FileWalkDirection.BOTTOM_UP)
+            .let { walk ->
+                walk.forEach {
+                    Files.delete(it.toPath())
+                }
+            }
+    }
 
 fun listChildren(folder: Path): Pair<List<Path>, List<Path>> = folder
     .listDirectoryEntries()
@@ -17,16 +38,5 @@ fun extension(path: Path): String {
 }
 
 fun detectMimeType(path: Path): String? {
-    Log.d(LOG_PREFIX, "invoking Apache Tika to detect MIME type")
-    val mime = Tika().detect(Files.newInputStream(path))
-
-    if (mime == null) {
-        Log.w(LOG_PREFIX, "can't detect MIME type for $path")
-    } else {
-        Log.d(LOG_PREFIX, "$path is detected as $mime")
-    }
-
-    return mime
+    return Tika().detect(Files.newInputStream(path))
 }
-
-private const val LOG_PREFIX: String = "[files]"
