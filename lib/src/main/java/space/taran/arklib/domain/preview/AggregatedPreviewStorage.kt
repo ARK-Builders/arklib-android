@@ -11,7 +11,7 @@ import java.nio.file.Path
 
 class AggregatedPreviewStorage(
     private val shards: Collection<RootPreviewStorage>,
-    private val appScope: CoroutineScope
+    private val scope: CoroutineScope
 ) : PreviewStorage {
 
     private val _inProgress = MutableStateFlow(false)
@@ -44,7 +44,7 @@ class AggregatedPreviewStorage(
         shards.forEach { shard ->
             shard.inProgress.onEach {
                 _inProgress.emit(anyShardIndexing())
-            }.launchIn(appScope)
+            }.launchIn(scope)
         }
     }
 }

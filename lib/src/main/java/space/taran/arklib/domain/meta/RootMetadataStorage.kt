@@ -19,8 +19,8 @@ import java.nio.file.Path
 import kotlin.io.path.*
 
 class RootMetadataStorage(
+    private val scope: CoroutineScope,
     private val index: RootIndex,
-    private val appScope: CoroutineScope
 ) : MetadataStorage {
     val root = index.path
 
@@ -59,14 +59,16 @@ class RootMetadataStorage(
 
     override suspend fun forget(id: ResourceId) {
         _updates.emit(MetadataUpdate.Deleted(id))
-        metadataPath(id).deleteIfExists()
+        withContext(Dispatchers.IO) {
+            metadataPath(id).deleteIfExists()
+        }
     }
 
     private fun generate(resources: Collection<NewResource>) {
         val amount = resources.size
         Log.i(LOG_PREFIX, "Checking metadata for $amount known resources in $root")
 
-        appScope.launch(Dispatchers.IO) {
+        scope.launch {
             _inProgress.emit(true)
 
             val jobs = resources.map { added ->
@@ -97,7 +99,9 @@ class RootMetadataStorage(
                     is Metadata.Video -> Json.encodeToString(metadata)
                 }
 
-                locator.writeText(json)
+                scope.launch(Dispatchers.IO) {
+                    locator.writeText(json)
+                }.join()
                 _updates.emit(MetadataUpdate.Added(resource.id, path, metadata))
             }
             .getOrThrow()
@@ -152,14 +156,14 @@ class RootMetadataStorage(
             generate(diff.added.values)
 
             diff.deleted.forEach { (id, _) -> forget(id) }
-        }.launchIn(appScope + Dispatchers.IO)
+        }.launchIn(scope + Dispatchers.IO)
     }
 
     // this forces to check existing metadata,
     // existing metadata will be pushed into `updates` too,
     // this is needed for checking previews
     private fun initKnownResources() {
-        appScope.launch(Dispatchers.IO) {
+        scope.launch(Dispatchers.Default) {
             generate(index.asAdded())
         }
     }

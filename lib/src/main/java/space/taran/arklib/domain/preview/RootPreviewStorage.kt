@@ -18,11 +18,12 @@ import java.nio.file.Path
 import kotlin.io.path.*
 
 class RootPreviewStorage(
-    val root: Path,
+    private val scope: CoroutineScope,
     private val index: RootIndex,
     private val metadataStorage: RootMetadataStorage,
-    private val appScope: CoroutineScope
 ): PreviewStorage {
+
+    val root = index.path
 
     private val previewsDir = root.arkFolder().arkPreviews()
     private val thumbnailsDir = root.arkFolder().arkThumbnails()
@@ -68,7 +69,7 @@ class RootPreviewStorage(
     }
 
     private fun generate(update: MetadataUpdate.Added) {
-        appScope.launch(Dispatchers.IO) {
+        scope.launch(Dispatchers.IO) {
             _inProgress.emit(true)
 
             launch {
@@ -98,6 +99,6 @@ class RootPreviewStorage(
                 is MetadataUpdate.Added -> generate(update)
                 is MetadataUpdate.Deleted -> forget(update.id)
             }
-        }.launchIn(appScope + Dispatchers.IO)
+        }.launchIn(scope + Dispatchers.IO)
     }
 }

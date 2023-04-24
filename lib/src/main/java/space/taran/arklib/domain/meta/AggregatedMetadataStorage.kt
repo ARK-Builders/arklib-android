@@ -8,7 +8,7 @@ import java.nio.file.Path
 
 class AggregatedMetadataStorage(
     private val shards: Collection<RootMetadataStorage>,
-    private val appScope: CoroutineScope
+    private val scope: CoroutineScope
 ) : MetadataStorage {
 
     private val _inProgress = MutableStateFlow(false)
@@ -43,7 +43,7 @@ class AggregatedMetadataStorage(
         shards.forEach { shard ->
             shard.inProgress.onEach {
                 _inProgress.emit(anyShardIndexing())
-            }.launchIn(appScope)
+            }.launchIn(scope)
         }
     }
 }
