@@ -13,7 +13,6 @@ interface Monoid<V> {
      * for scores it's value with greater absolute value */
     fun combine(a: V, b: V): V
 
-    //todo: binary grouping
     fun combineAll(values: Iterable<V>): V = values
         .fold(neutral) { acc, value ->
             combine(acc, value)

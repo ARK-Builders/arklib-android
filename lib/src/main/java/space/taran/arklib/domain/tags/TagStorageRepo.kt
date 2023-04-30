@@ -13,7 +13,7 @@ class TagsStorageRepo(private val scope: CoroutineScope) {
 
         return if (roots.size > 1) {
             val shards = roots.map { provide(it) }
-            AggregatedTagsStorage(shards)
+            AggregateTagStorage(shards)
         } else {
             val root = roots.iterator().next()
             provide(root)

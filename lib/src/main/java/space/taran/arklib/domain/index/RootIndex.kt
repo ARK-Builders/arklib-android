@@ -44,7 +44,7 @@ class RootIndex
     private val pathById: MutableMap<ResourceId, Path> = mutableMapOf()
 
     private fun wrap(update: RawUpdates): ResourceUpdates {
-        Log.d(LOG_PREFIX, "Wrapping raw updates from arklib")
+        Log.d(LOG_PREFIX, "wrapping raw updates from arklib")
 
         val deleted = update.deleted.associateWith { id ->
             val path = pathById[id]!!
@@ -164,10 +164,10 @@ class RootIndex
         val pathsN = pathById.values.size
         val resourcesN = resourceById.values.size
 
-        Log.d(LOG_PREFIX, "There are $idsN1 ids in paths map")
-        Log.d(LOG_PREFIX, "There are $idsN2 ids in resources map")
         Log.i(LOG_PREFIX, "There are $pathsN paths in the index")
         Log.i(LOG_PREFIX, "There are $resourcesN resources in the index")
+        Log.d(LOG_PREFIX, "there are $idsN1 ids in paths map")
+        Log.d(LOG_PREFIX, "there are $idsN2 ids in resources map")
 
         val duplicatesN = pathsN - resourcesN
         if (duplicatesN > 0) {

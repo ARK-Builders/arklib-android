@@ -13,8 +13,7 @@ class ScoreStorageRepo(private val scope: CoroutineScope) {
 
         return if (roots.size > 1) {
             val shards = roots.map { provide(it) }
-
-            AggregatedScoreStorage(shards)
+            AggregateScoreStorage(shards)
         } else {
             val root = roots.iterator().next()
             provide(root)

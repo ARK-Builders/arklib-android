@@ -1,23 +1,66 @@
 package space.taran.arklib.domain.meta
 
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
-import space.taran.arklib.ResourceId
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import space.taran.arklib.domain.storage.FolderStorage
+import space.taran.arklib.domain.storage.MonoidIsNotUsed
 import java.nio.file.Path
 
-interface MetadataStorage {
+internal class MetadataStorage(
+    scope: CoroutineScope, path: Path
+) : FolderStorage<Metadata>(scope, path, MonoidIsNotUsed(), "metadata") {
+    override fun valueToBinary(value: Metadata): ByteArray {
+        val json = when (value) {
+            is Metadata.Archive -> Json.encodeToString(value)
+            is Metadata.Document -> Json.encodeToString(value)
+            is Metadata.Image -> Json.encodeToString(value)
+            is Metadata.Link -> Json.encodeToString(value)
+            is Metadata.PlainText -> Json.encodeToString(value)
+            is Metadata.Video -> Json.encodeToString(value)
+        }
 
-    val inProgress: StateFlow<Boolean>
+        return json.toByteArray(Charsets.UTF_8)
+    }
 
-    val updates: Flow<MetadataUpdate>
+    override fun valueFromBinary(raw: ByteArray): Metadata {
+        val text = String(raw, Charsets.UTF_8)
+        val json = Json.parseToJsonElement(text)
 
-    fun locate(path: Path, id: ResourceId): Result<Metadata>
+        val kind = json.jsonObject[KIND]!!.jsonPrimitive.content
 
-    suspend fun forget(id: ResourceId)
-}
+        val metadata = when (Kind.valueOf(kind)) {
+            Kind.IMAGE ->
+                Json.decodeFromJsonElement(
+                    Metadata.Image.serializer(),
+                    json
+                )
+            Kind.VIDEO ->
+                Json.decodeFromJsonElement(
+                    Metadata.Video.serializer(),
+                    json
+                )
+            Kind.DOCUMENT ->
+                Json.decodeFromJsonElement(
+                    Metadata.Document.serializer(),
+                    json
+                )
+            Kind.LINK -> Json.decodeFromJsonElement(
+                Metadata.Link.serializer(),
+                json
+            )
+            Kind.PLAINTEXT -> Json.decodeFromJsonElement(
+                Metadata.PlainText.serializer(),
+                json
+            )
+            Kind.ARCHIVE -> Json.decodeFromJsonElement(
+                Metadata.Archive.serializer(),
+                json
+            )
+        }
 
-
-sealed class MetadataUpdate {
-    data class Deleted(val id: ResourceId): MetadataUpdate()
-    data class Added(val id: ResourceId, val path: Path, val metadata: Metadata): MetadataUpdate()
+        return metadata
+    }
 }
