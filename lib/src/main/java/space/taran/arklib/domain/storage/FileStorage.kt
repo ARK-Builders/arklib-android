@@ -14,7 +14,7 @@ abstract class FileStorage<V>(
     private val scope: CoroutineScope,
     private val storageFile: Path,
     monoid: Monoid<V>,
-    logLabel: String) : Storage<V>(monoid, logLabel) {
+    logLabel: String) : BaseStorage<V>(monoid, logLabel) {
 
     /* The file will be filled with a table,
      * one mapping entry per line of the table.
@@ -34,7 +34,7 @@ abstract class FileStorage<V>(
         val result = Files.exists(storageFile)
 
         val not = if (result) "" else " not"
-        Log.d(LOG_PREFIX, "folder $storageFile does$not exist")
+        Log.d(label, "folder $storageFile does$not exist")
         return result
     }
 
@@ -42,12 +42,12 @@ abstract class FileStorage<V>(
     // we don't have more granular timestamping
     override fun readFromDisk(handle: (Map<ResourceId, V>) -> Unit) {
         val newTimestamp = Files.getLastModifiedTime(storageFile)
-        Log.d(LOG_PREFIX, "timestamp of storage file $storageFile is $timestamp")
+        Log.d(label, "timestamp of storage file $storageFile is $timestamp")
 
         if (timestamp >= newTimestamp) {
             return
         }
-        Log.d(LOG_PREFIX, "the file was modified externally, merging")
+        Log.d(label, "the file was modified externally, merging")
 
         val lines = Files.readAllLines(storageFile, StandardCharsets.UTF_8)
 
@@ -64,10 +64,10 @@ abstract class FileStorage<V>(
         }
 
         if (valueById.isEmpty()) {
-            Log.w(LOG_PREFIX, "Storage is empty")
+            Log.w(label, "Storage is empty")
         }
 
-        Log.d(LOG_PREFIX, "${valueById.size} entries have been read")
+        Log.d(label, "${valueById.size} entries have been read")
 
         handle(valueById)
         timestamp = newTimestamp
@@ -94,7 +94,7 @@ abstract class FileStorage<V>(
         }
         timestamp = newTimestamp
 
-        Log.d(LOG_PREFIX, "${valueById.size} entries has been written")
+        Log.d(label, "${valueById.size} entries has been written")
     }
 
     companion object {
@@ -117,6 +117,8 @@ abstract class FileStorage<V>(
             }
         }
     }
+
+    private val label = "$LOG_PREFIX [$logLabel]"
 }
 
 private const val LOG_PREFIX: String = "[file-storage]"

@@ -40,7 +40,7 @@ interface MetadataGenerator {
             val time = measureTimeMillis {
                 result = generator.generate(path, resource)
             }
-            Log.d(LOG_PREFIX, "Metadata generated for $path in $time ms")
+            Log.d(LOG_PREFIX, "metadata generated for $path in $time ms")
             return result!!
         }
 

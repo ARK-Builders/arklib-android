@@ -1,7 +1,6 @@
 package space.taran.arklib.domain.preview
 
 import android.graphics.Bitmap
-import android.util.Log
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -9,6 +8,9 @@ import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
 import com.bumptech.glide.request.RequestOptions
 import space.taran.arklib.*
 import space.taran.arklib.app
+import space.taran.arklib.domain.processor.AggregateProcessor
+import space.taran.arklib.domain.processor.Processor
+import space.taran.arklib.domain.storage.MonoidIsNotUsed
 import space.taran.arklib.utils.ImageUtils
 import java.lang.IllegalStateException
 import java.nio.file.Files
@@ -23,7 +25,8 @@ data class Preview(
     //     in order to obtain the corresponding thumbnail
     // if `onlyThumbnail` is `true`:
     //   * the bitmap is thumbnail
-    //   * there cannot be any fullscreen image
+    //   * fullscreen image can be absent
+    //   * fullscreen image can be the resource itself
     val bitmap: Bitmap,
 
     // we don't have fullscreen preview for
@@ -90,22 +93,6 @@ class PreviewLocator(
         return status
     }
 
-    fun store(preview: Preview) {
-        if (status != PreviewStatus.ABSENT) {
-            throw IllegalStateException("Preview already exists")
-        }
-
-        if (preview.onlyThumbnail) {
-            storeImage(thumbnail(), preview.bitmap)
-            return
-        }
-
-        storeImage(fullscreen(), preview.bitmap)
-
-        val thumbnail = Preview.downscale(preview.bitmap)
-        storeImage(thumbnail(), thumbnail)
-    }
-
     fun erase() {
         thumbnail().deleteIfExists()
 
@@ -114,15 +101,10 @@ class PreviewLocator(
         }
     }
 
-    private fun storeImage(target: Path, bitmap: Bitmap) {
-        Files.newOutputStream(target).use { out ->
-            bitmap.compress(
-                Bitmap.CompressFormat.PNG,
-                Preview.COMPRESSION_QUALITY, out
-            )
-            out.flush()
-        }
-    }
 }
+
+typealias PreviewProcessor = Processor<PreviewLocator, Unit>
+
+typealias AggregatePreviewProcessor = AggregateProcessor<PreviewLocator, Unit>
 
 internal const val LOG_PREFIX: String = "[previews]"

@@ -17,7 +17,7 @@ abstract class FolderStorage<V>(
     private val scope: CoroutineScope,
     private val storageFolder: Path,
     monoid: Monoid<V>,
-    logLabel: String) : Storage<V>(monoid, logLabel) {
+    logLabel: String) : BaseStorage<V>(monoid, logLabel) {
 
     /* Folder storage is more flexible, allowing to store
      * arbitrary type of data as values. It could be images as well.
@@ -37,7 +37,7 @@ abstract class FolderStorage<V>(
         val result = Files.exists(storageFolder)
 
         val not = if (result) "" else " not"
-        Log.d(LOG_PREFIX, "folder $storageFolder does$not exist")
+        Log.d(label, "folder $storageFolder does$not exist")
         return result
     }
 
@@ -59,14 +59,15 @@ abstract class FolderStorage<V>(
 
         Files.list(storageFolder)
             .filter { !it.isDirectory() }
-            .forEach { file ->
-                val id = idFromPath(file)
+            .forEach { path ->
+                Log.d(label, "reading value from $path")
+                val id = idFromPath(path)
 
                 val timestamp = timestamps[id]
-                val newTimestamp = Files.getLastModifiedTime(file)
+                val newTimestamp = Files.getLastModifiedTime(path)
 
                 if (timestamp == null || timestamp < newTimestamp) {
-                    val binary = Files.readAllBytes(file)
+                    val binary = Files.readAllBytes(path)
                     val value = valueFromBinary(binary)
 
                     check(value)
@@ -76,7 +77,7 @@ abstract class FolderStorage<V>(
                 }
             }
 
-        Log.d(LOG_PREFIX, "${newValueById.size} entries has been read")
+        Log.d(label, "${newValueById.size} entries has been read")
 
         handle(newValueById)
 
@@ -104,7 +105,7 @@ abstract class FolderStorage<V>(
             timestamps[it.key] = Files.getLastModifiedTime(file)
         }
 
-        Log.d(LOG_PREFIX, "${valueById.size} entries have been written")
+        Log.d(label, "${valueById.size} entries have been written")
     }
 
     private fun pathFromId(id: ResourceId): Path =
@@ -116,6 +117,8 @@ abstract class FolderStorage<V>(
             path.relativeTo(storageFolder)
                 .fileName.toString()
         )
+
+    private val label = "$LOG_PREFIX [$logLabel]"
 }
 
 private const val LOG_PREFIX: String = "[folder-storage]"

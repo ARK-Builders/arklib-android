@@ -1,6 +1,8 @@
 package space.taran.arklib.domain.meta
 
 import kotlinx.serialization.Serializable
+import space.taran.arklib.domain.processor.AggregateProcessor
+import space.taran.arklib.domain.processor.Processor
 
 enum class Kind {
     IMAGE, VIDEO, DOCUMENT, LINK, PLAINTEXT, ARCHIVE
@@ -40,5 +42,9 @@ sealed class Metadata(val kind: Kind) {
     @Serializable
     class Archive: Metadata(Kind.ARCHIVE)
 }
+
+typealias MetadataProcessor = Processor<Metadata, MetadataUpdate>
+
+typealias AggregateMetadataProcessor = AggregateProcessor<Metadata, MetadataUpdate>
 
 internal const val LOG_PREFIX: String = "[metadata]"
