@@ -8,12 +8,7 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-parcelize'
 apply plugin: 'org.mozilla.rust-android-gradle.rust-android'
 apply plugin: 'maven-publish'
-apply plugin: "com.palantir.git-version"
 apply plugin: 'pl.allegro.tech.build.axion-release'
-
-def verDetails = versionDetails()
-
-version = "${scmVersion.version}-${verDetails.gitHash}"
 
 android {
     compileSdkVersion 31
@@ -37,6 +32,9 @@ android {
         singleVariant('release') {
             withSourcesJar()
         }
+        singleVariant('debug') {
+            withSourcesJar()
+        }
     }
     ndkVersion "25.2.9519653"
 }
@@ -49,7 +47,8 @@ cargo {
     // targets = ["arm64"]
     prebuiltToolchains = true
     // Set to "debug" to enable logging. Or "release" to make a production build.
-    profile = "release"
+    // https://github.com/mozilla/rust-android-gradle/issues/38
+    profile = gradle.startParameter.taskNames.any{it.toLowerCase().contains("debug")} ? "debug" : "release"
 }
 
 dependencies {
@@ -82,15 +81,24 @@ tasks.whenTaskAdded { task ->
     }
 }
 
+def libVersion = scmVersion.version
+
 publishing {
     publications {
         release(MavenPublication) {
             groupId = "space.taran"
             artifactId = "arklib"
-            version = "0.2.2"
-
+            version = libVersion
             afterEvaluate {
                 from components.release
+            }
+        }
+        debug(MavenPublication) {
+            groupId = "space.taran"
+            artifactId = "arklib-debug"
+            version = libVersion
+            afterEvaluate {
+                from components.debug
             }
         }
     }

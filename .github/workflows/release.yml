@@ -35,14 +35,18 @@ jobs:
 
     - name: Install Cargo targets
       run: rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
-
-    - name: Build with Gradle
-      run: ./gradlew lib:assemble
       
-    - name: Publish package
+    - name: Publish Release to Github
       uses: gradle/gradle-build-action@v2
       with:
-        arguments: publish
+        arguments: publishReleasePublicationToGithubPackagesRepository
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Publish Debug to Github
+      uses: gradle/gradle-build-action@v2
+      with:
+        arguments: publishDebugPublicationToGithubPackagesRepository
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
