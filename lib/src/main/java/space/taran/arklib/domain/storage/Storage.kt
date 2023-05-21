@@ -9,7 +9,5 @@ interface Storage<V> {
 
     fun remove(id: ResourceId)
 
-    fun refresh()
-
-    fun persist()
+    suspend fun persist()
 }

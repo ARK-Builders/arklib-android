@@ -11,8 +11,12 @@ import java.nio.file.Path
 
 internal class MetadataStorage(
     scope: CoroutineScope, path: Path
-) : FolderStorage<Metadata>(scope, path, MonoidIsNotUsed(), "metadata") {
-    override fun valueToBinary(value: Metadata): ByteArray {
+) : FolderStorage<Metadata>(
+    scope, path, MonoidIsNotUsed(), "metadata"
+) {
+    override fun isNeutral(value: Metadata): Boolean = false
+
+    override suspend fun valueToBinary(value: Metadata): ByteArray {
         val json = when (value) {
             is Metadata.Archive -> Json.encodeToString(value)
             is Metadata.Document -> Json.encodeToString(value)
@@ -25,7 +29,7 @@ internal class MetadataStorage(
         return json.toByteArray(Charsets.UTF_8)
     }
 
-    override fun valueFromBinary(raw: ByteArray): Metadata {
+    override suspend fun valueFromBinary(raw: ByteArray): Metadata {
         val text = String(raw, Charsets.UTF_8)
         val json = Json.parseToJsonElement(text)
 

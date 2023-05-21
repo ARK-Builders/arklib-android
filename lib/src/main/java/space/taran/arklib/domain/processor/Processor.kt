@@ -8,10 +8,10 @@ import space.taran.arklib.ResourceId
 
 abstract class Processor<Value, Update> {
 
-    abstract val updates: Flow<Update>
-
     protected val _busy = MutableStateFlow(false)
     val busy: StateFlow<Boolean> = _busy.asStateFlow()
+
+    abstract val updates: Flow<Update>
 
     abstract fun retrieve(id: ResourceId): Result<Value>
 

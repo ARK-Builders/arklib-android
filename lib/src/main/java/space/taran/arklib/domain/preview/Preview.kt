@@ -10,10 +10,7 @@ import space.taran.arklib.*
 import space.taran.arklib.app
 import space.taran.arklib.domain.processor.AggregateProcessor
 import space.taran.arklib.domain.processor.Processor
-import space.taran.arklib.domain.storage.MonoidIsNotUsed
 import space.taran.arklib.utils.ImageUtils
-import java.lang.IllegalStateException
-import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists

@@ -41,13 +41,13 @@ object ImageUtils {
         else R.drawable.ic_file
     }
 
-    fun loadGlideZoomImage(resource: ResourceId, image: Path, view: TouchImageView) =
+    fun loadGlideZoomImage(id: ResourceId, image: Path, view: TouchImageView) =
         Glide.with(view.context)
             .load(image.toFile())
             .apply(
                 RequestOptions()
                     .priority(Priority.IMMEDIATE)
-                    .signature(ObjectKey("$resource$PREVIEW_SIGNATURE"))
+                    .signature(ObjectKey("$id$PREVIEW_SIGNATURE"))
                     .downsample(DownsampleStrategy.CENTER_INSIDE)
                     .override(MAX_GLIDE_SIZE)
             )
@@ -72,7 +72,7 @@ object ImageUtils {
     }
 
     fun loadThumbnailWithPlaceholder(
-        resource: ResourceId,
+        id: ResourceId,
         image: Path?,
         placeHolder: Int,
         view: ImageView
@@ -82,7 +82,7 @@ object ImageUtils {
         Glide.with(view.context)
             .load(image?.toFile())
             .placeholder(placeHolder)
-            .signature(ObjectKey("$resource$THUMBNAIL_SIGNATURE"))
+            .signature(ObjectKey("$id$THUMBNAIL_SIGNATURE"))
             .transition(DrawableTransitionOptions.withCrossFade())
             .into(view)
     }
