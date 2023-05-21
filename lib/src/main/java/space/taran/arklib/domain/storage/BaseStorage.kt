@@ -2,6 +2,7 @@ package space.taran.arklib.domain.storage
 
 import android.util.Log
 import space.taran.arklib.ResourceId
+import java.util.concurrent.ConcurrentHashMap
 
 /* A storage is being read from the FS both during application startup
  * and during application lifecycle since it can be changed from outside.
@@ -12,25 +13,35 @@ abstract class BaseStorage<V>(
 
     private val label = "$LOG_PREFIX [$logLabel]"
 
-    internal lateinit var valueById: MutableMap<ResourceId, V>
+    internal val valueById: ConcurrentHashMap<ResourceId, V> = ConcurrentHashMap()
 
-    init {
+    private var initialized = false
+
+    internal suspend fun init() {
+        if (initialized) {
+            throw IllegalStateException("Already initialized")
+        }
+
         if (exists()) {
-            readFromDisk { valueById = it.toMutableMap() }
+            readFromDisk { valueById.putAll(it) }
 
             Log.d(label, "loaded ${valueById.size} values")
         } else {
-            valueById = mutableMapOf()
-
             Log.d(label, "created empty storage")
         }
+
+        initialized = true
+    }
+
+    internal suspend fun refresh() {
+        syncWithDisk()
     }
 
     override fun getValue(id: ResourceId) =
         valueById[id] ?: monoid.neutral
 
     override fun setValue(id: ResourceId, value: V) {
-        if (value != monoid.neutral) {
+        if (!isNeutral(value)) {
             valueById[id] = value
         } else {
             remove(id)
@@ -42,11 +53,7 @@ abstract class BaseStorage<V>(
         valueById.remove(id)
     }
 
-    override fun refresh() {
-        syncWithDisk()
-    }
-
-    override fun persist() {
+    override suspend fun persist() {
         syncWithDisk()
         writeToDisk()
     }
@@ -58,7 +65,7 @@ abstract class BaseStorage<V>(
      * For real p2p sync we need to track each peer changes separately,
      * otherwise it is difficult to handle remote deletions properly.
      * At this moment, we only ensure that additions are not lost. */
-    private fun syncWithDisk() {
+    private suspend fun syncWithDisk() {
         if (!exists()) {
             // storage could be deleted from outside and, right now,
             // we deal with this case by just re-creating the file,
@@ -90,31 +97,38 @@ abstract class BaseStorage<V>(
                 }
             }
         }
+
+        if (valueById.any { isNeutral(it.value) }) {
+            throw BadStorageFile("Empty value can be an indicator of dirty write")
+        }
     }
 
     /* Reading updated parts of the storage,
      * the timestamp will be updated when `handle` function
      * finished processing new map. */
-    protected abstract fun readFromDisk(handle: (Map<ResourceId, V>) -> Unit)
+    protected abstract suspend fun readFromDisk(handle: (Map<ResourceId, V>) -> Unit)
 
     /* Plain dump of values mapping into filesystem. */
-    protected abstract fun writeToDisk(valueById: Map<ResourceId, V>)
+    protected abstract suspend fun writeToDisk(valueById: Map<ResourceId, V>)
 
     protected abstract fun exists(): Boolean
 
     protected abstract fun erase()
 
-    protected fun check(value: V): Boolean {
+    protected open fun isNeutral(value: V): Boolean {
         if (value == monoid.neutral) {
-            Log.w(label, "Storage is excessive")
             return true
         }
 
         return false
     }
 
-    private fun writeToDisk() {
-        if (valueById.isEmpty() || valueById.all { it.value == monoid.neutral }) {
+    private suspend fun writeToDisk() {
+        if (valueById.any { isNeutral(it.value) }) {
+            throw IllegalStateException("Must not write empty values")
+        }
+
+        if (valueById.isEmpty()) {
             if (exists()) {
                 Log.d(label, "no actual data, deleting the file")
                 erase()
@@ -126,5 +140,7 @@ abstract class BaseStorage<V>(
         writeToDisk(valueById.toMap())
     }
 }
+
+class BadStorageFile(val msg: String) : Exception()
 
 private const val LOG_PREFIX: String = "[storage]"

@@ -14,7 +14,12 @@ package space.taran.arklib.domain.storage
  * class also should not be used.
  */
 internal class MonoidIsNotUsed<T> : Monoid<T> {
-    override val neutral: T = throw IllegalStateException()
+
+    override val neutral: T by lazy<T> {
+        throw IllegalStateException(
+            "Must not be used"
+        )
+    }
 
     override fun combine(a: T, b: T): T {
         // the implementation must be provided

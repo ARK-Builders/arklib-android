@@ -32,19 +32,16 @@ class RootPreviewProcessor(
     init {
         Log.i(LOG_PREFIX, "Initializing previews storage for root $root")
 
-        previews.refresh()
-        thumbnails.refresh()
+        scope.launch(Dispatchers.IO) {
+            previews.init()
+            thumbnails.init()
 
-        // in contrast to MetadataStorage,
-        // existing items are not retrieved from underlying layer,
-        // existing metadata is pushed into `updates`
-        // and should be processed in update handler here
-        initUpdatedResourcesListener()
-    }
-
-    override fun forget(id: ResourceId) {
-        previews.remove(id)
-        thumbnails.remove(id)
+            // in contrast to MetadataStorage,
+            // existing items are not retrieved from underlying layer,
+            // existing metadata is pushed into `updates`
+            // and should be processed in update handler here
+            initUpdatedResourcesListener()
+        }
     }
 
     // can be `Result.failure` only if the corresponding metadata doesn't exist
@@ -60,6 +57,11 @@ class RootPreviewProcessor(
 
             return Result.success(locator)
         }
+
+    override fun forget(id: ResourceId) {
+        previews.remove(id)
+        thumbnails.remove(id)
+    }
 
     private suspend fun generate(update: MetadataUpdate.Added) {
         val id = update.id
@@ -101,14 +103,27 @@ class RootPreviewProcessor(
         scope.launch(Dispatchers.IO) {
             _busy.emit(true)
 
+            metadata.state().forEach { (id, meta) ->
+                val path = index.getPath(id)!!
+                generate(MetadataUpdate.Added(id, path, meta))
+            }
+
+            previews.persist()
+            thumbnails.persist()
+            _busy.emit(false)
+
             metadata.updates.onEach { update ->
+                _busy.emit(true)
+
                 when (update) {
                     is MetadataUpdate.Added -> generate(update)
                     is MetadataUpdate.Deleted -> forget(update.id)
                 }
-            }
 
-            _busy.emit(false)
+                previews.persist()
+                thumbnails.persist()
+                _busy.emit(false)
+            }
         }
     }
 }

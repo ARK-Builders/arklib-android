@@ -18,9 +18,6 @@ open class AggregateStorage<V>(
     override fun remove(id: ResourceId) =
         shards.forEach { it.remove(id) }
 
-    override fun refresh() =
-        shards.forEach { it.refresh() }
-
-    override fun persist() =
+    override suspend fun persist() =
         shards.forEach { it.persist() }
 }

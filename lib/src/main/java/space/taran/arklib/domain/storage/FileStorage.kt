@@ -40,7 +40,7 @@ abstract class FileStorage<V>(
 
     // returns all values from new file,
     // we don't have more granular timestamping
-    override fun readFromDisk(handle: (Map<ResourceId, V>) -> Unit) {
+    override suspend fun readFromDisk(handle: (Map<ResourceId, V>) -> Unit) {
         val newTimestamp = Files.getLastModifiedTime(storageFile)
         Log.d(label, "timestamp of storage file $storageFile is $timestamp")
 
@@ -49,43 +49,48 @@ abstract class FileStorage<V>(
         }
         Log.d(label, "the file was modified externally, merging")
 
-        val lines = Files.readAllLines(storageFile, StandardCharsets.UTF_8)
+        scope.launch(Dispatchers.IO) {
+            val lines = Files.readAllLines(storageFile, StandardCharsets.UTF_8)
 
-        verifyVersion(lines.removeAt(0))
+            verifyVersion(lines.removeAt(0))
 
-        val valueById = lines.associate {
-            val parts = it.split(KEY_VALUE_SEPARATOR)
-            val id = ResourceId.fromString(parts[0])
-            val value = valueFromString(parts[1])
+            val valueById = lines.associate {
+                val parts = it.split(KEY_VALUE_SEPARATOR)
+                val id = ResourceId.fromString(parts[0])
+                val value = valueFromString(parts[1])
 
-            check(value)
+                if (isNeutral(value)) {
+                    throw BadStorageFile("Empty value can be indicator of dirty write")
+                }
 
-            id to value
+                id to value
+            }
+
+            if (valueById.isEmpty()) {
+                throw BadStorageFile("Empty storage can be indicator of dirty write")
+            }
+
+            Log.d(label, "${valueById.size} entries have been read")
+
+            handle(valueById)
+            timestamp = newTimestamp
         }
-
-        if (valueById.isEmpty()) {
-            Log.w(label, "Storage is empty")
-        }
-
-        Log.d(label, "${valueById.size} entries have been read")
-
-        handle(valueById)
-        timestamp = newTimestamp
     }
 
-    override fun writeToDisk(valueById: Map<ResourceId, V>) {
+    override suspend fun writeToDisk(valueById: Map<ResourceId, V>) {
         val lines = mutableListOf<String>()
         lines.add("$STORAGE_VERSION_PREFIX$STORAGE_VERSION")
 
         lines.addAll(
             valueById.map { (id, value: V) ->
-                if (check(value)) {
+                if (isNeutral(value)) {
                     throw IllegalStateException("Storage is excessive")
                 }
                 "$id$KEY_VALUE_SEPARATOR${valueToString(value)}"
             }
         )
 
+        Files.createDirectories(storageFile.parent)
         Files.write(storageFile, lines, StandardCharsets.UTF_8)
 
         val newTimestamp = Files.getLastModifiedTime(storageFile)
@@ -105,15 +110,15 @@ abstract class FileStorage<V>(
 
         private fun verifyVersion(header: String) {
             if (!header.startsWith(STORAGE_VERSION_PREFIX)) {
-                throw IllegalStateException("Unknown storage version")
+                throw BadStorageFile("Unknown storage version")
             }
             val version = header.removePrefix(STORAGE_VERSION_PREFIX).toInt()
 
             if (version > STORAGE_VERSION) {
-                throw IllegalStateException("Storage format is newer than the app")
+                throw BadStorageFile("Storage format is newer than the app")
             }
             if (version < STORAGE_VERSION) {
-                throw IllegalStateException("Storage format is older than the app")
+                throw BadStorageFile("Storage format is older than the app")
             }
         }
     }

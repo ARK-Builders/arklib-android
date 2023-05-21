@@ -96,7 +96,7 @@ publishing {
         debug(MavenPublication) {
             groupId = "space.taran"
             artifactId = "arklib-debug"
-            version = libVersion
+            version = '999'
             afterEvaluate {
                 from components.debug
             }

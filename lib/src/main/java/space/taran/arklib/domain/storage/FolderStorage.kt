@@ -3,15 +3,18 @@ package space.taran.arklib.domain.storage
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import space.taran.arklib.ResourceId
 import space.taran.arklib.utils.deleteRecursively
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.FileTime
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.isDirectory
 import kotlin.io.path.relativeTo
+import kotlin.streams.toList
 
 abstract class FolderStorage<V>(
     private val scope: CoroutineScope,
@@ -22,10 +25,11 @@ abstract class FolderStorage<V>(
     /* Folder storage is more flexible, allowing to store
      * arbitrary type of data as values. It could be images as well.
      * Inheritants must define binary conversions for their type. */
-    protected abstract fun valueToBinary(value: V): ByteArray
-    protected abstract fun valueFromBinary(raw: ByteArray): V
+    protected abstract suspend fun valueToBinary(value: V): ByteArray
+    protected abstract suspend fun valueFromBinary(raw: ByteArray): V
 
-    private var timestamps: MutableMap<ResourceId, FileTime> = mutableMapOf()
+    private var timestamps: ConcurrentHashMap<ResourceId, FileTime> =
+        ConcurrentHashMap()
 
     final override fun erase() {
         scope.launch(Dispatchers.IO) {
@@ -52,30 +56,40 @@ abstract class FolderStorage<V>(
         }
     }
 
-    // returns only new values
-    final override fun readFromDisk(handle: (Map<ResourceId, V>) -> Unit) {
+    // passes only new values into the `handle` callback
+    final override suspend fun readFromDisk(handle: (Map<ResourceId, V>) -> Unit) {
         val newValueById: MutableMap<ResourceId, V> = mutableMapOf()
-        val newTimestamps: MutableMap<ResourceId, FileTime> = mutableMapOf()
+        val newTimestamps: ConcurrentHashMap<ResourceId, FileTime> =
+            ConcurrentHashMap()
 
-        Files.list(storageFolder)
-            .filter { !it.isDirectory() }
-            .forEach { path ->
-                Log.d(label, "reading value from $path")
-                val id = idFromPath(path)
+        scope.launch(Dispatchers.IO) {
+            val jobs = Files.list(storageFolder)
+                .filter { !it.isDirectory() }
+                .map { path ->
+                    Log.d(label, "reading value from $path")
+                    val id = idFromPath(path)
 
-                val timestamp = timestamps[id]
-                val newTimestamp = Files.getLastModifiedTime(path)
+                    scope.launch(Dispatchers.IO) {
+                        val timestamp = timestamps[id]
+                        val newTimestamp = Files.getLastModifiedTime(path)
 
-                if (timestamp == null || timestamp < newTimestamp) {
-                    val binary = Files.readAllBytes(path)
-                    val value = valueFromBinary(binary)
+                        if (timestamp == null || timestamp < newTimestamp) {
+                            val binary = Files.readAllBytes(path)
 
-                    check(value)
+                            val value = valueFromBinary(binary)
 
-                    newValueById[id] = value
-                    newTimestamps[id] = newTimestamp
-                }
-            }
+                            if (isNeutral(value)) {
+                                throw BadStorageFile("Empty value can be indicator of dirty write")
+                            }
+
+                            newValueById[id] = value
+                            newTimestamps[id] = newTimestamp
+                        }
+                    }
+                }.toList()
+
+            jobs.joinAll()
+        }
 
         Log.d(label, "${newValueById.size} entries has been read")
 
@@ -86,26 +100,30 @@ abstract class FolderStorage<V>(
         timestamps = newTimestamps
     }
 
-    override fun writeToDisk(valueById: Map<ResourceId, V>) {
-        valueById.forEach {
-            if (check(it.value)) {
-                throw IllegalStateException("Storage is excessive")
+    override suspend fun writeToDisk(valueById: Map<ResourceId, V>) {
+        scope.launch(Dispatchers.IO) {
+            Files.createDirectories(storageFolder)
+
+            valueById.forEach {
+                if (isNeutral(it.value)) {
+                    throw IllegalStateException("Storage is excessive")
+                }
+
+                val timestamp = timestamps[it.key]
+
+                val file = pathFromId(it.key)
+                Files.write(file, valueToBinary(it.value))
+
+                val newTimestamp = Files.getLastModifiedTime(file)
+                if (newTimestamp == timestamp) {
+                    throw IllegalStateException("Timestamp didn't update")
+                }
+
+                timestamps[it.key] = Files.getLastModifiedTime(file)
             }
 
-            val timestamp = timestamps[it.key]
-
-            val file = pathFromId(it.key)
-            Files.write(file, valueToBinary(it.value))
-
-            val newTimestamp = Files.getLastModifiedTime(file)
-            if (newTimestamp == timestamp) {
-                throw IllegalStateException("Timestamp didn't update")
-            }
-
-            timestamps[it.key] = Files.getLastModifiedTime(file)
+            Log.d(label, "${valueById.size} entries have been written")
         }
-
-        Log.d(label, "${valueById.size} entries have been written")
     }
 
     private fun pathFromId(id: ResourceId): Path =
