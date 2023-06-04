@@ -9,11 +9,12 @@ import java.nio.file.Path
 
 class PreviewProcessorRepo(
     private val scope: CoroutineScope,
-    private val metadataProcessorRepo: MetadataProcessorRepo) {
+    private val metadataProcessorRepo: MetadataProcessorRepo
+) {
 
     private val processorByRoot = mutableMapOf<Path, RootPreviewProcessor>()
 
-    fun provide(index: ResourceIndex): PreviewProcessor {
+    suspend fun provide(index: ResourceIndex): PreviewProcessor {
         val roots = index.roots
 
         return if (roots.size > 1) {
@@ -22,7 +23,7 @@ class PreviewProcessorRepo(
                 provide(it, metadataStorage)
             }
 
-            AggregatePreviewProcessor(shards)
+            AggregatePreviewProcessor.provide(scope, shards)
         } else {
             val root = roots.iterator().next()
             val metadataStorage = metadataProcessorRepo.provide(root)
@@ -30,11 +31,11 @@ class PreviewProcessorRepo(
         }
     }
 
-    fun provide(
+    suspend fun provide(
         root: RootIndex,
         metadataProcessor: RootMetadataProcessor
     ): RootPreviewProcessor =
-        processorByRoot[root.path] ?: RootPreviewProcessor(
+        processorByRoot[root.path] ?: RootPreviewProcessor.provide(
             scope, root, metadataProcessor
         ).also {
             processorByRoot[root.path] = it
