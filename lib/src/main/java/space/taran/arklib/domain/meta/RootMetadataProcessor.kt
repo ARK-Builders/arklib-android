@@ -11,28 +11,26 @@ import space.taran.arklib.domain.index.RootIndex
 import space.taran.arklib.domain.processor.RootProcessor
 import java.nio.file.Path
 
-sealed class MetadataUpdate {
-    data class Deleted(val id: ResourceId): MetadataUpdate()
-    data class Added(val id: ResourceId, val path: Path, val metadata: Metadata): MetadataUpdate()
-}
+class MetadataUpdate(
+    val added: List<AddedMetadata>,
+    val deleted: List<DeletedMetadata>
+)
 
-class RootMetadataProcessor(
+data class AddedMetadata(val id: ResourceId, val path: Path, val metadata: Metadata)
+data class DeletedMetadata(val id: ResourceId)
+
+class RootMetadataProcessor private constructor(
     private val scope: CoroutineScope,
     private val index: RootIndex,
-): RootProcessor<Metadata, MetadataUpdate>() {
+) : RootProcessor<Metadata, MetadataUpdate>() {
     val root = index.path
 
     private val storage = MetadataStorage(scope, root.arkFolder().arkMetadata())
 
-    init {
-        Log.i(LOG_PREFIX, "Initializing metadata storage for root $root")
-
-        scope.launch(Dispatchers.IO) {
-            storage.init()
-
-            initUpdatedResourcesListener()
-            initKnownResources()
-        }
+    override suspend fun init() {
+        storage.init()
+        initKnownResources()
+        initUpdatedResourcesListener()
     }
 
     // used for RootPreviewProcessor initialization
@@ -49,63 +47,99 @@ class RootMetadataProcessor(
         storage.remove(id)
 
         scope.launch {
-            _updates.emit(MetadataUpdate.Deleted(id))
+            _updates.emit(
+                MetadataUpdate(
+                    added = emptyList(),
+                    deleted = listOf(DeletedMetadata(id))
+                )
+            )
         }
     }
 
-    private fun generate(resources: Collection<NewResource>) {
-        val amount = resources.size
-        Log.i(LOG_PREFIX, "Checking metadata for $amount known resources in $root")
+    private suspend fun generate(resources: Collection<NewResource>): List<AddedMetadata> =
+        withContext(Dispatchers.Default) {
+            val amount = resources.size
+            Log.i(
+                LOG_PREFIX,
+                "Checking metadata for $amount known resources in $root"
+            )
 
-        scope.launch(Dispatchers.IO) {
             _busy.emit(true)
 
             val jobs = resources.map { added ->
-                launch {
-                    val resource = added.resource
-                    val path = added.path
-
-                    val result = storage.valueById[resource.id]
-                    if (result == null) {
-                        Log.d(
-                            LOG_PREFIX,
-                            "generating metadata for resource ${resource.id} by path $path"
-                        )
-
-                        MetadataGenerator
-                            .generate(path, resource)
-                            .onSuccess {
-                                storage.setValue(resource.id, it)
-                                _updates.emit(
-                                    MetadataUpdate.Added(resource.id, path, it)
-                                )
-                            }
-                    }
+                async {
+                    generate(added)
                 }
             }
 
-            jobs.joinAll()
+            val added = jobs.awaitAll().filterNotNull()
             _busy.emit(false)
 
             // UI should become interactive before persisting
-            storage.persist()
+            scope.launch { storage.persist() }
+            return@withContext added
         }
-    }
+
+    private suspend fun generate(newResource: NewResource): AddedMetadata? =
+        withContext(Dispatchers.Default) {
+            val resource = newResource.resource
+            val path = newResource.path
+
+            var metadata = storage.valueById[resource.id]
+
+            metadata?.let {
+                return@withContext null
+            }
+
+            Log.d(
+                LOG_PREFIX,
+                "generating metadata for resource ${resource.id} by path $path"
+            )
+
+            metadata = MetadataGenerator
+                .generate(path, resource)
+                .getOrNull()
+
+            metadata?.let {
+                storage.setValue(resource.id, it)
+
+                return@withContext AddedMetadata(
+                    newResource.resource.id,
+                    newResource.path,
+                    metadata
+                )
+            }
+
+            return@withContext null
+        }
+
 
     private fun initUpdatedResourcesListener() {
         Log.i(LOG_PREFIX, "Listening for updates in the index")
         index.updates.onEach { diff ->
-            generate(diff.added.values)
+            val addedMetadata = generate(diff.added.values)
 
             diff.deleted.forEach { (id, _) ->
-                forget(id)
+                storage.remove(id)
             }
+
+            _updates.emit(
+                MetadataUpdate(
+                    addedMetadata,
+                    diff.deleted.map { (id, _) -> DeletedMetadata(id) }
+                )
+            )
         }.launchIn(scope + Dispatchers.Default)
     }
 
-    private fun initKnownResources() {
-        scope.launch(Dispatchers.Default) {
-            generate(index.asAdded())
+    private suspend fun initKnownResources() = generate(index.asAdded())
+
+    companion object {
+        suspend fun provide(
+            scope: CoroutineScope,
+            index: RootIndex,
+        ) = RootMetadataProcessor(scope, index).also {
+            it.init()
         }
     }
 }

@@ -8,6 +8,8 @@ import space.taran.arklib.ResourceId
 
 abstract class Processor<Value, Update> {
 
+    abstract suspend fun init()
+
     protected val _busy = MutableStateFlow(false)
     val busy: StateFlow<Boolean> = _busy.asStateFlow()
 
