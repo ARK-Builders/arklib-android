@@ -20,7 +20,8 @@ abstract class FolderStorage<V>(
     private val scope: CoroutineScope,
     private val storageFolder: Path,
     monoid: Monoid<V>,
-    logLabel: String) : BaseStorage<V>(monoid, logLabel) {
+    logLabel: String
+) : BaseStorage<V>(monoid, logLabel) {
 
     /* Folder storage is more flexible, allowing to store
      * arbitrary type of data as values. It could be images as well.
@@ -62,34 +63,32 @@ abstract class FolderStorage<V>(
         val newTimestamps: ConcurrentHashMap<ResourceId, FileTime> =
             ConcurrentHashMap()
 
-        scope.launch(Dispatchers.IO) {
-            val jobs = Files.list(storageFolder)
-                .filter { !it.isDirectory() }
-                .map { path ->
-                    Log.d(label, "reading value from $path")
-                    val id = idFromPath(path)
+        val jobs = Files.list(storageFolder)
+            .filter { !it.isDirectory() }
+            .map { path ->
+                Log.d(label, "reading value from $path")
+                val id = idFromPath(path)
 
-                    scope.launch(Dispatchers.IO) {
-                        val timestamp = timestamps[id]
-                        val newTimestamp = Files.getLastModifiedTime(path)
+                scope.launch(Dispatchers.IO) {
+                    val timestamp = timestamps[id]
+                    val newTimestamp = Files.getLastModifiedTime(path)
 
-                        if (timestamp == null || timestamp < newTimestamp) {
-                            val binary = Files.readAllBytes(path)
+                    if (timestamp == null || timestamp < newTimestamp) {
+                        val binary = Files.readAllBytes(path)
 
-                            val value = valueFromBinary(binary)
+                        val value = valueFromBinary(binary)
 
-                            if (isNeutral(value)) {
-                                throw BadStorageFile("Empty value can be indicator of dirty write")
-                            }
-
-                            newValueById[id] = value
-                            newTimestamps[id] = newTimestamp
+                        if (isNeutral(value)) {
+                            throw BadStorageFile("Empty value can be indicator of dirty write")
                         }
-                    }
-                }.toList()
 
-            jobs.joinAll()
-        }
+                        newValueById[id] = value
+                        newTimestamps[id] = newTimestamp
+                    }
+                }
+            }.toList()
+
+        jobs.joinAll()
 
         Log.d(label, "${newValueById.size} entries has been read")
 

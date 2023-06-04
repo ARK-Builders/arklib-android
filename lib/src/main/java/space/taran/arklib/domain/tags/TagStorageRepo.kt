@@ -8,7 +8,7 @@ import java.nio.file.Path
 class TagsStorageRepo(private val scope: CoroutineScope) {
     private val storageByRoot = mutableMapOf<Path, RootTagsStorage>()
 
-    suspend fun provide(index: ResourceIndex): Any {
+    suspend fun provide(index: ResourceIndex): TagStorage {
         val roots = index.roots
 
         return if (roots.size > 1) {
