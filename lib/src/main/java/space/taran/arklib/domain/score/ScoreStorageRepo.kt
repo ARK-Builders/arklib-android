@@ -8,7 +8,7 @@ import java.nio.file.Path
 class ScoreStorageRepo(private val scope: CoroutineScope) {
     private val storageByRoot = mutableMapOf<Path, RootScoreStorage>()
 
-    suspend fun provide(index: ResourceIndex): Any {
+    suspend fun provide(index: ResourceIndex): ScoreStorage {
         val roots = index.roots
 
         return if (roots.size > 1) {
