@@ -5,7 +5,7 @@ import space.taran.arklib.domain.processor.AggregateProcessor
 import space.taran.arklib.domain.processor.Processor
 
 enum class Kind {
-    IMAGE, VIDEO, DOCUMENT, LINK, PLAINTEXT, ARCHIVE
+    IMAGE, VIDEO, DOCUMENT, LINK, PLAINTEXT, ARCHIVE, UNKNOWN
 }
 
 // used for JSON parsing, must be the same as name
@@ -41,6 +41,9 @@ sealed class Metadata(val kind: Kind) {
 
     @Serializable
     class Archive: Metadata(Kind.ARCHIVE)
+
+    @Serializable
+    class Unknown: Metadata(Kind.UNKNOWN)
 }
 
 typealias MetadataProcessor = Processor<Metadata, MetadataUpdate>

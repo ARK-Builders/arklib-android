@@ -24,6 +24,7 @@ internal class MetadataStorage(
             is Metadata.Link -> Json.encodeToString(value)
             is Metadata.PlainText -> Json.encodeToString(value)
             is Metadata.Video -> Json.encodeToString(value)
+            is Metadata.Unknown -> Json.encodeToString(value)
         }
 
         return json.toByteArray(Charsets.UTF_8)
@@ -61,6 +62,10 @@ internal class MetadataStorage(
             )
             Kind.ARCHIVE -> Json.decodeFromJsonElement(
                 Metadata.Archive.serializer(),
+                json
+            )
+            Kind.UNKNOWN -> Json.decodeFromJsonElement(
+                Metadata.Unknown.serializer(),
                 json
             )
         }

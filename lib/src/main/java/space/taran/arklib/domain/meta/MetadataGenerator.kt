@@ -31,17 +31,16 @@ interface MetadataGenerator {
             val generator = GENERATORS.find {
                 it.isValid(path)
             } ?: let {
-                return Result.failure(
-                    IllegalArgumentException("No generators found for $path")
-                )
+                Log.d(LOG_PREFIX, "No generators found for $path")
+                return Result.success(Metadata.Unknown())
             }
 
-            var result: Result<Metadata>?
+            var result: Result<Metadata>
             val time = measureTimeMillis {
                 result = generator.generate(path, resource)
             }
             Log.d(LOG_PREFIX, "metadata generated for $path in $time ms")
-            return result!!
+            return result
         }
 
         // Use this list to declare new types of generators
