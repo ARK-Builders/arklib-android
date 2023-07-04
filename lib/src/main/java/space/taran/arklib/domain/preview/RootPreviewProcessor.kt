@@ -125,8 +125,13 @@ class RootPreviewProcessor private constructor(
     private suspend fun initKnownResources() {
         _busy.emit(true)
         metadata.state().forEach { (id, meta) ->
-            val path = index.getPath(id)!!
-            generate(id, path, meta)
+            // Workaround
+            // Right now we are not removing lost resource meta, which causes npe
+            // Here should be index.getPath(id)!!, see:
+            // https://github.com/ARK-Builders/arklib-android/issues/70
+            index.getPath(id)?.let { path ->
+                generate(id, path, meta)
+            }
         }
         previews.persist()
         thumbnails.persist()
