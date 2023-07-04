@@ -45,19 +45,19 @@ class RootPreviewProcessor private constructor(
         }
     }
 
-    // can be `Result.failure` only if the corresponding metadata doesn't exist
-    // `locator.status` can be `ABSENT` and should be checked by consumer
-    override fun retrieve(id: ResourceId): Result<PreviewLocator> = metadata
-        .retrieve(id)
-        .map { metadata ->
-            val locator = if (metadata.kind == Kind.IMAGE) {
-                PreviewLocator(root, id, images[id])
-            } else {
-                PreviewLocator(root, id)
-            }
+    override fun retrieve(id: ResourceId): Result<PreviewLocator> {
+        val meta =  metadata.retrieve(id).getOrNull()
 
-            return Result.success(locator)
+        meta?.let {
+            if (meta.kind == Kind.IMAGE) {
+                return Result.success(
+                    PreviewLocator(root, id, images[id])
+                )
+            }
         }
+
+        return Result.success(PreviewLocator(root, id))
+    }
 
     override fun forget(id: ResourceId) {
         previews.remove(id)
