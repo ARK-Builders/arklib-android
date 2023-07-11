@@ -6,6 +6,7 @@ import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
 import com.bumptech.glide.request.RequestOptions
+import kotlinx.coroutines.Job
 import space.taran.arklib.*
 import space.taran.arklib.app
 import space.taran.arklib.domain.processor.AggregateProcessor
@@ -57,14 +58,16 @@ enum class PreviewStatus {
 }
 
 class PreviewLocator(
+    private val processor: RootPreviewProcessor,
     private val root: Path,
     private val id: ResourceId,
-    private val fullscreen: Path? = null) {
+    private var generateJob: Job? = null,
+) {
 
     private val previewsDir = root.arkFolder().arkPreviews()
     private val thumbnailsDir = root.arkFolder().arkThumbnails()
 
-    fun fullscreen(): Path = fullscreen ?: previewsDir.resolve(id.toString())
+    fun fullscreen(): Path = processor.images[id] ?: previewsDir.resolve(id.toString())
 
     fun thumbnail(): Path = thumbnailsDir.resolve(id.toString())
 
@@ -73,6 +76,19 @@ class PreviewLocator(
 
     init {
         check()
+    }
+
+    fun isGenerated(): Boolean {
+        generateJob?.let {
+            return it.isCompleted
+        }
+
+        return true
+    }
+
+    suspend fun join() {
+        generateJob?.join()
+        generateJob = null
     }
 
     fun check(): PreviewStatus {
@@ -93,7 +109,7 @@ class PreviewLocator(
     fun erase() {
         thumbnail().deleteIfExists()
 
-        if (fullscreen == null) {
+        if (processor.images[id] == null) {
             fullscreen().deleteIfExists()
         }
     }

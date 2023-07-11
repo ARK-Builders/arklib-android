@@ -1,33 +1,34 @@
 package space.taran.arklib.domain.preview
 
 import android.graphics.Bitmap
-import com.bumptech.glide.Glide
 import kotlinx.coroutines.CoroutineScope
-import space.taran.arklib.app
-import space.taran.arklib.domain.storage.FolderStorage
-import space.taran.arklib.domain.storage.MonoidIsNotUsed
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import space.taran.arklib.ResourceId
 import java.io.ByteArrayOutputStream
+import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.io.path.deleteIfExists
 
-internal class BitmapStorage(
-    val scope: CoroutineScope, path: Path, logLabel: String
-) : FolderStorage<Bitmap>(scope, path, MonoidIsNotUsed(), logLabel) {
+class BitmapStorage(
+    private val scope: CoroutineScope,
+    private val folderPath: Path
+) {
+    fun saveBitmap(id: ResourceId, bitmap: Bitmap) {
+        Files.createDirectories(folderPath)
 
-    override fun isNeutral(value: Bitmap): Boolean = false
-
-    override suspend fun valueToBinary(value: Bitmap): ByteArray {
         val stream = ByteArrayOutputStream()
-
-        value.compress(
+        bitmap.compress(
             Bitmap.CompressFormat.PNG,
             Preview.COMPRESSION_QUALITY,
             stream
         )
-
-        return stream.toByteArray()
+        Files.write(pathFromId(id), stream.toByteArray())
     }
 
-    override suspend fun valueFromBinary(raw: ByteArray): Bitmap {
-        return Glide.with(app).asBitmap().load(raw).submit().get()
+    fun remove(id: ResourceId) = scope.launch(Dispatchers.IO) {
+        pathFromId(id).deleteIfExists()
     }
+
+    private fun pathFromId(id: ResourceId) = folderPath.resolve(id.toString())
 }
