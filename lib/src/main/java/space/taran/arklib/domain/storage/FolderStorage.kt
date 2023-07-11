@@ -10,6 +10,7 @@ import space.taran.arklib.utils.deleteRecursively
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.FileTime
+import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.isDirectory
@@ -29,8 +30,16 @@ abstract class FolderStorage<V>(
     protected abstract suspend fun valueToBinary(value: V): ByteArray
     protected abstract suspend fun valueFromBinary(raw: ByteArray): V
 
-    private var timestamps: ConcurrentHashMap<ResourceId, FileTime> =
+    private var diskTimestamps: ConcurrentHashMap<ResourceId, FileTime> =
         ConcurrentHashMap()
+
+    // Can be changed by setValue or when writing to disk
+    private var ramTimestamps: ConcurrentHashMap<ResourceId, FileTime> =
+        ConcurrentHashMap()
+
+    override suspend fun afterInit() {
+        ramTimestamps.putAll(diskTimestamps)
+    }
 
     final override fun erase() {
         scope.launch(Dispatchers.IO) {
@@ -46,14 +55,20 @@ abstract class FolderStorage<V>(
         return result
     }
 
+    override fun setValue(id: ResourceId, value: V) {
+        ramTimestamps[id] = FileTime.from(Instant.now())
+        super.setValue(id, value)
+    }
+
     override fun remove(id: ResourceId) {
         super.remove(id)
 
-        if (timestamps[id]!! >= Files.getLastModifiedTime(pathFromId(id))) {
+        if (diskTimestamps[id]!! >= Files.getLastModifiedTime(pathFromId(id))) {
             scope.launch(Dispatchers.IO) {
                 pathFromId(id).deleteIfExists()
             }
-            timestamps.remove(id)
+            ramTimestamps.remove(id)
+            diskTimestamps.remove(id)
         }
     }
 
@@ -70,7 +85,7 @@ abstract class FolderStorage<V>(
                 val id = idFromPath(path)
 
                 scope.launch(Dispatchers.IO) {
-                    val timestamp = timestamps[id]
+                    val timestamp = diskTimestamps[id]
                     val newTimestamp = Files.getLastModifiedTime(path)
 
                     if (timestamp == null || timestamp < newTimestamp) {
@@ -96,34 +111,50 @@ abstract class FolderStorage<V>(
 
         // during merge, the file could be modified again
         // it will be handled during next sync
-        timestamps = newTimestamps
+        diskTimestamps.putAll(newTimestamps)
     }
 
     override suspend fun writeToDisk(valueById: Map<ResourceId, V>) {
-        scope.launch(Dispatchers.IO) {
-            Files.createDirectories(storageFolder)
+        Files.createDirectories(storageFolder)
 
-            valueById.forEach {
-                if (isNeutral(it.value)) {
-                    throw IllegalStateException("Storage is excessive")
-                }
+        val changedValueByIds = findChangedIds().map { id ->
+            id to valueById[id]!!
+        }.toMap()
 
-                val timestamp = timestamps[it.key]
-
-                val file = pathFromId(it.key)
-                Files.write(file, valueToBinary(it.value))
-
-                val newTimestamp = Files.getLastModifiedTime(file)
-                if (newTimestamp == timestamp) {
-                    throw IllegalStateException("Timestamp didn't update")
-                }
-
-                timestamps[it.key] = Files.getLastModifiedTime(file)
+        changedValueByIds.forEach {
+            if (isNeutral(it.value)) {
+                throw IllegalStateException("Storage is excessive")
             }
 
-            Log.d(label, "${valueById.size} entries have been written")
+            val timestamp = diskTimestamps[it.key]
+
+            val file = pathFromId(it.key)
+            Files.write(file, valueToBinary(it.value))
+
+            val newTimestamp = Files.getLastModifiedTime(file)
+            if (newTimestamp == timestamp) {
+                throw IllegalStateException("Timestamp didn't update")
+            }
+
+            diskTimestamps[it.key] = newTimestamp
+            ramTimestamps[it.key] = newTimestamp
         }
+
+        Log.d(label, "${changedValueByIds.size} entries have been written")
     }
+
+
+    private fun findChangedIds() = ramTimestamps.mapNotNull { (id, ramFt) ->
+        // If id is in RAM, but not on disk, then we must write it
+        val diskFt = diskTimestamps[id] ?: return@mapNotNull id
+
+        if (diskFt != ramFt) {
+            return@mapNotNull id
+        }
+
+        return@mapNotNull null
+    }
+
 
     private fun pathFromId(id: ResourceId): Path =
         storageFolder.resolve(id.toString())

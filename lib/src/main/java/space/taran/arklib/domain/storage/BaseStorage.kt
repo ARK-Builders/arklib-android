@@ -1,6 +1,8 @@
 package space.taran.arklib.domain.storage
 
 import android.util.Log
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import space.taran.arklib.ResourceId
 import java.util.concurrent.ConcurrentHashMap
 
@@ -9,7 +11,8 @@ import java.util.concurrent.ConcurrentHashMap
  * We also must persist all changes during application lifecycle into FS. */
 abstract class BaseStorage<V>(
     private val monoid: Monoid<V>,
-    logLabel: String): Storage<V> {
+    logLabel: String
+): Storage<V> {
 
     private val label = "$LOG_PREFIX [$logLabel]"
 
@@ -31,7 +34,10 @@ abstract class BaseStorage<V>(
         }
 
         initialized = true
+        afterInit()
     }
+
+    internal open suspend fun afterInit() {}
 
     internal suspend fun refresh() {
         syncWithDisk()

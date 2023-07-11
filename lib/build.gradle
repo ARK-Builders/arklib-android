@@ -81,7 +81,8 @@ tasks.whenTaskAdded { task ->
     }
 }
 
-def libVersion = scmVersion.version
+// def libVersion = scmVersion.version
+def libVersion = '999'
 
 publishing {
     publications {
@@ -96,7 +97,7 @@ publishing {
         debug(MavenPublication) {
             groupId = "space.taran"
             artifactId = "arklib-debug"
-            version = '999'
+            version = libVersion
             afterEvaluate {
                 from components.debug
             }
