@@ -2,15 +2,25 @@ package space.taran.arklib.domain.preview
 
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
+import kotlinx.coroutines.withContext
 import space.taran.arklib.*
 import space.taran.arklib.domain.index.RootIndex
 import space.taran.arklib.domain.meta.*
 import space.taran.arklib.domain.processor.RootProcessor
 import java.nio.file.Path
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
+import kotlin.coroutines.coroutineContext
 
 class RootPreviewProcessor private constructor(
     private val scope: CoroutineScope,
@@ -19,44 +29,45 @@ class RootPreviewProcessor private constructor(
 ) : RootProcessor<PreviewLocator, Unit>() {
     val root = index.path
 
-    private val previews = BitmapStorage(
-        scope, root.arkFolder().arkPreviews(), "previews"
-    )
-    private val thumbnails = BitmapStorage(
-        scope, root.arkFolder().arkThumbnails(), "thumbnails"
-    )
+    private val previews = BitmapStorage(scope, root.arkFolder().arkPreviews())
+    private val thumbnails = BitmapStorage(scope, root.arkFolder().arkThumbnails())
+
+    private val generateJobs = ConcurrentHashMap<ResourceId, Job>()
 
     // we fill it once during initialization to avoid
     // asking it every time from mutex-protected index
-    private val images = mutableMapOf<ResourceId, Path>()
+    internal val images = ConcurrentHashMap<ResourceId, Path>()
 
     override suspend fun init() {
         Log.i(LOG_PREFIX, "Initializing previews storage for root $root")
-        previews.init()
-        thumbnails.init()
         initUpdatedResourcesListener()
 
         // in contrast to MetadataStorage,
         // existing items are not retrieved from underlying layer,
         // existing metadata is pushed into `updates`
         // and should be processed in update handler here
-        scope.launch(Dispatchers.Default) {
-            initKnownResources()
-        }
+        initKnownResources()
     }
 
     override fun retrieve(id: ResourceId): Result<PreviewLocator> {
-        val meta =  metadata.retrieve(id).getOrNull()
+        val meta = metadata.retrieve(id).getOrNull()
 
         meta?.let {
             if (meta.kind == Kind.IMAGE) {
                 return Result.success(
-                    PreviewLocator(root, id, images[id])
+                    PreviewLocator(
+                        this,
+                        root,
+                        id,
+                        generateJobs[id]
+                    )
                 )
             }
         }
 
-        return Result.success(PreviewLocator(root, id))
+        return Result.success(
+            PreviewLocator(this, root, id, generateJobs[id])
+        )
     }
 
     override fun forget(id: ResourceId) {
@@ -65,15 +76,19 @@ class RootPreviewProcessor private constructor(
         images.remove(id)
     }
 
-    private suspend fun generate(id: ResourceId, path: Path, metadata: Metadata) {
-        val locator = PreviewLocator(root, id)
+    private suspend fun generate(
+        id: ResourceId,
+        path: Path,
+        metadata: Metadata
+    ) = scope.launch(Dispatchers.Default) {
+        val locator = PreviewLocator(this@RootPreviewProcessor, root, id)
 
         if (metadata.kind == Kind.IMAGE) {
             images[id] = path
         }
 
         if (locator.status != PreviewStatus.ABSENT) {
-            return
+            return@launch
         }
 
         Log.d(LOG_PREFIX, "generating preview for $id")
@@ -82,38 +97,43 @@ class RootPreviewProcessor private constructor(
             .onSuccess {
                 if (it.onlyThumbnail) {
                     // images and text resources must fall into this branch
-                    thumbnails.setValue(id, it.bitmap)
+                    thumbnails.saveBitmap(id, it.bitmap)
 
                     if (metadata.kind == Kind.IMAGE) {
                         images[id] = path
                     }
-                    return
+                    return@launch
                 }
 
                 if (metadata.kind == Kind.IMAGE) {
                     throw IllegalStateException("Images have only thumbnail")
                 }
 
-                previews.setValue(id, it.bitmap)
+                previews.saveBitmap(id, it.bitmap)
 
                 val thumbnail = Preview.downscale(it.bitmap)
-                thumbnails.setValue(id, thumbnail)
+                thumbnails.saveBitmap(id, thumbnail)
             }
             .onFailure {
                 Log.w(LOG_PREFIX, "Failed to generate preview for $path")
                 Log.w(LOG_PREFIX, it.toString())
             }
+
+        generateJobs.remove(id)
+    }.also { job ->
+        generateJobs[id] = job
     }
+
 
     private fun initUpdatedResourcesListener() {
         metadata.updates.onEach { update ->
             _busy.emit(true)
 
-            update.added.forEach { added ->
+            val jobs = update.added.map { added ->
                 generate(added.id, added.path, added.metadata)
             }
-            previews.persist()
-            thumbnails.persist()
+            jobs.joinAll()
+
             _busy.emit(false)
 
             update.deleted.forEach { deleted ->
@@ -124,7 +144,7 @@ class RootPreviewProcessor private constructor(
 
     private suspend fun initKnownResources() {
         _busy.emit(true)
-        metadata.state().forEach { (id, meta) ->
+        val jobs = metadata.state().map { (id, meta) ->
             // Workaround
             // Right now we are not removing lost resource meta, which causes npe
             // Here should be index.getPath(id)!!, see:
@@ -133,9 +153,11 @@ class RootPreviewProcessor private constructor(
                 generate(id, path, meta)
             }
         }
-        previews.persist()
-        thumbnails.persist()
-        _busy.emit(false)
+        // UI is unlocked only after the generation of all images has been started
+        scope.launch {
+            jobs.filterNotNull().joinAll()
+            _busy.emit(false)
+        }
     }
 
     companion object {
