@@ -14,7 +14,8 @@ abstract class FileStorage<V>(
     private val scope: CoroutineScope,
     private val storageFile: Path,
     monoid: Monoid<V>,
-    logLabel: String) : BaseStorage<V>(monoid, logLabel) {
+    logLabel: String
+) : BaseStorage<V>(scope, monoid, logLabel) {
 
     /* The file will be filled with a table,
      * one mapping entry per line of the table.
