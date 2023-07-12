@@ -12,7 +12,7 @@ object ScoreMonoid: Monoid<Score> {
     override fun combine(a: Score, b: Score): Score {
         val result = if (abs(a) > abs(b)) { a } else { b }
 
-        Log.d(LOG_PREFIX, "merging $a and $b into $result")
+        Log.v(LOG_PREFIX, "merging $a and $b into $result")
         return result
     }
 }
