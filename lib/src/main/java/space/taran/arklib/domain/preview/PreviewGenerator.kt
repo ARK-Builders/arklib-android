@@ -29,7 +29,7 @@ interface PreviewGenerator {
             val time = measureTimeMillis {
                 result = generator.generate(path, meta)
             }
-            Log.d(LOG_PREFIX, "preview generated for $path in $time ms")
+            Log.v(LOG_PREFIX, "preview generated for $path in $time ms")
             return result!!
         }
 

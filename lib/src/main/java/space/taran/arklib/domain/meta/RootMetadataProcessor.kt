@@ -91,7 +91,7 @@ class RootMetadataProcessor private constructor(
                 return@withContext null
             }
 
-            Log.d(
+            Log.v(
                 LOG_PREFIX,
                 "generating metadata for resource ${resource.id} by path $path"
             )

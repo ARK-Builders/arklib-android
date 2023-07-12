@@ -77,7 +77,7 @@ object ImageUtils {
         placeHolder: Int,
         view: ImageView
     ) {
-        Log.d(LOG_PREFIX, "loading image $image")
+        Log.v(LOG_PREFIX, "loading image $image")
 
         Glide.with(view.context)
             .load(image?.toFile())
@@ -94,7 +94,7 @@ object ImageUtils {
             target: Target<T>?,
             isFirstResource: Boolean
         ): Boolean {
-            Log.d(
+            Log.w(
                 LOG_PREFIX,
                 "load failed with message: ${
                 e?.message

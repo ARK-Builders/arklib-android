@@ -81,7 +81,7 @@ abstract class FolderStorage<V>(
         val jobs = Files.list(storageFolder)
             .filter { !it.isDirectory() }
             .map { path ->
-                Log.d(label, "reading value from $path")
+                Log.v(label, "reading value from $path")
                 val id = idFromPath(path)
 
                 scope.launch(Dispatchers.IO) {
