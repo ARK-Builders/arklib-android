@@ -22,7 +22,7 @@ abstract class FolderStorage<V>(
     private val storageFolder: Path,
     monoid: Monoid<V>,
     logLabel: String
-) : BaseStorage<V>(monoid, logLabel) {
+) : BaseStorage<V>(scope, monoid, logLabel) {
 
     /* Folder storage is more flexible, allowing to store
      * arbitrary type of data as values. It could be images as well.

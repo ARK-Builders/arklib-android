@@ -1,6 +1,11 @@
 package space.taran.arklib.domain.storage
 
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import space.taran.arklib.ResourceId
@@ -10,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap
  * and during application lifecycle since it can be changed from outside.
  * We also must persist all changes during application lifecycle into FS. */
 abstract class BaseStorage<V>(
+    private val scope: CoroutineScope,
     private val monoid: Monoid<V>,
     logLabel: String
 ): Storage<V> {
@@ -19,6 +25,13 @@ abstract class BaseStorage<V>(
     internal val valueById: ConcurrentHashMap<ResourceId, V> = ConcurrentHashMap()
 
     private var initialized = false
+
+    private val persistMutex = Mutex()
+    private val persistRequestFlow = MutableSharedFlow<Unit>().also { flow ->
+        flow.debounce(PERSIST_INTERVAL).onEach {
+            actualPersist()
+        }.launchIn(scope)
+    }
 
     internal suspend fun init() {
         if (initialized) {
@@ -60,6 +73,10 @@ abstract class BaseStorage<V>(
     }
 
     override suspend fun persist() {
+        persistRequestFlow.emit(Unit)
+    }
+
+    private suspend fun actualPersist() = persistMutex.withLock {
         syncWithDisk()
         writeToDisk()
     }
@@ -144,6 +161,10 @@ abstract class BaseStorage<V>(
         }
 
         writeToDisk(valueById.toMap())
+    }
+
+    companion object {
+        private const val PERSIST_INTERVAL = 2_000L
     }
 }
 
