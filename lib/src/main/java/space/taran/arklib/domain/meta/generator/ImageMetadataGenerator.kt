@@ -9,7 +9,7 @@ object ImageMetadataGenerator: MetadataGenerator {
 
     override val acceptedExtensions: Set<String>
         get() = setOf("bmp", "gif", "ico", "jpg", "jpeg",
-            "png", "svg", "tif", "tiff",
+            "png", "tif", "tiff",
             "webp", "heic", "heif",
             "avif")
 
@@ -21,7 +21,6 @@ object ImageMetadataGenerator: MetadataGenerator {
             "image/jpeg",
             "image/jpg",
             "image/png",
-            "image/svg+xml",
             "image/tiff",
             "image/webp",
             "image/heic",
