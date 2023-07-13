@@ -9,17 +9,19 @@ import java.nio.file.Path
 class ResourceIndexRepo(
     private val foldersRepo: FoldersRepo,
 ) {
+    private val indexByRoot = mutableMapOf<Path, RootIndex>()
+
     suspend fun provide(
         folders: RootAndFav
     ): ResourceIndex = withContext(Dispatchers.IO) {
         val roots = foldersRepo.resolveRoots(folders)
 
         if (roots.size > 1) {
-            val shards = roots.map { RootIndex.provide(it) }
+            val shards = roots.map { provideRootIndex(it) }
             return@withContext IndexAggregation(shards)
         } else {
             val root = roots.iterator().next()
-            val index = RootIndex.provide(root)
+            val index = provideRootIndex(root)
 
             if (folders.fav != null) {
                 val rootPath = folders.root!!
@@ -39,4 +41,10 @@ class ResourceIndexRepo(
     ): ResourceIndex = provide(
         RootAndFav(root.toString(), favString = null)
     )
+
+    private suspend fun provideRootIndex(root: Path) =
+        indexByRoot[root]
+            ?: RootIndex.provide(root).also {
+                indexByRoot[root] = it
+            }
 }
