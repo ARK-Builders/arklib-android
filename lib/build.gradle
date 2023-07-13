@@ -81,8 +81,7 @@ tasks.whenTaskAdded { task ->
     }
 }
 
-// def libVersion = scmVersion.version
-def libVersion = '999'
+def libVersion = scmVersion.version
 
 publishing {
     publications {

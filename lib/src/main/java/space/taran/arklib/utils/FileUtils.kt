@@ -1,5 +1,6 @@
 package space.taran.arklib.utils
 
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.tika.Tika
@@ -38,5 +39,13 @@ fun extension(path: Path): String {
 }
 
 fun detectMimeType(path: Path): String? {
-    return Tika().detect(Files.newInputStream(path))
+    return try {
+        Tika().detect(Files.newInputStream(path))
+    } catch (e: Throwable) {
+        Log.d(
+            "FileUtils",
+            "Tika failed to detect mime type for $path because ${e.message}"
+        )
+        null
+    }
 }
