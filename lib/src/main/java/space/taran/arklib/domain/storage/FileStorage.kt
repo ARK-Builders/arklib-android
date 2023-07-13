@@ -11,11 +11,11 @@ import java.nio.file.Path
 import java.nio.file.attribute.FileTime
 
 abstract class FileStorage<V>(
+    private val label: String,
     private val scope: CoroutineScope,
     private val storageFile: Path,
-    monoid: Monoid<V>,
-    logLabel: String
-) : BaseStorage<V>(scope, monoid, logLabel) {
+    monoid: Monoid<V>
+) : BaseStorage<V>(label, scope, monoid) {
 
     /* The file will be filled with a table,
      * one mapping entry per line of the table.
@@ -35,7 +35,7 @@ abstract class FileStorage<V>(
         val result = Files.exists(storageFile)
 
         val not = if (result) "" else " not"
-        Log.d(label, "folder $storageFile does$not exist")
+        Log.d(logPrefix, "folder $storageFile does$not exist")
         return result
     }
 
@@ -43,17 +43,17 @@ abstract class FileStorage<V>(
     // we don't have more granular timestamping
     override suspend fun readFromDisk(handle: (Map<ResourceId, V>) -> Unit) {
         val newTimestamp = Files.getLastModifiedTime(storageFile)
-        Log.d(label, "timestamp of storage file $storageFile is $timestamp")
+        Log.d(logPrefix, "timestamp of storage file $storageFile is $timestamp")
 
         if (timestamp >= newTimestamp) {
             return
         }
-        Log.d(label, "the file was modified externally, merging")
+        Log.d(logPrefix, "the file was modified externally, merging")
 
         scope.launch(Dispatchers.IO) {
             val lines = Files.readAllLines(storageFile, StandardCharsets.UTF_8)
 
-            verifyVersion(lines.removeAt(0))
+            verifyVersion(label, lines.removeAt(0))
 
             val valueById = lines.associate {
                 val parts = it.split(KEY_VALUE_SEPARATOR)
@@ -61,17 +61,23 @@ abstract class FileStorage<V>(
                 val value = valueFromString(parts[1])
 
                 if (isNeutral(value)) {
-                    throw BadStorageFile("Empty value can be indicator of dirty write")
+                    throw StorageException(
+                        label,
+                        "Empty value can be indicator of dirty write"
+                    )
                 }
 
                 id to value
             }
 
             if (valueById.isEmpty()) {
-                throw BadStorageFile("Empty storage can be indicator of dirty write")
+                throw StorageException(
+                    label,
+                    "Empty storage can be indicator of dirty write"
+                )
             }
 
-            Log.d(label, "${valueById.size} entries have been read")
+            Log.d(logPrefix, "${valueById.size} entries have been read")
 
             handle(valueById)
             timestamp = newTimestamp
@@ -100,7 +106,7 @@ abstract class FileStorage<V>(
         }
         timestamp = newTimestamp
 
-        Log.d(label, "${valueById.size} entries has been written")
+        Log.d(logPrefix, "${valueById.size} entries has been written")
     }
 
     companion object {
@@ -109,22 +115,31 @@ abstract class FileStorage<V>(
 
         const val KEY_VALUE_SEPARATOR = ':'
 
-        private fun verifyVersion(header: String) {
+        private fun verifyVersion(label: String, header: String) {
             if (!header.startsWith(STORAGE_VERSION_PREFIX)) {
-                throw BadStorageFile("Unknown storage version")
+                throw StorageException(
+                    label,
+                    "Unknown storage version"
+                )
             }
             val version = header.removePrefix(STORAGE_VERSION_PREFIX).toInt()
 
             if (version > STORAGE_VERSION) {
-                throw BadStorageFile("Storage format is newer than the app")
+                throw StorageException(
+                    label,
+                    "Storage format is newer than the app"
+                )
             }
             if (version < STORAGE_VERSION) {
-                throw BadStorageFile("Storage format is older than the app")
+                throw StorageException(
+                    label,
+                    "Storage format is older than the app"
+                )
             }
         }
     }
 
-    private val label = "$LOG_PREFIX [$logLabel]"
+    private val logPrefix = "$LOG_PREFIX [${this.label}]"
 }
 
 private const val LOG_PREFIX: String = "[file-storage]"

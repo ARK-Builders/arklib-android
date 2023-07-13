@@ -10,7 +10,7 @@ class RootScoreStorage(
     scope: CoroutineScope,
     val root: Path
 ) : FileStorage<Score>(
-    scope, root.arkFolder().arkScores(), ScoreMonoid, "scores"
+    "scores", scope, root.arkFolder().arkScores(), ScoreMonoid
 ), ScoreStorage {
 
     override fun valueToString(value: Score): String =

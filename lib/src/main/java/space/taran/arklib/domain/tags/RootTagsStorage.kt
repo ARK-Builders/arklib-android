@@ -16,7 +16,7 @@ class RootTagsStorage(
     val root: Path,
     private val statsFlow: MutableSharedFlow<StatsEvent>,
 ) : FileStorage<Tags>(
-    scope, root.arkFolder().arkTags(), TagsMonoid, "tags"
+    "tags", scope, root.arkFolder().arkTags(), TagsMonoid
 ), TagStorage {
 
     override fun valueToString(value: Tags): String =

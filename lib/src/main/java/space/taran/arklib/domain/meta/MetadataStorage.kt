@@ -12,7 +12,7 @@ import java.nio.file.Path
 internal class MetadataStorage(
     scope: CoroutineScope, path: Path
 ) : FolderStorage<Metadata>(
-    scope, path, MonoidIsNotUsed(), "metadata"
+    "metadata", scope, path, MonoidIsNotUsed()
 ) {
     override fun isNeutral(value: Metadata): Boolean = false
 

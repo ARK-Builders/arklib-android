@@ -81,6 +81,8 @@ tasks.whenTaskAdded { task ->
     }
 }
 
+//For local injection during development:
+//def libVersion = '999'
 def libVersion = scmVersion.version
 
 publishing {
