@@ -18,11 +18,11 @@ import kotlin.io.path.relativeTo
 import kotlin.streams.toList
 
 abstract class FolderStorage<V>(
+    private val label: String,
     private val scope: CoroutineScope,
     private val storageFolder: Path,
     monoid: Monoid<V>,
-    logLabel: String
-) : BaseStorage<V>(scope, monoid, logLabel) {
+) : BaseStorage<V>(label, scope, monoid) {
 
     /* Folder storage is more flexible, allowing to store
      * arbitrary type of data as values. It could be images as well.
@@ -51,7 +51,7 @@ abstract class FolderStorage<V>(
         val result = Files.exists(storageFolder)
 
         val not = if (result) "" else " not"
-        Log.d(label, "folder $storageFolder does$not exist")
+        Log.d(logPrefix, "folder $storageFolder does$not exist")
         return result
     }
 
@@ -81,7 +81,7 @@ abstract class FolderStorage<V>(
         val jobs = Files.list(storageFolder)
             .filter { !it.isDirectory() }
             .map { path ->
-                Log.v(label, "reading value from $path")
+                Log.v(logPrefix, "reading value from $path")
                 val id = idFromPath(path)
 
                 scope.launch(Dispatchers.IO) {
@@ -94,7 +94,7 @@ abstract class FolderStorage<V>(
                         val value = valueFromBinary(binary)
 
                         if (isNeutral(value)) {
-                            throw BadStorageFile("Empty value can be indicator of dirty write")
+                            throw StorageException(label, "Empty value can be indicator of dirty write")
                         }
 
                         newValueById[id] = value
@@ -105,7 +105,7 @@ abstract class FolderStorage<V>(
 
         jobs.joinAll()
 
-        Log.d(label, "${newValueById.size} entries has been read")
+        Log.d(logPrefix, "${newValueById.size} entries has been read")
 
         handle(newValueById)
 
@@ -140,7 +140,7 @@ abstract class FolderStorage<V>(
             ramTimestamps[it.key] = newTimestamp
         }
 
-        Log.d(label, "${changedValueByIds.size} entries have been written")
+        Log.d(logPrefix, "${changedValueByIds.size} entries have been written")
     }
 
 
@@ -166,7 +166,7 @@ abstract class FolderStorage<V>(
                 .fileName.toString()
         )
 
-    private val label = "$LOG_PREFIX [$logLabel]"
+    private val logPrefix = "$LOG_PREFIX [$label]"
 }
 
 private const val LOG_PREFIX: String = "[folder-storage]"
