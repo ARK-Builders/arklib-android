@@ -72,18 +72,18 @@ abstract class FileStorage<V>(
         } catch (e: Throwable) {
             if (e is StorageException) {
                 throw e
-            } else {
-                Log.w(
-                    label,
-                    "Error while parsing lines, stack trace:"
-                )
-                e.printStackTrace()
-                throw StorageException(
-                    label,
-                    "Error while parsing lines, looks like a dirty write",
-                    error = e
-                )
             }
+
+            Log.w(
+                label,
+                "Error while parsing lines, stack trace:"
+            )
+            e.printStackTrace()
+            throw StorageException(
+                label,
+                "Error while parsing lines, looks like a dirty write",
+                error = e
+            )
         }
 
         if (valueById.isEmpty()) {
