@@ -70,16 +70,20 @@ abstract class FileStorage<V>(
                 id to value
             }
         } catch (e: Throwable) {
-            Log.w(
-                label,
-                "Error while parsing lines, looks like a dirty write"
-            )
-            e.printStackTrace()
-            throw StorageException(
-                label,
-                "Error while parsing lines, looks like a dirty write",
-                error = e
-            )
+            if (e is StorageException) {
+                throw e
+            } else {
+                Log.w(
+                    label,
+                    "Error while parsing lines, stack trace:"
+                )
+                e.printStackTrace()
+                throw StorageException(
+                    label,
+                    "Error while parsing lines, looks like a dirty write",
+                    error = e
+                )
+            }
         }
 
         if (valueById.isEmpty()) {
