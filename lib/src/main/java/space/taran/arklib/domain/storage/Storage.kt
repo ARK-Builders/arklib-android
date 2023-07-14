@@ -11,3 +11,9 @@ interface Storage<V> {
 
     suspend fun persist()
 }
+
+class StorageException(
+    val label: String,
+    val msg: String,
+    val error: Throwable? = null
+) : Exception()

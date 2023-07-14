@@ -15,12 +15,12 @@ import java.util.concurrent.ConcurrentHashMap
  * and during application lifecycle since it can be changed from outside.
  * We also must persist all changes during application lifecycle into FS. */
 abstract class BaseStorage<V>(
+    private val label: String,
     private val scope: CoroutineScope,
     private val monoid: Monoid<V>,
-    logLabel: String
 ): Storage<V> {
 
-    private val label = "$LOG_PREFIX [$logLabel]"
+    private val logPrefix = "$LOG_PREFIX [$label]"
 
     internal val valueById: ConcurrentHashMap<ResourceId, V> = ConcurrentHashMap()
 
@@ -41,9 +41,9 @@ abstract class BaseStorage<V>(
         if (exists()) {
             readFromDisk { valueById.putAll(it) }
 
-            Log.d(label, "loaded ${valueById.size} values")
+            Log.d(logPrefix, "loaded ${valueById.size} values")
         } else {
-            Log.d(label, "created empty storage")
+            Log.d(logPrefix, "created empty storage")
         }
 
         initialized = true
@@ -68,7 +68,7 @@ abstract class BaseStorage<V>(
     }
 
     override fun remove(id: ResourceId) {
-        Log.d(label, "forgetting resource $id")
+        Log.d(logPrefix, "forgetting resource $id")
         valueById.remove(id)
     }
 
@@ -104,7 +104,7 @@ abstract class BaseStorage<V>(
         // only resources modified after our read or write
         readFromDisk {
             for (addedId in it.keys - valueById.keys) {
-                Log.d(label, "resource $addedId appeared from outside")
+                Log.d(logPrefix, "resource $addedId appeared from outside")
                 setValue(addedId, it[addedId]!!)
             }
 
@@ -122,7 +122,7 @@ abstract class BaseStorage<V>(
         }
 
         if (valueById.any { isNeutral(it.value) }) {
-            throw BadStorageFile("Empty value can be an indicator of dirty write")
+            throw StorageException(label, "Empty value can be an indicator of dirty write")
         }
     }
 
@@ -153,7 +153,7 @@ abstract class BaseStorage<V>(
 
         if (valueById.isEmpty()) {
             if (exists()) {
-                Log.d(label, "no actual data, deleting the file")
+                Log.d(logPrefix, "no actual data, deleting the file")
                 erase()
             }
 
@@ -167,7 +167,5 @@ abstract class BaseStorage<V>(
         private const val PERSIST_INTERVAL = 2_000L
     }
 }
-
-class BadStorageFile(val msg: String) : Exception()
 
 private const val LOG_PREFIX: String = "[storage]"
