@@ -50,32 +50,49 @@ abstract class FileStorage<V>(
         }
         Log.d(logPrefix, "the file was modified externally, merging")
 
-        scope.launch(Dispatchers.IO) {
-            val lines = Files.readAllLines(storageFile, StandardCharsets.UTF_8)
+        val lines = Files.readAllLines(storageFile, StandardCharsets.UTF_8)
 
-            verifyVersion(label, lines.removeAt(0))
+        verifyVersion(label, lines.removeAt(0))
 
-            val valueById = lines.associate {
+        val valueById = try {
+            lines.associate {
                 val parts = it.split(KEY_VALUE_SEPARATOR)
                 val id = ResourceId.fromString(parts[0])
                 val value = valueFromString(parts[1])
 
                 if (isNeutral(value)) {
-                    throw StorageException(label, "Empty value can be indicator of dirty write")
+                    throw StorageException(
+                        label,
+                        "Empty value can be indicator of dirty write"
+                    )
                 }
 
                 id to value
             }
-
-            if (valueById.isEmpty()) {
-                throw StorageException(label, "Empty storage can be indicator of dirty write")
-            }
-
-            Log.d(logPrefix, "${valueById.size} entries have been read")
-
-            handle(valueById)
-            timestamp = newTimestamp
+        } catch (e: Throwable) {
+            Log.w(
+                label,
+                "Error while parsing lines, looks like a dirty write"
+            )
+            e.printStackTrace()
+            throw StorageException(
+                label,
+                "Error while parsing lines, looks like a dirty write",
+                error = e
+            )
         }
+
+        if (valueById.isEmpty()) {
+            throw StorageException(
+                label,
+                "Empty storage can be indicator of dirty write"
+            )
+        }
+
+        Log.d(logPrefix, "${valueById.size} entries have been read")
+
+        handle(valueById)
+        timestamp = newTimestamp
     }
 
     override suspend fun writeToDisk(valueById: Map<ResourceId, V>) {

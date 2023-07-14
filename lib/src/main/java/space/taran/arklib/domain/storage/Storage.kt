@@ -14,5 +14,6 @@ interface Storage<V> {
 
 class StorageException(
     val label: String,
-    val msg: String
+    val msg: String,
+    val error: Throwable? = null
 ) : Exception()
