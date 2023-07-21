@@ -1,4 +1,4 @@
-package space.taran.arklib.domain.tags
+package space.taran.arklib.user.tags
 
 import android.util.Log
 import space.taran.arklib.domain.storage.Monoid

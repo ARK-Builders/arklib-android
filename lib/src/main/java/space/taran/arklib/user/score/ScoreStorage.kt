@@ -1,4 +1,4 @@
-package space.taran.arklib.domain.score
+package space.taran.arklib.user.score
 
 import space.taran.arklib.ResourceId
 import space.taran.arklib.domain.index.ResourceIndex

@@ -1,4 +1,4 @@
-package space.taran.arklib.domain.tags
+package space.taran.arklib.user.tags
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow

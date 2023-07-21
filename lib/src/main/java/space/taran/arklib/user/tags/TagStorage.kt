@@ -1,4 +1,4 @@
-package space.taran.arklib.domain.tags
+package space.taran.arklib.user.tags
 
 import space.taran.arklib.ResourceId
 import space.taran.arklib.domain.index.ResourceIndex

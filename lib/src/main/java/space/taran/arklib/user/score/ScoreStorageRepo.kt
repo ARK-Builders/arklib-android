@@ -1,35 +1,30 @@
-package space.taran.arklib.domain.tags
+package space.taran.arklib.user.score
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableSharedFlow
 import space.taran.arklib.domain.index.ResourceIndex
 import space.taran.arklib.domain.index.RootIndex
-import space.taran.arklib.domain.stats.StatsEvent
 import java.nio.file.Path
 
-class TagsStorageRepo(
-    private val scope: CoroutineScope,
-    private val statsFlow: MutableSharedFlow<StatsEvent>,
-) {
-    private val storageByRoot = mutableMapOf<Path, RootTagsStorage>()
+class ScoreStorageRepo(private val scope: CoroutineScope) {
+    private val storageByRoot = mutableMapOf<Path, RootScoreStorage>()
 
-    suspend fun provide(index: ResourceIndex): TagStorage {
+    suspend fun provide(index: ResourceIndex): ScoreStorage {
         val roots = index.roots
 
         return if (roots.size > 1) {
             val shards = roots.map { provide(it) to it }
-            AggregateTagStorage(shards)
+            AggregateScoreStorage(shards)
         } else {
             val root = roots.iterator().next()
             provide(root)
         }
     }
 
-    suspend fun provide(root: RootIndex): RootTagsStorage {
+    suspend fun provide(root: RootIndex): RootScoreStorage {
         var storage = storageByRoot[root.path]
 
         if (storage == null) {
-            storage = RootTagsStorage(scope, root.path, statsFlow)
+            storage = RootScoreStorage(scope, root.path)
             storage.init()
             storageByRoot[root.path] = storage
         } else {
