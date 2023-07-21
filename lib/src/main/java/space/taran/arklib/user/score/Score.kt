@@ -1,4 +1,4 @@
-package space.taran.arklib.domain.score
+package space.taran.arklib.user.score
 
 import android.util.Log
 import space.taran.arklib.domain.storage.Monoid

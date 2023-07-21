@@ -1,4 +1,4 @@
-package space.taran.arklib.domain.score
+package space.taran.arklib.user.score
 
 import kotlinx.coroutines.CoroutineScope
 import space.taran.arklib.arkFolder

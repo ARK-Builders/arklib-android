@@ -2,25 +2,19 @@ package space.taran.arklib.domain.preview
 
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
-import kotlinx.coroutines.withContext
 import space.taran.arklib.*
 import space.taran.arklib.domain.index.RootIndex
 import space.taran.arklib.domain.meta.*
 import space.taran.arklib.domain.processor.RootProcessor
+import space.taran.arklib.domain.storage.BitmapStorage
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Executors
-import kotlin.coroutines.coroutineContext
 
 class RootPreviewProcessor private constructor(
     private val scope: CoroutineScope,

@@ -2,8 +2,8 @@ package space.taran.arklib.domain.stats
 
 import space.taran.arklib.ResourceId
 import space.taran.arklib.domain.meta.Kind
-import space.taran.arklib.domain.tags.Tag
-import space.taran.arklib.domain.tags.Tags
+import space.taran.arklib.user.tags.Tag
+import space.taran.arklib.user.tags.Tags
 
 sealed class StatsEvent {
     data class TagsChanged(

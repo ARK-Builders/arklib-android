@@ -2,30 +2,35 @@ package space.taran.arklib
 
 import space.taran.arklib.ArkFiles.ARK_FOLDER
 import space.taran.arklib.ArkFiles.FAVORITES_FILE
-import space.taran.arklib.ArkFiles.METADATA_FOLDER
-import space.taran.arklib.ArkFiles.PREVIEWS_FOLDER
-import space.taran.arklib.ArkFiles.SCORES_STORAGE_FILE
+import space.taran.arklib.ArkFiles.METADATA_STORAGE_FOLDER
+import space.taran.arklib.ArkFiles.PREVIEWS_STORAGE_FOLDER
+import space.taran.arklib.ArkFiles.SCORE_STORAGE_FILE
 import space.taran.arklib.ArkFiles.STATS_FOLDER
-import space.taran.arklib.ArkFiles.TAGS_STORAGE_FILE
-import space.taran.arklib.ArkFiles.THUMBNAILS_FOLDER
+import space.taran.arklib.ArkFiles.TAG_STORAGE_FILE
+import space.taran.arklib.ArkFiles.THUMBNAILS_STORAGE_FOLDER
 import java.nio.file.Path
 
 object ArkFiles {
     const val ARK_FOLDER = ".ark"
     const val STATS_FOLDER = "stats"
     const val FAVORITES_FILE = "favorites"
-    const val TAGS_STORAGE_FILE = "tags"
-    const val PREVIEWS_FOLDER = "previews"
-    const val METADATA_FOLDER = "meta"
-    const val THUMBNAILS_FOLDER = "thumbnails"
-    const val SCORES_STORAGE_FILE = "scores"
+
+    // User-defined data
+    const val TAG_STORAGE_FILE = "user/tags"
+    const val SCORE_STORAGE_FILE = "user/scores"
+    const val PROPERTY_STORAGE_FOLDER = "user/properties"
+
+    // Generated data
+    const val METADATA_STORAGE_FOLDER = "cache/meta"
+    const val PREVIEWS_STORAGE_FOLDER = "cache/previews"
+    const val THUMBNAILS_STORAGE_FOLDER = "cache/thumbnails"
 }
 
 fun Path.arkFolder() = resolve(ARK_FOLDER)
 fun Path.arkStats() = resolve(STATS_FOLDER)
 fun Path.arkFavorites() = resolve(FAVORITES_FILE)
-fun Path.arkTags() = resolve(TAGS_STORAGE_FILE)
-fun Path.arkPreviews() = resolve(PREVIEWS_FOLDER)
-fun Path.arkThumbnails() = resolve(THUMBNAILS_FOLDER)
-fun Path.arkMetadata() = resolve(METADATA_FOLDER)
-fun Path.arkScores() = resolve(SCORES_STORAGE_FILE)
+fun Path.arkTags() = resolve(TAG_STORAGE_FILE)
+fun Path.arkPreviews() = resolve(PREVIEWS_STORAGE_FOLDER)
+fun Path.arkThumbnails() = resolve(THUMBNAILS_STORAGE_FOLDER)
+fun Path.arkMetadata() = resolve(METADATA_STORAGE_FOLDER)
+fun Path.arkScores() = resolve(SCORE_STORAGE_FILE)
