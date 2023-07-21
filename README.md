@@ -1,6 +1,12 @@
-# Arklib For Android
+<a href="https://www.buymeacoffee.com/arkbuilders" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
-An arklib wrapper for Android.
+# ArkLib for Android
+
+This is a wrapper of <a href="https://github.com/ARK-Builders/arklib" target="_blank">ArkLib</a> which enables you to build Android apps, powered by resource indexing, previews generation and user metadata support such as tags or scores.
+
+| :warning: WARNING          |
+|:---------------------------|
+| The following information is only for developers. |
 
 ## Prerequisites
 
