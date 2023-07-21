@@ -6,9 +6,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import space.taran.arklib.ResourceId
-import space.taran.arklib.domain.index.ResourceIndex
 import space.taran.arklib.domain.index.RootIndex
-import java.lang.IllegalStateException
 
 class AggregateProcessor<Value, Update> private constructor(
     private val scope: CoroutineScope,

@@ -4,6 +4,7 @@ import space.taran.arklib.ArkFiles.ARK_FOLDER
 import space.taran.arklib.ArkFiles.FAVORITES_FILE
 import space.taran.arklib.ArkFiles.METADATA_STORAGE_FOLDER
 import space.taran.arklib.ArkFiles.PREVIEWS_STORAGE_FOLDER
+import space.taran.arklib.ArkFiles.PROPERTIES_STORAGE_FOLDER
 import space.taran.arklib.ArkFiles.SCORE_STORAGE_FILE
 import space.taran.arklib.ArkFiles.STATS_FOLDER
 import space.taran.arklib.ArkFiles.TAG_STORAGE_FILE
@@ -18,7 +19,7 @@ object ArkFiles {
     // User-defined data
     const val TAG_STORAGE_FILE = "user/tags"
     const val SCORE_STORAGE_FILE = "user/scores"
-    const val PROPERTY_STORAGE_FOLDER = "user/properties"
+    const val PROPERTIES_STORAGE_FOLDER = "user/properties"
 
     // Generated data
     const val METADATA_STORAGE_FOLDER = "cache/meta"
@@ -29,8 +30,13 @@ object ArkFiles {
 fun Path.arkFolder() = resolve(ARK_FOLDER)
 fun Path.arkStats() = resolve(STATS_FOLDER)
 fun Path.arkFavorites() = resolve(FAVORITES_FILE)
+
+// User-defined data
 fun Path.arkTags() = resolve(TAG_STORAGE_FILE)
+fun Path.arkScores() = resolve(SCORE_STORAGE_FILE)
+fun Path.arkProperties() = resolve(PROPERTIES_STORAGE_FOLDER)
+
+// Generated data
+fun Path.arkMetadata() = resolve(METADATA_STORAGE_FOLDER)
 fun Path.arkPreviews() = resolve(PREVIEWS_STORAGE_FOLDER)
 fun Path.arkThumbnails() = resolve(THUMBNAILS_STORAGE_FOLDER)
-fun Path.arkMetadata() = resolve(METADATA_STORAGE_FOLDER)
-fun Path.arkScores() = resolve(SCORE_STORAGE_FILE)
