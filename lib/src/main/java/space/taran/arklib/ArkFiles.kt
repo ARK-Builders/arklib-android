@@ -22,7 +22,7 @@ object ArkFiles {
     const val PROPERTIES_STORAGE_FOLDER = "user/properties"
 
     // Generated data
-    const val METADATA_STORAGE_FOLDER = "cache/meta"
+    const val METADATA_STORAGE_FOLDER = "cache/metadata"
     const val PREVIEWS_STORAGE_FOLDER = "cache/previews"
     const val THUMBNAILS_STORAGE_FOLDER = "cache/thumbnails"
 }
