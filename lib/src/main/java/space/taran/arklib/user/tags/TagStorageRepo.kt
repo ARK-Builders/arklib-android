@@ -2,9 +2,9 @@ package space.taran.arklib.user.tags
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
-import space.taran.arklib.domain.index.ResourceIndex
-import space.taran.arklib.domain.index.RootIndex
-import space.taran.arklib.domain.stats.StatsEvent
+import space.taran.arklib.data.index.ResourceIndex
+import space.taran.arklib.data.index.RootIndex
+import space.taran.arklib.data.stats.StatsEvent
 import java.nio.file.Path
 
 class TagsStorageRepo(

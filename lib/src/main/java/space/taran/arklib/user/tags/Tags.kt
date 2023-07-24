@@ -1,7 +1,7 @@
 package space.taran.arklib.user.tags
 
 import android.util.Log
-import space.taran.arklib.domain.storage.Monoid
+import space.taran.arklib.data.storage.Monoid
 
 typealias Tag = String
 

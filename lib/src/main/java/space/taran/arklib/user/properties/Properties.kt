@@ -2,7 +2,7 @@ package space.taran.arklib.user.properties
 
 import android.util.Log
 import kotlinx.serialization.Serializable
-import space.taran.arklib.domain.storage.Monoid
+import space.taran.arklib.data.storage.Monoid
 
 @Serializable
 class Properties(

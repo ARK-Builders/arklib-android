@@ -5,7 +5,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import space.taran.arklib.arkFolder
 import space.taran.arklib.arkProperties
-import space.taran.arklib.domain.storage.FolderStorage
+import space.taran.arklib.data.storage.FolderStorage
 import java.nio.file.Path
 
 class RootPropertiesStorage(

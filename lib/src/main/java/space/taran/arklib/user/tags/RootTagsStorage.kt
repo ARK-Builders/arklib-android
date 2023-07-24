@@ -1,14 +1,13 @@
 package space.taran.arklib.user.tags
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import space.taran.arklib.ResourceId
 import space.taran.arklib.arkFolder
 import space.taran.arklib.arkTags
-import space.taran.arklib.domain.stats.StatsEvent
-import space.taran.arklib.domain.storage.FileStorage
+import space.taran.arklib.data.stats.StatsEvent
+import space.taran.arklib.data.storage.FileStorage
 import java.nio.file.Path
 
 class RootTagsStorage(

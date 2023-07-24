@@ -1,10 +1,10 @@
 package space.taran.arklib.user.score
 
 import space.taran.arklib.ResourceId
-import space.taran.arklib.domain.index.ResourceIndex
-import space.taran.arklib.domain.index.RootIndex
-import space.taran.arklib.domain.storage.AggregateStorage
-import space.taran.arklib.domain.storage.Storage
+import space.taran.arklib.data.index.ResourceIndex
+import space.taran.arklib.data.index.RootIndex
+import space.taran.arklib.data.storage.AggregateStorage
+import space.taran.arklib.data.storage.Storage
 
 interface ScoreStorage: Storage<Score> {
 
