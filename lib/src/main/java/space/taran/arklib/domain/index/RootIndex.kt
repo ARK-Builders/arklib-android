@@ -6,11 +6,13 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import space.taran.arklib.ResourceId
 import space.taran.arklib.binding.BindingIndex
 import space.taran.arklib.binding.RawUpdates
 import space.taran.arklib.utils.withContextAndLock
 import java.nio.file.Path
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * [RootIndex] is a type of index backed by storage file.
@@ -25,8 +27,7 @@ import java.nio.file.Path
  *
  * See also [IndexAggregation] and [IndexProjection].
  */
-class RootIndex
-    private constructor(val path: Path): ResourceIndex {
+class RootIndex private constructor(val path: Path) : ResourceIndex {
 
     companion object {
         suspend fun provide(path: Path): RootIndex {
@@ -37,18 +38,18 @@ class RootIndex
         }
     }
 
-    private val mutex = Mutex()
     private val _updates = MutableSharedFlow<ResourceUpdates>()
 
-    private val resourceById: MutableMap<ResourceId, Resource> = mutableMapOf()
-    private val pathById: MutableMap<ResourceId, Path> = mutableMapOf()
+    private val mutex = Mutex()
+
+    private val resourceAndPathById:
+            ConcurrentHashMap<ResourceId, Pair<Resource, Path>> = ConcurrentHashMap()
 
     private fun wrap(update: RawUpdates): ResourceUpdates {
         Log.d(LOG_PREFIX, "wrapping raw updates from arklib")
 
         val deleted = update.deleted.associateWith { id ->
-            val path = pathById[id]!!
-            val resource = resourceById[id]!!
+            val (resource, path) = resourceAndPathById[id]!!
             LostResource(path, resource)
         }
 
@@ -103,8 +104,7 @@ class RootIndex
                             Log.e(LOG_PREFIX, error.toString())
                         }
                         .onSuccess { resource ->
-                            pathById[id] = path
-                            resourceById[id] = resource
+                            resourceAndPathById[id] = resource to path
                         }
                 }
         }
@@ -126,43 +126,40 @@ class RootIndex
             val updates: ResourceUpdates = wrap(raw)
 
             updates.deleted.forEach { (id, _) ->
-                resourceById.remove(id)
-                pathById.remove(id)
+                resourceAndPathById.remove(id)
             }
 
             updates.added.forEach { (id, added) ->
-                resourceById[id] = added.resource
-                pathById[id] = added.path
+                resourceAndPathById[id] = added.resource to added.path
             }
 
             _updates.emit(updates)
             check()
         }
 
-    override suspend fun allResources(): Map<ResourceId, Resource> = mutex.withLock {
-        return resourceById
-    }
+    override fun allResources(): Map<ResourceId, Resource> =
+        resourceAndPathById.mapValues { it.value.first }
 
-    override suspend fun getResource(id: ResourceId): Resource? = mutex.withLock {
-        return resourceById[id]
-    }
+    override fun getResource(id: ResourceId): Resource? =
+        resourceAndPathById[id]?.first
 
-    override suspend fun allPaths(): Map<ResourceId, Path> = mutex.withLock {
-        return pathById
-    }
+    override fun allPaths(): Map<ResourceId, Path> =
+        resourceAndPathById.mapValues { it.value.second }
 
-    override suspend fun getPath(id: ResourceId): Path? = mutex.withLock {
-        return pathById[id]
-    }
+    override fun getPath(id: ResourceId): Path? =
+        resourceAndPathById[id]?.second
 
     // used by storages to initialize state
-    internal suspend fun asAdded(): Set<NewResource> = mutex.withLock {
-        return resourceById.map { (id, resource) ->
-            NewResource(pathById[id]!!, resource)
+    internal fun asAdded(): Set<NewResource> =
+        resourceAndPathById.map { (id, pair) ->
+            val (resource, path) = pair
+            NewResource(path, resource)
         }.toSet()
-    }
+
 
     private fun check() {
+        val resourceById = resourceAndPathById.mapValues { it.value.first }
+        val pathById = resourceAndPathById.mapValues { it.value.second }
         val idsN1 = pathById.keys.size
         val idsN2 = resourceById.keys.size
         val pathsN = pathById.values.size
