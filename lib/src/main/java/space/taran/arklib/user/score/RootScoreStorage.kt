@@ -3,7 +3,7 @@ package space.taran.arklib.user.score
 import kotlinx.coroutines.CoroutineScope
 import space.taran.arklib.arkFolder
 import space.taran.arklib.arkScores
-import space.taran.arklib.domain.storage.FileStorage
+import space.taran.arklib.data.storage.FileStorage
 import java.nio.file.Path
 
 class RootScoreStorage(
