@@ -19,10 +19,6 @@ class AggregateProcessor<Value, Update> private constructor(
         .merge()
 
     override suspend fun init() {
-        shards.forEach {
-            it.init()
-        }
-
         shards.forEach { shard ->
             shard.busy.onEach {
                 _busy.emit(atLeastOneShardIsBusy())
