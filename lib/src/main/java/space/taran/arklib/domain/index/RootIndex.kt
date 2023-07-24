@@ -139,12 +139,16 @@ class RootIndex
             check()
         }
 
-    override suspend fun allResources(): Set<Resource> = mutex.withLock {
-        return resourceById.values.toSet()
+    override suspend fun allResources(): Map<ResourceId, Resource> = mutex.withLock {
+        return resourceById
     }
 
     override suspend fun getResource(id: ResourceId): Resource? = mutex.withLock {
         return resourceById[id]
+    }
+
+    override suspend fun allPaths(): Map<ResourceId, Path> = mutex.withLock {
+        return pathById
     }
 
     override suspend fun getPath(id: ResourceId): Path? = mutex.withLock {

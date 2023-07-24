@@ -13,14 +13,16 @@ interface ResourceIndex {
 
     suspend fun updateAll()
 
-    suspend fun allResources(): Set<Resource>
+    suspend fun allResources(): Map<ResourceId, Resource>
 
     suspend fun getResource(id: ResourceId): Resource?
+
+    suspend fun allPaths(): Map<ResourceId, Path>
 
     suspend fun getPath(id: ResourceId): Path?
 
     suspend fun allIds(): Set<ResourceId> =
-        allResources().map { it.id }.toSet()
+        allResources().keys
 }
 
 
