@@ -20,7 +20,7 @@ class PreviewProcessorRepo(
         return if (roots.size > 1) {
             val shards = roots.map {
                 val metadataStorage = metadataProcessorRepo.provide(it)
-                provide(it, metadataStorage)
+                provide(it, metadataStorage) to it
             }
 
             AggregatePreviewProcessor.provide(scope, shards)

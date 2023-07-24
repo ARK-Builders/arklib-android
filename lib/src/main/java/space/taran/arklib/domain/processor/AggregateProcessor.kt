@@ -6,47 +6,44 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import space.taran.arklib.ResourceId
+import space.taran.arklib.domain.index.ResourceIndex
 import java.lang.IllegalStateException
 
 class AggregateProcessor<Value, Update> private constructor(
     private val scope: CoroutineScope,
-    private val shards: Collection<RootProcessor<Value, Update>>,
+    private val shards: Collection<Pair<RootProcessor<Value, Update>, ResourceIndex>>,
 ) : Processor<Value, Update>() {
 
     override val updates: Flow<Update> = shards
-        .map { it.updates }
+        .map { (processor, _) -> processor.updates }
         .asIterable()
         .merge()
 
     override suspend fun init() {
-        shards.forEach { shard ->
-            shard.busy.onEach {
+        shards.forEach { (processor, _) ->
+            processor.busy.onEach {
                 _busy.emit(atLeastOneShardIsBusy())
             }.launchIn(scope)
         }
     }
 
     override fun retrieve(id: ResourceId): Result<Value> = shards
-        .map { it.retrieve(id) }
-        .find { it.isSuccess }
-        .let {
-            if (it == null) {
-                return Result.failure(IllegalStateException())
-            }
+        .find { (_, index) -> index.allIds().contains(id) }!!
+        .let { (processor, _) -> processor.retrieve(id) }
 
-            return it
-        }
 
-    override fun forget(id: ResourceId) = shards.forEach {
-        it.forget(id)
+    override fun forget(id: ResourceId) = shards.forEach { (processor, _) ->
+        processor.forget(id)
     }
 
-    private fun atLeastOneShardIsBusy() = shards.map { it.busy.value }.contains(true)
+    private fun atLeastOneShardIsBusy() = shards.map { (processor, _) ->
+        processor.busy.value
+    }.contains(true)
 
     companion object {
         suspend fun <Value, Update> provide(
             scope: CoroutineScope,
-            shards: Collection<RootProcessor<Value, Update>>,
+            shards: Collection<Pair<RootProcessor<Value, Update>, ResourceIndex>>,
         ) = AggregateProcessor(scope, shards).also {
             it.init()
         }

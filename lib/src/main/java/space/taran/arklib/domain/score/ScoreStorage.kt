@@ -1,6 +1,7 @@
 package space.taran.arklib.domain.score
 
 import space.taran.arklib.ResourceId
+import space.taran.arklib.domain.index.ResourceIndex
 import space.taran.arklib.domain.storage.AggregateStorage
 import space.taran.arklib.domain.storage.Storage
 
@@ -17,5 +18,5 @@ interface ScoreStorage: Storage<Score> {
 }
 
 class AggregateScoreStorage(
-    shards: Collection<RootScoreStorage>
+    shards: Collection<Pair<RootScoreStorage, ResourceIndex>>
 ): AggregateStorage<Score>(ScoreMonoid, shards), ScoreStorage

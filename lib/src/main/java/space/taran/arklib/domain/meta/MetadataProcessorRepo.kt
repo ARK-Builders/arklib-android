@@ -12,7 +12,7 @@ class MetadataProcessorRepo(private val scope: CoroutineScope) {
         val roots = index.roots
 
         return if (roots.size > 1) {
-            val shards = roots.map { provide(it) }
+            val shards = roots.map { provide(it) to it }
 
             AggregateMetadataProcessor.provide(scope, shards)
         } else {

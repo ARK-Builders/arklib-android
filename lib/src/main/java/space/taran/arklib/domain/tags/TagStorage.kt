@@ -1,6 +1,7 @@
 package space.taran.arklib.domain.tags
 
 import space.taran.arklib.ResourceId
+import space.taran.arklib.domain.index.ResourceIndex
 import space.taran.arklib.domain.storage.AggregateStorage
 import space.taran.arklib.domain.storage.Storage
 
@@ -20,5 +21,5 @@ interface TagStorage: Storage<Tags> {
 }
 
 class AggregateTagStorage(
-    shards: Collection<RootTagsStorage>
+    shards: Collection<Pair<RootTagsStorage, ResourceIndex>>
 ): AggregateStorage<Tags>(TagsMonoid, shards), TagStorage
