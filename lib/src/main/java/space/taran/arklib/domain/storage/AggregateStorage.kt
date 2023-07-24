@@ -1,23 +1,28 @@
 package space.taran.arklib.domain.storage
 
 import space.taran.arklib.ResourceId
+import space.taran.arklib.domain.index.ResourceIndex
+import space.taran.arklib.domain.index.RootIndex
 
 open class AggregateStorage<V>(
     private val monoid: Monoid<V>,
-    private val shards: Collection<BaseStorage<V>>
-): Storage<V> {
+    private val shards: Collection<Pair<BaseStorage<V>, RootIndex>>
+) : Storage<V> {
 
     override fun getValue(id: ResourceId): V =
-        shards.map { it.valueById[id] }
-            .find { it != null }
-            ?: monoid.neutral
+        shards.firstNotNullOfOrNull { (storage, _) ->
+            storage.valueById[id]
+        } ?: monoid.neutral
 
     override fun setValue(id: ResourceId, value: V) =
-        shards.forEach { it.setValue(id, value) }
+        shards.forEach { (storage, index) ->
+            if (index.allIds().contains(id))
+                storage.setValue(id, value)
+        }
 
     override fun remove(id: ResourceId) =
-        shards.forEach { it.remove(id) }
+        shards.forEach { (storage, _) -> storage.remove(id) }
 
     override suspend fun persist() =
-        shards.forEach { it.persist() }
+        shards.forEach { (storage, _) -> storage.persist() }
 }

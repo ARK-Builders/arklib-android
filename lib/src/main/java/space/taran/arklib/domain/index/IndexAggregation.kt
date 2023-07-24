@@ -29,7 +29,7 @@ class IndexAggregation(
         .asIterable()
         .merge()
 
-    override suspend fun allResources(): Map<ResourceId, Resource> =
+    override fun allResources(): Map<ResourceId, Resource> =
         shards
             .map { it.allResources() }
             .fold(hashMapOf()) { acc, curr ->
@@ -37,10 +37,10 @@ class IndexAggregation(
                 acc
             }
 
-    override suspend fun getResource(id: ResourceId): Resource? =
+    override fun getResource(id: ResourceId): Resource? =
         shards.firstNotNullOfOrNull { it.getResource(id) }
 
-    override suspend fun allPaths(): Map<ResourceId, Path> =
+    override fun allPaths(): Map<ResourceId, Path> =
         shards
             .map { it.allPaths() }
             .fold(hashMapOf()) { acc, curr ->
@@ -48,7 +48,7 @@ class IndexAggregation(
                 acc
             }
 
-    override suspend fun getPath(id: ResourceId): Path? =
+    override fun getPath(id: ResourceId): Path? =
         shards.firstNotNullOfOrNull { it.getPath(id) }
 
     override suspend fun updateAll() {

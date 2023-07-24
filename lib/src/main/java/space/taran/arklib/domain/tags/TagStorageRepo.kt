@@ -17,7 +17,7 @@ class TagsStorageRepo(
         val roots = index.roots
 
         return if (roots.size > 1) {
-            val shards = roots.map { provide(it) }
+            val shards = roots.map { provide(it) to it }
             AggregateTagStorage(shards)
         } else {
             val root = roots.iterator().next()
