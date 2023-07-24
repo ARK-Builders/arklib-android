@@ -2,10 +2,11 @@ package space.taran.arklib.domain.storage
 
 import space.taran.arklib.ResourceId
 import space.taran.arklib.domain.index.ResourceIndex
+import space.taran.arklib.domain.index.RootIndex
 
 open class AggregateStorage<V>(
     private val monoid: Monoid<V>,
-    private val shards: Collection<Pair<BaseStorage<V>, ResourceIndex>>
+    private val shards: Collection<Pair<BaseStorage<V>, RootIndex>>
 ) : Storage<V> {
 
     override fun getValue(id: ResourceId): V =

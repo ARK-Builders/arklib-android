@@ -7,11 +7,12 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import space.taran.arklib.ResourceId
 import space.taran.arklib.domain.index.ResourceIndex
+import space.taran.arklib.domain.index.RootIndex
 import java.lang.IllegalStateException
 
 class AggregateProcessor<Value, Update> private constructor(
     private val scope: CoroutineScope,
-    private val shards: Collection<Pair<RootProcessor<Value, Update>, ResourceIndex>>,
+    private val shards: Collection<Pair<RootProcessor<Value, Update>, RootIndex>>,
 ) : Processor<Value, Update>() {
 
     override val updates: Flow<Update> = shards
@@ -43,7 +44,7 @@ class AggregateProcessor<Value, Update> private constructor(
     companion object {
         suspend fun <Value, Update> provide(
             scope: CoroutineScope,
-            shards: Collection<Pair<RootProcessor<Value, Update>, ResourceIndex>>,
+            shards: Collection<Pair<RootProcessor<Value, Update>, RootIndex>>,
         ) = AggregateProcessor(scope, shards).also {
             it.init()
         }
