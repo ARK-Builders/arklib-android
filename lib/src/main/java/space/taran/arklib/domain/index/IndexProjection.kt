@@ -48,19 +48,11 @@ class IndexProjection(
 
     override suspend fun updateAll() = root.updateAll()
 
-    override suspend fun allResourcesMap(): Map<ResourceId, Resource> {
-        val allPathsMap = root.allPathsMap()
-        return root
-            .allResourcesMap()
-            .filter { (id, res) -> predicate(res, allPathsMap[id]!!)  }
-    }
-
-    override suspend fun allResources(): Set<Resource> {
-        val allPathsMap = root.allPathsMap()
+    override suspend fun allResources(): Map<ResourceId, Resource> {
+        val allPathsMap = root.allPaths()
         return root
             .allResources()
-            .filter { predicate(it, allPathsMap[it.id]!!) }
-            .toSet()
+            .filter { (id, res) -> predicate(res, allPathsMap[id]!!)  }
     }
 
     override suspend fun getResource(id: ResourceId): Resource? {
@@ -68,10 +60,10 @@ class IndexProjection(
         return result?.first
     }
 
-    override suspend fun allPathsMap(): Map<ResourceId, Path> {
-        val allResourcesMap = root.allResourcesMap()
+    override suspend fun allPaths(): Map<ResourceId, Path> {
+        val allResourcesMap = root.allResources()
         return root
-            .allPathsMap()
+            .allPaths()
             .filter { (id, path) -> predicate(allResourcesMap[id]!!, path) }
     }
 
