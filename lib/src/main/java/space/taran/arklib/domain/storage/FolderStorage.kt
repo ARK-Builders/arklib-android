@@ -74,7 +74,7 @@ abstract class FolderStorage<V>(
 
     // passes only new values into the `handle` callback
     final override suspend fun readFromDisk(handle: (Map<ResourceId, V>) -> Unit) {
-        val newValueById: MutableMap<ResourceId, V> = mutableMapOf()
+        val newValueById: ConcurrentHashMap<ResourceId, V> = ConcurrentHashMap()
         val newTimestamps: ConcurrentHashMap<ResourceId, FileTime> =
             ConcurrentHashMap()
 
