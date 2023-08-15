@@ -88,6 +88,7 @@ def libVersion = scmVersion.version
 publishing {
     publications {
         release(MavenPublication) {
+            alias true
             groupId = "space.taran"
             artifactId = "arklib"
             version = libVersion
@@ -96,6 +97,7 @@ publishing {
             }
         }
         debug(MavenPublication) {
+            alias false
             groupId = "space.taran"
             artifactId = "arklib-debug"
             version = libVersion

@@ -36,22 +36,23 @@ jobs:
     - name: Install Cargo targets
       run: rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
       
-    - name: Publish Release to Github
+    - name: Publish release Lib to Github
       uses: gradle/gradle-build-action@v2
       with:
-        arguments: publishReleasePublicationToGithubPackagesRepository
+        arguments: lib:publishReleasePublicationToGithubPackagesRepository
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
-    - name: Publish Debug to Github
+    - name: Publish debug Lib to Github
       uses: gradle/gradle-build-action@v2
       with:
-        arguments: publishDebugPublicationToGithubPackagesRepository
+        arguments: lib:publishDebugPublicationToGithubPackagesRepository
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Publish Debug
-      uses: actions/upload-artifact@v3
+    - name: Publish Score Widget to Github
+      uses: gradle/gradle-build-action@v2
       with:
-        name: debug-lib
-        path: ./lib/build/outputs/aar/lib-debug.aar
+        arguments: scorewidget:publish
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

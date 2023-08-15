@@ -33,11 +33,14 @@ jobs:
     - name: Install Cargo targets
       run: rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
 
-    - name: Debug build with Gradle
+    - name: Build debug Lib with Gradle
       run: ./gradlew lib:assembleDebug
       
-    - name: Release build with Gradle
-      run: ./gradlew lib:assembleRelease    
+    - name: Build release Lib with Gradle
+      run: ./gradlew lib:assembleRelease
+
+    - name: Build Score Widget with Gradle
+      run: ./gradlew scorewidget:assembleRelease
 
   test:
     needs: build
