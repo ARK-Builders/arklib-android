@@ -1,8 +1,8 @@
-package space.taran.arklib.user.properties
+package dev.arkbuilders.arklib.user.properties
 
 import kotlinx.coroutines.CoroutineScope
-import space.taran.arklib.data.index.ResourceIndex
-import space.taran.arklib.data.index.RootIndex
+import dev.arkbuilders.arklib.data.index.ResourceIndex
+import dev.arkbuilders.arklib.data.index.RootIndex
 import java.nio.file.Path
 
 class PropertiesStorageRepo(private val scope: CoroutineScope) {

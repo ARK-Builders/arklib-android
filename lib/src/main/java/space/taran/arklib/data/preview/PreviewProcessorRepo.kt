@@ -1,10 +1,10 @@
-package space.taran.arklib.data.preview
+package dev.arkbuilders.arklib.data.preview
 
 import kotlinx.coroutines.CoroutineScope
-import space.taran.arklib.data.index.ResourceIndex
-import space.taran.arklib.data.index.RootIndex
-import space.taran.arklib.data.meta.MetadataProcessorRepo
-import space.taran.arklib.data.meta.RootMetadataProcessor
+import dev.arkbuilders.arklib.data.index.ResourceIndex
+import dev.arkbuilders.arklib.data.index.RootIndex
+import dev.arkbuilders.arklib.data.meta.MetadataProcessorRepo
+import dev.arkbuilders.arklib.data.meta.RootMetadataProcessor
 import java.nio.file.Path
 
 class PreviewProcessorRepo(

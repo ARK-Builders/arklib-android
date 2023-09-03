@@ -1,9 +1,9 @@
-package space.taran.arklib.user.score
+package dev.arkbuilders.arklib.user.score
 
 import kotlinx.coroutines.CoroutineScope
-import space.taran.arklib.arkFolder
-import space.taran.arklib.arkScores
-import space.taran.arklib.data.storage.FileStorage
+import dev.arkbuilders.arklib.arkFolder
+import dev.arkbuilders.arklib.arkScores
+import dev.arkbuilders.arklib.data.storage.FileStorage
 import java.nio.file.Path
 
 class RootScoreStorage(

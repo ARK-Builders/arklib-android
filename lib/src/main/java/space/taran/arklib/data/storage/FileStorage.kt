@@ -1,10 +1,10 @@
-package space.taran.arklib.data.storage
+package dev.arkbuilders.arklib.data.storage
 
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import space.taran.arklib.ResourceId
+import dev.arkbuilders.arklib.ResourceId
 import java.nio.file.Files
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path

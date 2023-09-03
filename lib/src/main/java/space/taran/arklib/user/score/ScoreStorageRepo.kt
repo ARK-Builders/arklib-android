@@ -1,8 +1,8 @@
-package space.taran.arklib.user.score
+package dev.arkbuilders.arklib.user.score
 
 import kotlinx.coroutines.CoroutineScope
-import space.taran.arklib.data.index.ResourceIndex
-import space.taran.arklib.data.index.RootIndex
+import dev.arkbuilders.arklib.data.index.ResourceIndex
+import dev.arkbuilders.arklib.data.index.RootIndex
 import java.nio.file.Path
 
 class ScoreStorageRepo(private val scope: CoroutineScope) {

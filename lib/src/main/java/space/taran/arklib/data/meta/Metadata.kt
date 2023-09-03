@@ -1,8 +1,8 @@
-package space.taran.arklib.data.meta
+package dev.arkbuilders.arklib.data.meta
 
 import kotlinx.serialization.Serializable
-import space.taran.arklib.data.processor.AggregateProcessor
-import space.taran.arklib.data.processor.Processor
+import dev.arkbuilders.arklib.data.processor.AggregateProcessor
+import dev.arkbuilders.arklib.data.processor.Processor
 
 enum class Kind {
     IMAGE, VIDEO, DOCUMENT, LINK, PLAINTEXT, ARCHIVE, UNKNOWN

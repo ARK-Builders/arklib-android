@@ -1,4 +1,4 @@
-package space.taran.arklib.data.preview.generator
+package dev.arkbuilders.arklib.data.preview.generator
 
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
@@ -6,11 +6,11 @@ import android.net.Uri
 import android.util.Log
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
-import space.taran.arklib.app
-import space.taran.arklib.data.meta.Kind
-import space.taran.arklib.data.meta.Metadata
-import space.taran.arklib.data.preview.Preview
-import space.taran.arklib.data.preview.PreviewGenerator
+import dev.arkbuilders.arklib.app
+import dev.arkbuilders.arklib.data.meta.Kind
+import dev.arkbuilders.arklib.data.meta.Metadata
+import dev.arkbuilders.arklib.data.preview.Preview
+import dev.arkbuilders.arklib.data.preview.PreviewGenerator
 import java.nio.file.Path
 import kotlin.io.path.name
 import wseemann.media.FFmpegMediaMetadataRetriever

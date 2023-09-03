@@ -1,4 +1,4 @@
-package space.taran.arklib.data.processor
+package dev.arkbuilders.arklib.data.processor
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow

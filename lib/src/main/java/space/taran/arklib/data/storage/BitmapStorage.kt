@@ -1,11 +1,11 @@
-package space.taran.arklib.data.storage
+package dev.arkbuilders.arklib.data.storage
 
 import android.graphics.Bitmap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import space.taran.arklib.ResourceId
-import space.taran.arklib.data.preview.Preview
+import dev.arkbuilders.arklib.ResourceId
+import dev.arkbuilders.arklib.data.preview.Preview
 import java.io.ByteArrayOutputStream
 import java.nio.file.Files
 import java.nio.file.Path

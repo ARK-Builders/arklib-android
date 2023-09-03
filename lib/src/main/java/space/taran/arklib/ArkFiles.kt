@@ -1,14 +1,14 @@
-package space.taran.arklib
+package dev.arkbuilders.arklib
 
-import space.taran.arklib.ArkFiles.ARK_FOLDER
-import space.taran.arklib.ArkFiles.FAVORITES_FILE
-import space.taran.arklib.ArkFiles.METADATA_STORAGE_FOLDER
-import space.taran.arklib.ArkFiles.PREVIEWS_STORAGE_FOLDER
-import space.taran.arklib.ArkFiles.PROPERTIES_STORAGE_FOLDER
-import space.taran.arklib.ArkFiles.SCORE_STORAGE_FILE
-import space.taran.arklib.ArkFiles.STATS_FOLDER
-import space.taran.arklib.ArkFiles.TAG_STORAGE_FILE
-import space.taran.arklib.ArkFiles.THUMBNAILS_STORAGE_FOLDER
+import dev.arkbuilders.arklib.ArkFiles.ARK_FOLDER
+import dev.arkbuilders.arklib.ArkFiles.FAVORITES_FILE
+import dev.arkbuilders.arklib.ArkFiles.METADATA_STORAGE_FOLDER
+import dev.arkbuilders.arklib.ArkFiles.PREVIEWS_STORAGE_FOLDER
+import dev.arkbuilders.arklib.ArkFiles.PROPERTIES_STORAGE_FOLDER
+import dev.arkbuilders.arklib.ArkFiles.SCORE_STORAGE_FILE
+import dev.arkbuilders.arklib.ArkFiles.STATS_FOLDER
+import dev.arkbuilders.arklib.ArkFiles.TAG_STORAGE_FILE
+import dev.arkbuilders.arklib.ArkFiles.THUMBNAILS_STORAGE_FOLDER
 import java.nio.file.Path
 
 object ArkFiles {

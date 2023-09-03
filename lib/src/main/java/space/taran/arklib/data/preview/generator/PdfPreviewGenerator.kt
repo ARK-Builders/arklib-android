@@ -1,13 +1,13 @@
-package space.taran.arklib.data.preview.generator
+package dev.arkbuilders.arklib.data.preview.generator
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import space.taran.arklib.PreviewQuality
-import space.taran.arklib.data.meta.Kind
-import space.taran.arklib.data.meta.Metadata
-import space.taran.arklib.data.preview.Preview
-import space.taran.arklib.data.preview.PreviewGenerator
-import space.taran.arklib.pdfPreviewGenerate
+import dev.arkbuilders.arklib.PreviewQuality
+import dev.arkbuilders.arklib.data.meta.Kind
+import dev.arkbuilders.arklib.data.meta.Metadata
+import dev.arkbuilders.arklib.data.preview.Preview
+import dev.arkbuilders.arklib.data.preview.PreviewGenerator
+import dev.arkbuilders.arklib.pdfPreviewGenerate
 import java.nio.file.Path
 
 object PdfPreviewGenerator : PreviewGenerator {

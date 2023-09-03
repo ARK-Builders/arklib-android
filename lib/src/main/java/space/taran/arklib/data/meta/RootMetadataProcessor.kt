@@ -1,14 +1,14 @@
-package space.taran.arklib.data.meta
+package dev.arkbuilders.arklib.data.meta
 
 import android.util.Log
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import space.taran.arklib.ResourceId
-import space.taran.arklib.arkFolder
-import space.taran.arklib.arkMetadata
-import space.taran.arklib.data.index.NewResource
-import space.taran.arklib.data.index.RootIndex
-import space.taran.arklib.data.processor.RootProcessor
+import dev.arkbuilders.arklib.ResourceId
+import dev.arkbuilders.arklib.arkFolder
+import dev.arkbuilders.arklib.arkMetadata
+import dev.arkbuilders.arklib.data.index.NewResource
+import dev.arkbuilders.arklib.data.index.RootIndex
+import dev.arkbuilders.arklib.data.processor.RootProcessor
 import java.nio.file.Path
 
 class MetadataUpdate(

@@ -1,8 +1,8 @@
-package space.taran.arklib.data.meta.generator
+package dev.arkbuilders.arklib.data.meta.generator
 
-import space.taran.arklib.data.index.Resource
-import space.taran.arklib.data.meta.Metadata
-import space.taran.arklib.data.meta.MetadataGenerator
+import dev.arkbuilders.arklib.data.index.Resource
+import dev.arkbuilders.arklib.data.meta.Metadata
+import dev.arkbuilders.arklib.data.meta.MetadataGenerator
 import java.nio.file.Path
 
 object ImageMetadataGenerator: MetadataGenerator {

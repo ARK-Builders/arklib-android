@@ -1,4 +1,4 @@
-package space.taran.sample
+package dev.arkbuilders.sample
 
 import android.Manifest
 import androidx.test.platform.app.InstrumentationRegistry
@@ -12,11 +12,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.TestMethodOrder
 import org.junit.jupiter.api.extension.RegisterExtension
-import space.taran.arklib.createLinkFile
-import space.taran.arklib.fetchLinkData
-import space.taran.arklib.getLinkHash
-import space.taran.arklib.loadLinkFile
-import space.taran.sample.GrantPermissionExtension.Companion.grant
+import dev.arkbuilders.arklib.createLinkFile
+import dev.arkbuilders.arklib.fetchLinkData
+import dev.arkbuilders.arklib.getLinkHash
+import dev.arkbuilders.arklib.loadLinkFile
+import dev.arkbuilders.sample.GrantPermissionExtension.Companion.grant
 import java.nio.file.Path
 import kotlin.io.path.Path
 import kotlin.io.path.exists

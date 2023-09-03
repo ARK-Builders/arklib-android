@@ -1,4 +1,4 @@
-package space.taran.arklib.utils
+package dev.arkbuilders.arklib.utils
 
 import android.util.Log
 import kotlinx.coroutines.Dispatchers

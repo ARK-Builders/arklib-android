@@ -1,10 +1,10 @@
-package space.taran.arklib.data.meta.generator
+package dev.arkbuilders.arklib.data.meta.generator
 
 import android.net.Uri
-import space.taran.arklib.app
-import space.taran.arklib.data.index.Resource
-import space.taran.arklib.data.meta.Metadata
-import space.taran.arklib.data.meta.MetadataGenerator
+import dev.arkbuilders.arklib.app
+import dev.arkbuilders.arklib.data.index.Resource
+import dev.arkbuilders.arklib.data.meta.Metadata
+import dev.arkbuilders.arklib.data.meta.MetadataGenerator
 import wseemann.media.FFmpegMediaMetadataRetriever
 import java.nio.file.Path
 

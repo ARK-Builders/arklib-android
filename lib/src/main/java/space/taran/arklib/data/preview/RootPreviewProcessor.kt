@@ -1,4 +1,4 @@
-package space.taran.arklib.data.preview
+package dev.arkbuilders.arklib.data.preview
 
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
@@ -8,11 +8,11 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
-import space.taran.arklib.*
-import space.taran.arklib.data.index.RootIndex
-import space.taran.arklib.data.meta.*
-import space.taran.arklib.data.processor.RootProcessor
-import space.taran.arklib.data.storage.BitmapStorage
+import dev.arkbuilders.arklib.*
+import dev.arkbuilders.arklib.data.index.RootIndex
+import dev.arkbuilders.arklib.data.meta.*
+import dev.arkbuilders.arklib.data.processor.RootProcessor
+import dev.arkbuilders.arklib.data.storage.BitmapStorage
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 

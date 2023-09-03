@@ -1,10 +1,10 @@
-package space.taran.arklib.data.meta
+package dev.arkbuilders.arklib.data.meta
 
 import android.util.Log
-import space.taran.arklib.data.index.Resource
-import space.taran.arklib.data.meta.generator.*
-import space.taran.arklib.utils.detectMimeType
-import space.taran.arklib.utils.extension
+import dev.arkbuilders.arklib.data.index.Resource
+import dev.arkbuilders.arklib.data.meta.generator.*
+import dev.arkbuilders.arklib.utils.detectMimeType
+import dev.arkbuilders.arklib.utils.extension
 import java.nio.file.Path
 import kotlin.system.measureTimeMillis
 

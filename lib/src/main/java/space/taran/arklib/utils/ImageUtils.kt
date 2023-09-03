@@ -1,4 +1,4 @@
-package space.taran.arklib.utils
+package dev.arkbuilders.arklib.utils
 
 import android.graphics.drawable.Drawable
 import android.util.Log
@@ -18,9 +18,9 @@ import com.bumptech.glide.signature.ObjectKey
 import com.davemorrissey.labs.subscaleview.ImageSource
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.ortiz.touchview.TouchImageView
-import space.taran.arklib.app
-import space.taran.arklib.R
-import space.taran.arklib.ResourceId
+import dev.arkbuilders.arklib.app
+import dev.arkbuilders.arklib.R
+import dev.arkbuilders.arklib.ResourceId
 import java.nio.file.Path
 
 object ImageUtils {

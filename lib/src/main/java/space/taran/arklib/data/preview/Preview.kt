@@ -1,4 +1,4 @@
-package space.taran.arklib.data.preview
+package dev.arkbuilders.arklib.data.preview
 
 import android.graphics.Bitmap
 import com.bumptech.glide.Glide
@@ -7,11 +7,11 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
 import com.bumptech.glide.request.RequestOptions
 import kotlinx.coroutines.Job
-import space.taran.arklib.*
-import space.taran.arklib.app
-import space.taran.arklib.data.processor.AggregateProcessor
-import space.taran.arklib.data.processor.Processor
-import space.taran.arklib.utils.ImageUtils
+import dev.arkbuilders.arklib.*
+import dev.arkbuilders.arklib.app
+import dev.arkbuilders.arklib.data.processor.AggregateProcessor
+import dev.arkbuilders.arklib.data.processor.Processor
+import dev.arkbuilders.arklib.utils.ImageUtils
 import java.nio.file.Path
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists

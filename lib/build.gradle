@@ -88,7 +88,7 @@ def libVersion = scmVersion.version
 publishing {
     publications {
         release(MavenPublication) {
-            groupId = "space.taran"
+            groupId = "dev.arkbuilders"
             artifactId = "arklib"
             version = libVersion
             afterEvaluate {
@@ -96,7 +96,7 @@ publishing {
             }
         }
         debug(MavenPublication) {
-            groupId = "space.taran"
+            groupId = "dev.arkbuilders"
             artifactId = "arklib-debug"
             version = libVersion
             afterEvaluate {

@@ -1,6 +1,6 @@
-package space.taran.arklib.binding
+package dev.arkbuilders.arklib.binding
 
-import space.taran.arklib.ResourceId
+import dev.arkbuilders.arklib.ResourceId
 import java.nio.file.Path
 import kotlin.io.path.Path
 

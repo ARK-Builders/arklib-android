@@ -1,4 +1,4 @@
-package space.taran.arklib.data
+package dev.arkbuilders.arklib.data
 
 import java.nio.file.Path
 

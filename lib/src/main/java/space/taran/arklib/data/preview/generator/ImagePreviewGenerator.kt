@@ -1,11 +1,11 @@
-package space.taran.arklib.data.preview.generator
+package dev.arkbuilders.arklib.data.preview.generator
 
 import com.bumptech.glide.Glide
-import space.taran.arklib.app
-import space.taran.arklib.data.meta.Kind
-import space.taran.arklib.data.meta.Metadata
-import space.taran.arklib.data.preview.Preview
-import space.taran.arklib.data.preview.PreviewGenerator
+import dev.arkbuilders.arklib.app
+import dev.arkbuilders.arklib.data.meta.Kind
+import dev.arkbuilders.arklib.data.meta.Metadata
+import dev.arkbuilders.arklib.data.preview.Preview
+import dev.arkbuilders.arklib.data.preview.PreviewGenerator
 import java.nio.file.Path
 
 object ImagePreviewGenerator: PreviewGenerator {

@@ -1,4 +1,4 @@
-package space.taran.arklib.data.storage
+package dev.arkbuilders.arklib.data.storage
 
 /*
  * Bogus instance of Monoid, used as a stub for

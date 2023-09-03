@@ -1,4 +1,4 @@
-package space.taran.arklib.utils
+package dev.arkbuilders.arklib.utils
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.currentCoroutineContext

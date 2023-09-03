@@ -1,8 +1,8 @@
-package space.taran.arklib.data.meta
+package dev.arkbuilders.arklib.data.meta
 
 import kotlinx.coroutines.CoroutineScope
-import space.taran.arklib.data.index.ResourceIndex
-import space.taran.arklib.data.index.RootIndex
+import dev.arkbuilders.arklib.data.index.ResourceIndex
+import dev.arkbuilders.arklib.data.index.RootIndex
 import java.nio.file.Path
 
 class MetadataProcessorRepo(private val scope: CoroutineScope) {
