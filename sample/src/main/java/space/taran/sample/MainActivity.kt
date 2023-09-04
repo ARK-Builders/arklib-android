@@ -1,10 +1,10 @@
-package space.taran.sample
+package dev.arkbuilders.sample
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import space.taran.arkfilepicker.folders.FoldersRepo
-import space.taran.arklib.initArkLib
-import space.taran.arklib.initRustLogger
+import dev.arkbuilders.arklib.initArkLib
+import dev.arkbuilders.arklib.initRustLogger
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

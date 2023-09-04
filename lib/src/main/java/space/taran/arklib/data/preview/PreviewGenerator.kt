@@ -1,11 +1,11 @@
-package space.taran.arklib.data.preview
+package dev.arkbuilders.arklib.data.preview
 
 import android.util.Log
-import space.taran.arklib.data.meta.Metadata
-import space.taran.arklib.data.preview.generator.ImagePreviewGenerator
-import space.taran.arklib.data.preview.generator.PdfPreviewGenerator
-import space.taran.arklib.data.preview.generator.TxtPreviewGenerator
-import space.taran.arklib.data.preview.generator.VideoPreviewGenerator
+import dev.arkbuilders.arklib.data.meta.Metadata
+import dev.arkbuilders.arklib.data.preview.generator.ImagePreviewGenerator
+import dev.arkbuilders.arklib.data.preview.generator.PdfPreviewGenerator
+import dev.arkbuilders.arklib.data.preview.generator.TxtPreviewGenerator
+import dev.arkbuilders.arklib.data.preview.generator.VideoPreviewGenerator
 import java.nio.file.Path
 import kotlin.system.measureTimeMillis
 

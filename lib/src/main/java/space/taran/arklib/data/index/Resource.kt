@@ -1,7 +1,7 @@
-package space.taran.arklib.data.index
+package dev.arkbuilders.arklib.data.index
 
-import space.taran.arklib.ResourceId
-import space.taran.arklib.utils.extension
+import dev.arkbuilders.arklib.ResourceId
+import dev.arkbuilders.arklib.utils.extension
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.nio.file.Files

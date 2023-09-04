@@ -1,4 +1,4 @@
-package space.taran.sample
+package dev.arkbuilders.sample
 
 import android.graphics.Bitmap
 import android.os.Environment
@@ -9,8 +9,8 @@ import androidx.test.rule.ActivityTestRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import space.taran.arklib.PreviewQuality
-import space.taran.arklib.pdfPreviewGenerate
+import dev.arkbuilders.arklib.PreviewQuality
+import dev.arkbuilders.arklib.pdfPreviewGenerate
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.io.path.Path

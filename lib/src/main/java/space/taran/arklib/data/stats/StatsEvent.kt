@@ -1,9 +1,9 @@
-package space.taran.arklib.data.stats
+package dev.arkbuilders.arklib.data.stats
 
-import space.taran.arklib.ResourceId
-import space.taran.arklib.data.meta.Kind
-import space.taran.arklib.user.tags.Tag
-import space.taran.arklib.user.tags.Tags
+import dev.arkbuilders.arklib.ResourceId
+import dev.arkbuilders.arklib.data.meta.Kind
+import dev.arkbuilders.arklib.user.tags.Tag
+import dev.arkbuilders.arklib.user.tags.Tags
 
 sealed class StatsEvent {
     data class TagsChanged(

@@ -79,5 +79,5 @@ allprojects {
 
 And add arklib-android dependency to app module's build.gradle
 ```groovy
-implementation 'space.taran:arklib:0.1.0-SNAPSHOT-7df9a4e581'
+implementation 'dev.arkbuilders:arklib:0.3.1'
 ```

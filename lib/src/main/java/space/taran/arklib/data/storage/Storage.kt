@@ -1,6 +1,6 @@
-package space.taran.arklib.data.storage
+package dev.arkbuilders.arklib.data.storage
 
-import space.taran.arklib.ResourceId
+import dev.arkbuilders.arklib.ResourceId
 
 interface Storage<V> {
     fun getValue(id: ResourceId): V

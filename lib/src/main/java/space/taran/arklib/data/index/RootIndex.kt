@@ -1,4 +1,4 @@
-package space.taran.arklib.data.index
+package dev.arkbuilders.arklib.data.index
 
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
@@ -7,10 +7,10 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import space.taran.arklib.ResourceId
-import space.taran.arklib.binding.BindingIndex
-import space.taran.arklib.binding.RawUpdates
-import space.taran.arklib.utils.withContextAndLock
+import dev.arkbuilders.arklib.ResourceId
+import dev.arkbuilders.arklib.binding.BindingIndex
+import dev.arkbuilders.arklib.binding.RawUpdates
+import dev.arkbuilders.arklib.utils.withContextAndLock
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 

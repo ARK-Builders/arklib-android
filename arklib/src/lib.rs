@@ -26,12 +26,12 @@ pub mod android {
     use android_logger::Config;
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_initRustLogger(_: JNIEnv, _: JClass) {
+    pub extern "C" fn Java_dev_arkbuilders_arklib_LibKt_initRustLogger(_: JNIEnv, _: JClass) {
         android_logger::init_once(Config::default().with_min_level(Level::Trace));
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_computeIdNative(
+    pub extern "C" fn Java_dev_arkbuilders_arklib_LibKt_computeIdNative(
         env: JNIEnv,
         _: JClass,
         jni_size: i64,
@@ -49,13 +49,13 @@ pub mod android {
 
         let resourceId = ResourceId::compute(data_size.try_into().unwrap(), file_path).unwrap();
 
-        let resource_id_cls = env.find_class("space/taran/arklib/ResourceId").unwrap();
+        let resource_id_cls = env.find_class("dev/arkbuilders/arklib/ResourceId").unwrap();
 
         let create_resource_id_fn = env
             .get_static_method_id(
                 resource_id_cls,
                 "create",
-                "(JJ)Lspace/taran/arklib/ResourceId;",
+                "(JJ)Ldev/arkbuilders/arklib/ResourceId;",
             )
             .unwrap();
 
@@ -67,7 +67,7 @@ pub mod android {
             .call_static_method_unchecked(
                 resource_id_cls,
                 create_resource_id_fn,
-                JavaType::Object(String::from("space/taran/arklib/ResourceId")),
+                JavaType::Object(String::from("dev/arkbuilders/arklib/ResourceId")),
                 &[JValue::from(data_size), JValue::from(crc32)],
             )
             .unwrap()
@@ -77,7 +77,7 @@ pub mod android {
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_getLinkHashNative(
+    pub extern "C" fn Java_dev_arkbuilders_arklib_LibKt_getLinkHashNative(
         env: JNIEnv,
         _: JClass,
         jni_url: JString,
@@ -93,18 +93,18 @@ pub mod android {
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_loadLinkFileNative(
+    pub extern "C" fn Java_dev_arkbuilders_arklib_LibKt_loadLinkFileNative(
         env: JNIEnv,
         _: JClass,
         jni_root: JString,
         jni_file_path: JString,
     ) -> jobject {
-        let link_data_cls = env.find_class("space/taran/arklib/LinkData").unwrap();
+        let link_data_cls = env.find_class("dev/arkbuilders/arklib/LinkData").unwrap();
         let create_link_data_fn = env
             .get_static_method_id(
                 link_data_cls,
                 "create",
-                "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lspace/taran/arklib/LinkData;",
+                "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ldev/arkbuilders/arklib/LinkData;",
             )
             .unwrap();
 
@@ -149,7 +149,7 @@ pub mod android {
             .call_static_method_unchecked(
                 link_data_cls,
                 create_link_data_fn,
-                JavaType::Object(String::from("space/taran/arklib/LinkData")),
+                JavaType::Object(String::from("dev/arkbuilders/arklib/LinkData")),
                 &[
                     JValue::from(title),
                     JValue::from(description),
@@ -164,7 +164,7 @@ pub mod android {
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_fetchLinkDataNative(
+    pub extern "C" fn Java_dev_arkbuilders_arklib_LibKt_fetchLinkDataNative(
         env: JNIEnv,
         _: JClass,
         jni_url: JString,
@@ -179,12 +179,12 @@ pub mod android {
         match og_result {
             Ok(og) => {
                 trace!("Got link title: {}", og.title.to_owned().unwrap());
-                let link_data_cls = env.find_class("space/taran/arklib/LinkData").unwrap();
+                let link_data_cls = env.find_class("dev/arkbuilders/arklib/LinkData").unwrap();
                 let create_link_data_fn = env
                     .get_static_method_id(
                         link_data_cls,
                         "create",
-                        "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lspace/taran/arklib/LinkData;",
+                        "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ldev/arkbuilders/arklib/LinkData;",
                     )
                     .unwrap();
 
@@ -209,7 +209,7 @@ pub mod android {
                     .call_static_method_unchecked(
                         link_data_cls,
                         create_link_data_fn,
-                        JavaType::Object(String::from("space/taran/arklib/LinkData")),
+                        JavaType::Object(String::from("dev/arkbuilders/arklib/LinkData")),
                         &[
                             JValue::from(title),
                             JValue::from(description),
@@ -230,7 +230,7 @@ pub mod android {
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_createLinkFileNative(
+    pub extern "C" fn Java_dev_arkbuilders_arklib_LibKt_createLinkFileNative(
         env: JNIEnv,
         _: JClass,
         jni_root: JString,
@@ -286,7 +286,7 @@ pub mod android {
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_LibKt_pdfPreviewGenerateNative(
+    pub extern "C" fn Java_dev_arkbuilders_arklib_LibKt_pdfPreviewGenerateNative(
         env: JNIEnv,
         _: JClass,
         jni_path: JString,
@@ -402,7 +402,7 @@ pub mod android {
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_binding_BindingIndex_loadNative(
+    pub extern "C" fn Java_dev_arkbuilders_arklib_binding_BindingIndex_loadNative(
         env: JNIEnv,
         _: JClass,
         jni_root: JString,
@@ -422,7 +422,7 @@ pub mod android {
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_binding_BindingIndex_updateNative(
+    pub extern "C" fn Java_dev_arkbuilders_arklib_binding_BindingIndex_updateNative(
         env: JNIEnv,
         _: JClass,
         jni_root: JString,
@@ -479,7 +479,7 @@ pub mod android {
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_binding_BindingIndex_storeNative(
+    pub extern "C" fn Java_dev_arkbuilders_arklib_binding_BindingIndex_storeNative(
         env: JNIEnv,
         _: JClass,
         jni_root: JString,
@@ -490,7 +490,7 @@ pub mod android {
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_space_taran_arklib_binding_BindingIndex_id2pathNative(
+    pub extern "C" fn Java_dev_arkbuilders_arklib_binding_BindingIndex_id2pathNative(
         env: JNIEnv,
         _: JClass,
         jni_root: JString,

@@ -1,12 +1,12 @@
-package space.taran.arklib.data.meta.generator
+package dev.arkbuilders.arklib.data.meta.generator
 
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
-import space.taran.arklib.data.index.Resource
-import space.taran.arklib.data.meta.Metadata
-import space.taran.arklib.data.meta.MetadataGenerator
-import space.taran.arklib.utils.detectMimeType
-import space.taran.arklib.utils.extension
+import dev.arkbuilders.arklib.data.index.Resource
+import dev.arkbuilders.arklib.data.meta.Metadata
+import dev.arkbuilders.arklib.data.meta.MetadataGenerator
+import dev.arkbuilders.arklib.utils.detectMimeType
+import dev.arkbuilders.arklib.utils.extension
 import java.io.FileNotFoundException
 import java.nio.file.Path
 

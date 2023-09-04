@@ -1,8 +1,8 @@
-package space.taran.arklib.data.index
+package dev.arkbuilders.arklib.data.index
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.merge
-import space.taran.arklib.ResourceId
+import dev.arkbuilders.arklib.ResourceId
 import java.nio.file.Path
 
 /**

@@ -1,10 +1,10 @@
-package space.taran.arklib.user.tags
+package dev.arkbuilders.arklib.user.tags
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
-import space.taran.arklib.data.index.ResourceIndex
-import space.taran.arklib.data.index.RootIndex
-import space.taran.arklib.data.stats.StatsEvent
+import dev.arkbuilders.arklib.data.index.ResourceIndex
+import dev.arkbuilders.arklib.data.index.RootIndex
+import dev.arkbuilders.arklib.data.stats.StatsEvent
 import java.nio.file.Path
 
 class TagsStorageRepo(

@@ -1,4 +1,4 @@
-package space.taran.sample
+package dev.arkbuilders.sample
 
 import org.junit.Test
 

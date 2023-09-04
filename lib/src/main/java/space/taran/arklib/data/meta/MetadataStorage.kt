@@ -1,12 +1,12 @@
-package space.taran.arklib.data.meta
+package dev.arkbuilders.arklib.data.meta
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import space.taran.arklib.data.storage.FolderStorage
-import space.taran.arklib.data.storage.MonoidIsNotUsed
+import dev.arkbuilders.arklib.data.storage.FolderStorage
+import dev.arkbuilders.arklib.data.storage.MonoidIsNotUsed
 import java.nio.file.Path
 
 internal class MetadataStorage(

@@ -1,11 +1,11 @@
-package space.taran.arklib.user.properties
+package dev.arkbuilders.arklib.user.properties
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import space.taran.arklib.arkFolder
-import space.taran.arklib.arkProperties
-import space.taran.arklib.data.storage.FolderStorage
+import dev.arkbuilders.arklib.arkFolder
+import dev.arkbuilders.arklib.arkProperties
+import dev.arkbuilders.arklib.data.storage.FolderStorage
 import java.nio.file.Path
 
 class RootPropertiesStorage(

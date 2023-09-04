@@ -1,4 +1,4 @@
-package space.taran.arklib
+package dev.arkbuilders.arklib
 
 import android.app.Application
 import android.graphics.Bitmap

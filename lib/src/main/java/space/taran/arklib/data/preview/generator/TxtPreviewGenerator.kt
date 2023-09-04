@@ -1,4 +1,4 @@
-package space.taran.arklib.data.preview.generator
+package dev.arkbuilders.arklib.data.preview.generator
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -7,11 +7,11 @@ import android.graphics.Paint
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
-import space.taran.arklib.app
-import space.taran.arklib.data.meta.Kind
-import space.taran.arklib.data.meta.Metadata
-import space.taran.arklib.data.preview.Preview
-import space.taran.arklib.data.preview.PreviewGenerator
+import dev.arkbuilders.arklib.app
+import dev.arkbuilders.arklib.data.meta.Kind
+import dev.arkbuilders.arklib.data.meta.Metadata
+import dev.arkbuilders.arklib.data.preview.Preview
+import dev.arkbuilders.arklib.data.preview.PreviewGenerator
 import java.nio.file.Path
 import kotlin.io.path.readLines
 

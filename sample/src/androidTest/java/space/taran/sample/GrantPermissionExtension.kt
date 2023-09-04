@@ -1,4 +1,4 @@
-package space.taran.sample
+package dev.arkbuilders.sample
 
 import android.Manifest
 import android.os.Build

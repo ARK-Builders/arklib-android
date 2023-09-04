@@ -1,7 +1,7 @@
-package space.taran.arklib.data.storage
+package dev.arkbuilders.arklib.data.storage
 
-import space.taran.arklib.ResourceId
-import space.taran.arklib.data.index.RootIndex
+import dev.arkbuilders.arklib.ResourceId
+import dev.arkbuilders.arklib.data.index.RootIndex
 
 open class AggregateStorage<V>(
     private val monoid: Monoid<V>,

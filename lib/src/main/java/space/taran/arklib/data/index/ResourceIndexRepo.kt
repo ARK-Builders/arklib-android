@@ -1,4 +1,4 @@
-package space.taran.arklib.data.index
+package dev.arkbuilders.arklib.data.index
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

@@ -1,9 +1,9 @@
-package space.taran.arklib.user.properties
+package dev.arkbuilders.arklib.user.properties
 
-import space.taran.arklib.ResourceId
-import space.taran.arklib.data.index.RootIndex
-import space.taran.arklib.data.storage.AggregateStorage
-import space.taran.arklib.data.storage.Storage
+import dev.arkbuilders.arklib.ResourceId
+import dev.arkbuilders.arklib.data.index.RootIndex
+import dev.arkbuilders.arklib.data.storage.AggregateStorage
+import dev.arkbuilders.arklib.data.storage.Storage
 
 interface PropertiesStorage: Storage<Properties> {
 

@@ -1,4 +1,4 @@
-package space.taran.arklib.data.storage
+package dev.arkbuilders.arklib.data.storage
 
 interface Monoid<V> {
     /* Default value, e.g. empty set or 0, must not be

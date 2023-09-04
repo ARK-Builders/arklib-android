@@ -1,12 +1,12 @@
-package space.taran.arklib.data.processor
+package dev.arkbuilders.arklib.data.processor
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
-import space.taran.arklib.ResourceId
-import space.taran.arklib.data.index.RootIndex
+import dev.arkbuilders.arklib.ResourceId
+import dev.arkbuilders.arklib.data.index.RootIndex
 
 class AggregateProcessor<Value, Update> private constructor(
     private val scope: CoroutineScope,
