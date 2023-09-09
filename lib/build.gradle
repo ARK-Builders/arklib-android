@@ -73,6 +73,10 @@ dependencies {
     kapt "com.github.bumptech.glide:compiler:4.11.0"
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4"
+
+    // testing
+    testImplementation 'junit:junit:4.12'
+    testImplementation "io.mockk:mockk:1.13.7"
 }
 
 tasks.whenTaskAdded { task ->
