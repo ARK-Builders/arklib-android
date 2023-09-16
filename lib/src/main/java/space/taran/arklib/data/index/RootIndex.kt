@@ -5,8 +5,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import dev.arkbuilders.arklib.ResourceId
 import dev.arkbuilders.arklib.binding.BindingIndex
 import dev.arkbuilders.arklib.binding.RawUpdates
@@ -91,7 +89,7 @@ class RootIndex private constructor(val path: Path) : ResourceIndex {
             // we should not have subscribers yet
             // this update is not pushed into the flow
             // it is needed only to catch up
-            BindingIndex.update(path)
+            BindingIndex.updateAll(path)
             BindingIndex.store(path)
 
             // id2path should be used in order to filter-out duplicates
@@ -120,7 +118,7 @@ class RootIndex private constructor(val path: Path) : ResourceIndex {
         withContextAndLock(Dispatchers.IO, mutex) {
             Log.i(LOG_PREFIX, "Updating the index of root $path")
 
-            val raw: RawUpdates = BindingIndex.update(path)
+            val raw: RawUpdates = BindingIndex.updateAll(path)
             BindingIndex.store(path)
 
             val updates: ResourceUpdates = wrap(raw)

@@ -422,7 +422,7 @@ pub mod android {
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_dev_arkbuilders_arklib_binding_BindingIndex_updateNative(
+    pub extern "C" fn Java_dev_arkbuilders_arklib_binding_BindingIndex_updateAllNative(
         env: JNIEnv,
         _: JClass,
         jni_root: JString,
@@ -430,52 +430,47 @@ pub mod android {
         let result = match provide_index(env, jni_root) {
             Ok(rwlock) => {
                 let mut index = rwlock.write().unwrap();
-                index.update().unwrap()
+                index.update_all().unwrap()
             }
             Err(err) => {
                 panic!("couldn't provide index {}", err)
             }
         };
 
-        let jni_deleted_list = env.new_object("java/util/ArrayList", "()V", &[]).unwrap();
+        let jni_deleted_set = env.new_object("java/util/HashSet", "()V", &[]).unwrap();
         let jni_added_map = env.new_object("java/util/HashMap", "()V", &[]).unwrap();
 
         for id in &result.deleted {
-            let id = env.new_string(id.to_string()).unwrap().into();
+            let jni_id = id_to_jni_id(env, id);
 
-            env.call_method(jni_deleted_list, "add", "(Ljava/lang/Object;)Z", &[id])
-                .unwrap();
+            env.call_method(
+                jni_deleted_set, 
+                "add", 
+                "(Ljava/lang/Object;)Z", 
+                &[jni_id]
+            ).unwrap();
         }
 
         for (path, id) in &result.added {
-            let id = env.new_string(id.to_string()).unwrap().into();
-            let path = env.new_string(path.to_str().unwrap()).unwrap().into();
+            let jni_id = id_to_jni_id(env, id);
+            let jni_path = env.new_string(path.to_str().unwrap()).unwrap().into();
+
             env.call_method(
                 jni_added_map,
                 "put",
                 "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-                &[id, path],
+                &[jni_id, jni_path],
             )
             .unwrap();
         }
 
-        let jni_params_list = env.new_object("java/util/ArrayList", "()V", &[]).unwrap();
-        env.call_method(
-            jni_params_list,
-            "add",
-            "(Ljava/lang/Object;)Z",
-            &[jni_deleted_list.into()],
-        )
-        .unwrap();
-        env.call_method(
-            jni_params_list,
-            "add",
-            "(Ljava/lang/Object;)Z",
-            &[jni_added_map.into()],
-        )
-        .unwrap();
+        let jni_raw_updates = env.new_object(
+            "dev/arkbuilders/arklib/binding/RawUpdates", 
+            "(Ljava/util/HashSet;Ljava/util/HashMap;)V", 
+            &[jni_deleted_set.into(), jni_added_map.into()]
+        ).unwrap();
 
-        jni_params_list.into_inner()
+        jni_raw_updates.into_inner()
     }
 
     #[no_mangle]
@@ -501,7 +496,7 @@ pub mod android {
         let jni_map = env.new_object("java/util/HashMap", "()V", &[]).unwrap();
 
         for (id, path) in &index.id2path {
-            let id = env.new_string(id.to_string()).unwrap().into();
+            let id = id_to_jni_id(env, id);
             let path = env.new_string(path.to_str().unwrap()).unwrap().into();
             env.call_method(
                 jni_map,
@@ -513,6 +508,17 @@ pub mod android {
         }
 
         jni_map.into_inner()
+    }
+
+    fn id_to_jni_id<'a>(env: JNIEnv<'a>, id: &'a ResourceId) -> JValue<'a> {
+        let data_size: jlong = id.data_size as usize as i64;
+        let crc32: jlong = id.crc32 as usize as i64;
+
+        env.new_object(
+            "dev/arkbuilders/arklib/ResourceId", 
+            "(JJ)V", 
+            &[JValue::from(data_size), JValue::from(crc32)]
+        ).unwrap().into()
     }
 
     fn provide_index(env: JNIEnv, jni_root: JString) -> Result<Arc<RwLock<ResourceIndex>>, Error> {
