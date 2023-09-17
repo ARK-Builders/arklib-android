@@ -54,4 +54,10 @@ class IndexAggregation(
     override suspend fun updateAll() {
         shards.forEach { it.updateAll() }
     }
+
+    override suspend fun updateOne(resourcePath: Path, oldId: ResourceId) {
+        shards.find {
+            resourcePath.startsWith(it.path)
+        }?.updateOne(resourcePath, oldId)
+    }
 }

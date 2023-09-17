@@ -11,6 +11,7 @@ import dev.arkbuilders.arklib.binding.RawUpdates
 import dev.arkbuilders.arklib.utils.withContextAndLock
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.io.path.Path
 
 /**
  * [RootIndex] is a type of index backed by storage file.
@@ -53,7 +54,8 @@ class RootIndex private constructor(val path: Path) : ResourceIndex {
 
         val added = update.added
             //we can't present empty resources
-            .mapNotNull { (id, path) ->
+            .mapNotNull { (id, _path) ->
+                val path = Path(_path)
                 val resource: Resource = Resource.compute(id, path)
                     .onFailure { error ->
                         Log.e(
@@ -120,19 +122,19 @@ class RootIndex private constructor(val path: Path) : ResourceIndex {
 
             val raw: RawUpdates = BindingIndex.updateAll(path)
             BindingIndex.store(path)
+            handleRawUpdates(raw)
+        }
 
-            val updates: ResourceUpdates = wrap(raw)
+    override suspend fun updateOne(resourcePath: Path, oldId: ResourceId): Unit =
+        withContextAndLock(Dispatchers.IO, mutex) {
+            Log.i(
+                LOG_PREFIX,
+                "Updating one resource[$resourcePath] the index of root $path"
+            )
 
-            updates.deleted.forEach { (id, _) ->
-                resourceAndPathById.remove(id)
-            }
-
-            updates.added.forEach { (id, added) ->
-                resourceAndPathById[id] = added.resource to added.path
-            }
-
-            _updates.emit(updates)
-            check()
+            val raw: RawUpdates = BindingIndex.updateOne(path, resourcePath, oldId)
+            BindingIndex.store(path)
+            handleRawUpdates(raw)
         }
 
     override fun allResources(): Map<ResourceId, Resource> =
@@ -154,6 +156,22 @@ class RootIndex private constructor(val path: Path) : ResourceIndex {
             NewResource(path, resource)
         }.toSet()
 
+    private suspend fun handleRawUpdates(raw: RawUpdates) {
+        BindingIndex.store(path)
+
+        val updates: ResourceUpdates = wrap(raw)
+
+        updates.deleted.forEach { (id, _) ->
+            resourceAndPathById.remove(id)
+        }
+
+        updates.added.forEach { (id, added) ->
+            resourceAndPathById[id] = added.resource to added.path
+        }
+
+        _updates.emit(updates)
+        check()
+    }
 
     private fun check() {
         val resourceById = resourceAndPathById.mapValues { it.value.first }

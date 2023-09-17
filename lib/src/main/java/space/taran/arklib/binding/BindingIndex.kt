@@ -6,7 +6,7 @@ import kotlin.io.path.Path
 
 class RawUpdates(
     val deleted: HashSet<ResourceId>,
-    val added: HashMap<ResourceId, Path>,
+    val added: HashMap<ResourceId, String>,
 )
 
 object BindingIndex {
@@ -15,6 +15,15 @@ object BindingIndex {
 
     private external fun updateAllNative(root: String): RawUpdates
     fun updateAll(root: Path) = updateAllNative(root.toString())
+
+    private external fun updateOneNative(
+        root: String,
+        path: String,
+        oldId: String
+    ): RawUpdates
+
+    fun updateOne(root: Path, path: Path, oldId: ResourceId) =
+        updateOneNative(root.toString(), path.toString(), oldId.toString())
 
     private external fun storeNative(root: String)
     fun store(root: Path) = storeNative(root.toString())

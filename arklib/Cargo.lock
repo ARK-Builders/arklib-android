@@ -92,6 +92,7 @@ dependencies = [
  "android_logger",
  "anyhow",
  "arklib",
+ "canonical-path",
  "env_logger",
  "image",
  "jni",
