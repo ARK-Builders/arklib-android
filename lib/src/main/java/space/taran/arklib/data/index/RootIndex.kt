@@ -125,7 +125,7 @@ class RootIndex private constructor(val path: Path) : ResourceIndex {
             handleRawUpdates(raw)
         }
 
-    override suspend fun updateOne(resourcePath: Path, oldId: ResourceId): Unit =
+    override suspend fun updateOne(resourcePath: Path, oldId: ResourceId): ResourceUpdates =
         withContextAndLock(Dispatchers.IO, mutex) {
             Log.i(
                 LOG_PREFIX,
@@ -134,7 +134,7 @@ class RootIndex private constructor(val path: Path) : ResourceIndex {
 
             val raw: RawUpdates = BindingIndex.updateOne(path, resourcePath, oldId)
             BindingIndex.store(path)
-            handleRawUpdates(raw)
+            return@withContextAndLock handleRawUpdates(raw)
         }
 
     override fun allResources(): Map<ResourceId, Resource> =
@@ -156,7 +156,7 @@ class RootIndex private constructor(val path: Path) : ResourceIndex {
             NewResource(path, resource)
         }.toSet()
 
-    private suspend fun handleRawUpdates(raw: RawUpdates) {
+    private suspend fun handleRawUpdates(raw: RawUpdates): ResourceUpdates {
         BindingIndex.store(path)
 
         val updates: ResourceUpdates = wrap(raw)
@@ -171,6 +171,7 @@ class RootIndex private constructor(val path: Path) : ResourceIndex {
 
         _updates.emit(updates)
         check()
+        return updates
     }
 
     private fun check() {

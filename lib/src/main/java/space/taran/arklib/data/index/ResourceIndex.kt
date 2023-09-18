@@ -13,9 +13,9 @@ interface ResourceIndex {
 
     suspend fun updateAll()
 
-    suspend fun updateOne(resourcePath: Path, oldId: ResourceId)
+    suspend fun updateOne(resourcePath: Path, oldId: ResourceId): ResourceUpdates
 
-    suspend fun updateOne(oldId: ResourceId) = updateOne(
+    suspend fun updateOne(oldId: ResourceId): ResourceUpdates = updateOne(
         allPaths()[oldId]!!,
         oldId
     )
