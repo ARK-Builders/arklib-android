@@ -1,9 +1,8 @@
-package space.taran.arklib.user
+package space.taran.arklib.user.score
 
 import dev.arkbuilders.arklib.ResourceId
 import dev.arkbuilders.arklib.user.score.Score
 import dev.arkbuilders.arklib.user.score.ScoreStorage
-import org.hamcrest.core.IsInstanceOf.any
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
