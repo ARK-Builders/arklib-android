@@ -45,7 +45,7 @@ jobs:
 
   test:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
     - uses: actions/checkout@v3
 
@@ -71,11 +71,15 @@ jobs:
     - name: Install Cargo targets
       run: rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
 
+    - name : Run unit tests
+      run: ./gradlew :lib:test
+
     - name: Instrumentation Tests
       uses: reactivecircus/android-emulator-runner@v2
       with:
         profile: Galaxy Nexus
         api-level: 26
+        emulator-build: 7425822 # https://github.com/ReactiveCircus/android-emulator-runner/issues/160
         script: ./gradlew sample:connectedCheck
 
     - name: Upload test results
