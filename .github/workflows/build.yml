@@ -71,10 +71,10 @@ jobs:
     - name: Install Cargo targets
       run: rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
 
-    - name : Run lib platform indepdent tests
+    - name : Run unit tests
       run: ./gradlew :lib:test
 
-    - name: Instrumentation Tests
+    - name: Run instrumentation tests
       uses: reactivecircus/android-emulator-runner@v2
       with:
         profile: Galaxy Nexus
