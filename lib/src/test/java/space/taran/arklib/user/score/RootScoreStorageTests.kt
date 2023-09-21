@@ -15,46 +15,46 @@ import java.nio.file.Path
 
 class RootScoreStorageTests {
 
-    private val mScope: CoroutineScope by lazy {
+    private val scope: CoroutineScope by lazy {
         GlobalScope
     }
 
-    private val mPathMock: Path by lazy {
+    private val pathMock: Path by lazy {
         mockk()
     }
 
-    private lateinit var mRootScoreStorage: RootScoreStorage
+    private lateinit var rootScoreStorage: RootScoreStorage
 
     @Before
     fun setup() {
-        coEvery { mPathMock.resolve(any<String>()) } returns mPathMock
-        coEvery { mPathMock.resolve(any<Path>()) } returns mPathMock
-        mRootScoreStorage = RootScoreStorage(mScope, mPathMock)
+        coEvery { pathMock.resolve(any<String>()) } returns pathMock
+        coEvery { pathMock.resolve(any<Path>()) } returns pathMock
+        rootScoreStorage = RootScoreStorage(scope, pathMock)
     }
 
     @Test
     fun verifyGetScoreIfNoData() {
         val resourceId = randomResourceId()
-        assertEquals(mRootScoreStorage.getScore(resourceId), ScoreMonoid.neutral)
+        assertEquals(rootScoreStorage.getScore(resourceId), ScoreMonoid.neutral)
     }
 
     @Test
     fun verifySetScore() {
         val resourceId = randomResourceId()
         val score = randomScore()
-        mRootScoreStorage.setScore(resourceId, score)
-        assertEquals(score, mRootScoreStorage.getScore(resourceId))
+        rootScoreStorage.setScore(resourceId, score)
+        assertEquals(score, rootScoreStorage.getScore(resourceId))
     }
 
     @Test
     fun verifyRemove() {
         val resourceId = randomResourceId()
         val score = randomScore()
-        mRootScoreStorage.setScore(resourceId, score)
-        var result = mRootScoreStorage.getScore(resourceId)
+        rootScoreStorage.setScore(resourceId, score)
+        var result = rootScoreStorage.getScore(resourceId)
         assertEquals(score, result)
-        mRootScoreStorage.remove(resourceId)
-        result = mRootScoreStorage.getScore(resourceId)
+        rootScoreStorage.remove(resourceId)
+        result = rootScoreStorage.getScore(resourceId)
         assertEquals(result, ScoreMonoid.neutral)
     }
 }

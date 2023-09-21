@@ -10,31 +10,31 @@ import org.junit.Test
 
 class ScoreStorageTests {
 
-    private lateinit var mTestObj: ScoreStorage
+    private lateinit var testObj: ScoreStorage
 
-    private var mSetValueCalled: Boolean = false
-    private val mValue by lazy {
+    private var setValueCalled: Boolean = false
+    private val randomValue by lazy {
         (Math.random() * 100).toInt()
     }
-    private var mRemoveCalled: Boolean = false
-    private val mIdList: MutableList<ResourceId> = mutableListOf()
-    private lateinit var mPair: Pair<ResourceId, Score>
+    private var isRemoveCalled: Boolean = false
+    private val idList: MutableList<ResourceId> = mutableListOf()
+    private lateinit var pair: Pair<ResourceId, Score>
 
     @Before
     fun setup() {
-        mTestObj = object : ScoreStorage {
+        testObj = object : ScoreStorage {
             override fun getValue(id: ResourceId): Score {
-                return mValue
+                return randomValue
             }
 
             override fun setValue(id: ResourceId, value: Score) {
-                mSetValueCalled = true
-                mPair = Pair(id, value)
+                setValueCalled = true
+                pair = Pair(id, value)
             }
 
             override fun remove(id: ResourceId) {
-                mRemoveCalled = true
-                mIdList.add(id)
+                isRemoveCalled = true
+                idList.add(id)
             }
 
             override suspend fun persist() {
@@ -44,32 +44,32 @@ class ScoreStorageTests {
 
     @Test
     fun verifyScoreStorageGetValue() {
-        assertEquals(mTestObj.getScore(ResourceId(0, 0)), mValue)
+        assertEquals(testObj.getScore(ResourceId(0, 0)), randomValue)
     }
 
     @Test
     fun verifyScoreStorageSetValue() {
-        mSetValueCalled = false
+        setValueCalled = false
         val resourceId = ResourceId(0, 9)
-        mTestObj.setScore(resourceId, mValue)
-        assertTrue(mSetValueCalled)
-        assertEquals(resourceId, mPair.first)
-        assertEquals(mValue, mPair.second)
+        testObj.setScore(resourceId, randomValue)
+        assertTrue(setValueCalled)
+        assertEquals(resourceId, pair.first)
+        assertEquals(randomValue, pair.second)
     }
 
     @Test
     fun verifyRemove() {
-        mRemoveCalled = false
-        mIdList.clear()
+        isRemoveCalled = false
+        idList.clear()
         val listSize = (Math.random() * 10).toInt() + 1
         val list = mutableListOf<ResourceId>()
         for (index in 0 until listSize) {
             list.add(randomResourceId())
         }
-        mTestObj.resetScores(list)
-        assertTrue(mRemoveCalled)
-        assertEquals(mIdList.size, list.size)
-        assertEquals(mIdList, list)
+        testObj.resetScores(list)
+        assertTrue(isRemoveCalled)
+        assertEquals(idList.size, list.size)
+        assertEquals(idList, list)
     }
 
     private fun randomResourceId(): ResourceId =
