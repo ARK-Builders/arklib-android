@@ -19,7 +19,7 @@ import java.util.*
 class AggregateTagStorageTest {
 
     private val storedTags = HashMap<ResourceId, Tags>()
-    private val rootIds: List<ResourceId> = listOf(
+    private val resourceIds: Set<ResourceId> = setOf(
         ResourceId(1024, 123456789),
         ResourceId(2048, 987654321),
         ResourceId(4096, 246810121),
@@ -47,7 +47,7 @@ class AggregateTagStorageTest {
 
     private fun createRootIndex(): RootIndex {
         val rootIndex = mockk<RootIndex>()
-        every { rootIndex.allIds() } returns rootIds.toSet()
+        every { rootIndex.allIds() } returns resourceIds
         return rootIndex;
     }
 
@@ -73,6 +73,21 @@ class AggregateTagStorageTest {
         storedTags.clear()
     }
 
+    private fun getRandomStoragePairs(amount: Int): Map<ResourceId, Tags> {
+        if (amount > this.resourceIds.size) {
+            throw Exception("Requested storage pairs amount is over the limit")
+        }
+        val storagePairs = HashMap<ResourceId, Tags>()
+        while (resourceIds.size < amount) {
+            val randomId = this.resourceIds.random()
+            if (storagePairs.containsKey(randomId)) {
+                continue
+            }
+            storagePairs[randomId] = createRandomTags(7)
+        }
+        return storagePairs
+    }
+
     private fun createRandomTags(amount: Int): Set<Tag> {
         return (1..amount).map { UUID.randomUUID().toString() }.toSet()
     }
@@ -80,7 +95,7 @@ class AggregateTagStorageTest {
     @Test
     fun testGetTags() {
         val tags = createRandomTags(7)
-        val resourceId = rootIds.random()
+        val resourceId = resourceIds.random()
         aggregateTagStorage.setValue(resourceId, tags)
         val retrievedTags = aggregateTagStorage.getTags(resourceId)
         assertEquals(tags, retrievedTags)
@@ -88,33 +103,23 @@ class AggregateTagStorageTest {
 
     @Test
     fun testGetMultipleTags() {
-        val resourceIdA = rootIds[0]
-        val resourceIdB = rootIds[1]
-        val resourceIdC = rootIds[2]
-        val tagsA = createRandomTags(7)
-        val tagsB = createRandomTags(7)
-        val tagsC = createRandomTags(7)
-        aggregateTagStorage.setValue(resourceIdA, tagsA)
-        aggregateTagStorage.setValue(resourceIdB, tagsB)
-        aggregateTagStorage.setValue(resourceIdC, tagsC)
-        val retrievedTags = aggregateTagStorage.getTags(setOf(resourceIdA, resourceIdB, resourceIdC))
-        assertEquals(tagsA.union(tagsB).union(tagsC), retrievedTags)
+        val storagePairs = getRandomStoragePairs(3)
+        storagePairs.forEach { entry ->
+            aggregateTagStorage.setValue(entry.key, entry.value)
+        }
+        val retrievedTags = aggregateTagStorage.getTags(storagePairs.keys)
+        val expected = storagePairs.values.flatten().toSet()
+        assertEquals(expected, retrievedTags)
     }
 
     @Test
     fun testGroupTagsByResources() {
-        val resourceIdA = rootIds[0]
-        val resourceIdB = rootIds[1]
-        val resourceIdC = rootIds[2]
-        val tagsA = createRandomTags(7)
-        val tagsB = createRandomTags(7)
-        val tagsC = createRandomTags(7)
-        aggregateTagStorage.setValue(resourceIdA, tagsA)
-        aggregateTagStorage.setValue(resourceIdB, tagsB)
-        aggregateTagStorage.setValue(resourceIdC, tagsC)
-        val result = aggregateTagStorage.groupTagsByResources(setOf(resourceIdA, resourceIdB, resourceIdC))
-        val expected = mapOf<ResourceId, Tags>(resourceIdA to tagsA, resourceIdB to tagsB, resourceIdC to tagsC)
-        assertEquals(expected, result)
+        val storagePairs = getRandomStoragePairs(3)
+        storagePairs.forEach { entry ->
+            aggregateTagStorage.setValue(entry.key, entry.value)
+        }
+        val result = aggregateTagStorage.groupTagsByResources(storagePairs.keys)
+        assertEquals(storagePairs, result)
     }
 
 }
