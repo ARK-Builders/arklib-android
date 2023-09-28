@@ -11,7 +11,6 @@ import kotlinx.coroutines.sync.Mutex
 import org.junit.Assert.*
 import org.junit.Test
 import kotlin.coroutines.EmptyCoroutineContext
-import kotlin.random.Random
 import kotlin.system.measureTimeMillis
 
 class CoroutineUtilsTest {
@@ -19,10 +18,10 @@ class CoroutineUtilsTest {
     @Test
     fun testWithContextAndLock() = runBlocking {
         val mutex = Mutex()
+        val concurrency = 20
         var sharedCounter = 0
+        var delayMillis = 300L
         val context = EmptyCoroutineContext
-        val concurrency = Random.nextInt(2, 5)
-        var delayMillis = Random.nextLong(200, 500)
         val elapsedTime = measureTimeMillis {
             val jobs = List(concurrency) {
                 launch {
@@ -55,8 +54,8 @@ class CoroutineUtilsTest {
 
     @Test
     fun testTickerFlow() = runBlocking {
-        val delayMillis = Random.nextLong(200, 500)
-        val initialDelayMillis = Random.nextLong(200, 500)
+        val delayMillis = 300L
+        val initialDelayMillis = 500L
         val flow = tickerFlow(delayMillis, initialDelayMillis)
         val collectedValues = mutableListOf<Unit>()
         val job = launch {
