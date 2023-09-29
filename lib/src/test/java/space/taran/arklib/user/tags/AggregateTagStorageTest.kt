@@ -64,6 +64,10 @@ class AggregateTagStorageTest {
             val resourceId = resourceIdSlot.captured
             storedTags[resourceId]
         }
+        every { rootTagsStorage.remove(capture(resourceIdSlot)) } answers {
+            val resourceId = resourceIdSlot.captured
+            storedTags.remove(resourceId)
+        }
         return rootTagsStorage;
     }
 
@@ -120,6 +124,16 @@ class AggregateTagStorageTest {
         }
         val result = aggregateTagStorage.groupTagsByResources(storagePairs.keys)
         assertEquals(storagePairs, result)
+    }
+
+    @Test
+    fun testRemove() {
+        val tags = createRandomTags(7)
+        val resourceId = resourceIds.random()
+        aggregateTagStorage.setValue(resourceId, tags)
+        aggregateTagStorage.remove(resourceId)
+        val retrievedTags = aggregateTagStorage.getTags(resourceId)
+        assertEquals(emptySet<Tag>(), retrievedTags)
     }
 
 }
