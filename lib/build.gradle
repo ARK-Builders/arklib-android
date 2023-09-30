@@ -40,7 +40,7 @@ android {
 }
 
 cargo {
-    module  = "../arklib"
+    module = "../arklib"
     libname = "arklib"
     targets = ["arm64", "x86", "x86_64", "arm"]
     // speed up local build
@@ -48,7 +48,7 @@ cargo {
     prebuiltToolchains = true
     // Set to "debug" to enable logging. Or "release" to make a production build.
     // https://github.com/mozilla/rust-android-gradle/issues/38
-    profile = gradle.startParameter.taskNames.any{it.toLowerCase().contains("debug")} ? "debug" : "release"
+    profile = gradle.startParameter.taskNames.any { it.toLowerCase().contains("debug") } ? "debug" : "release"
 }
 
 dependencies {
@@ -72,11 +72,14 @@ dependencies {
     implementation "com.github.bumptech.glide:glide:4.11.0"
     kapt "com.github.bumptech.glide:compiler:4.11.0"
 
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4"
+    def coroutines_version = "1.6.4"
+
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
 
     // testing
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.13.2'
     testImplementation "io.mockk:mockk:1.13.7"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutines_version"
 }
 
 tasks.whenTaskAdded { task ->

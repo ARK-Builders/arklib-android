@@ -6,7 +6,8 @@ import dev.arkbuilders.arklib.user.score.Score
 import dev.arkbuilders.arklib.user.score.ScoreMonoid
 import io.mockk.coEvery
 import io.mockk.mockk
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.*
+import kotlinx.coroutines.test.*
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -19,6 +20,16 @@ class RootScoreStorageTests {
 
     private val pathMock: Path by lazy {
         mockk()
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val testDispatcher by lazy {
+        UnconfinedTestDispatcher()
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val testScope by lazy {
+        TestScope(testDispatcher)
     }
 
     @Before
@@ -118,5 +129,61 @@ class RootScoreStorageTests {
                 assertEquals(rootScoreStorage.getScore(randomResourceId), ScoreMonoid.neutral)
             }
         }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun functionCallsFromMultipleCoroutines() {
+        val size = randomPositiveInt(10) * 20
+        val mapOfResIdToScore = randomMapOfResIdToScore(size)
+        val listOfMaps = listOf<MutableMap<ResourceId, Score>>(
+            mutableMapOf(),
+            mutableMapOf(),
+            mutableMapOf(),
+            mutableMapOf()
+        )
+        val numOfThreads = listOfMaps.size
+        for ((index, resourceId) in mapOfResIdToScore.keys.withIndex()) {
+            val currMap = listOfMaps[index % numOfThreads]
+            currMap[resourceId] = mapOfResIdToScore[resourceId]!!
+        }
+        val jobs = mutableListOf<Job>()
+        val rootScoreStorage = RootScoreStorage(GlobalScope, pathMock)
+        repeat(numOfThreads) { currIndex ->
+            jobs.add(testScope.launch {
+                val currMap = listOfMaps[currIndex]
+                for (resId in currMap.keys) {
+                    rootScoreStorage.setScore(resId, currMap[resId]!!)
+                }
+                for (resId in currMap.keys) {
+                    assertEquals(currMap[resId], rootScoreStorage.getScore(resId))
+                    rootScoreStorage.remove(resId)
+                }
+                for (resId in currMap.keys) {
+                    assertEquals(ScoreMonoid.neutral, rootScoreStorage.getScore(resId))
+                }
+            })
+        }
+
+        runBlocking {
+            jobs.forEach {
+                it.join()
+            }
+        }
+    }
+
+    private fun randomMapOfResIdToScore(size: Int): Map<ResourceId, Score> {
+        val map = mutableMapOf<ResourceId, Score>()
+        val set = mutableSetOf<ResourceId>()
+        var index = 1
+        while (index < size) {
+            val resId = randomResourceId()
+            if (set.contains(resId).not()) {
+                set.add(resId)
+                map[resId] = randomScore()
+                index++
+            }
+        }
+        return map
     }
 }
