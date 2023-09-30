@@ -31,6 +31,7 @@ class AggregateTagStorageTest {
 
     @Before
     fun beforeEach() {
+        storedTags.clear()
         shards = createShards(3)
         aggregateTagStorage = AggregateTagStorage(shards)
     }
@@ -74,7 +75,6 @@ class AggregateTagStorageTest {
     @After
     fun afterEach() {
         unmockkAll()
-        storedTags.clear()
     }
 
     private fun getRandomStoragePairs(amount: Int): Map<ResourceId, Tags> {
