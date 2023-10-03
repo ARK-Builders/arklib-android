@@ -27,10 +27,8 @@ class LinkTest {
     @Test
     fun linkIsCreated() {
         createLinkFile()
-
         val linkId = getLinkHash(url)
         assert(root.resolve("$linkId.link").exists())
-        println(root.arkFolder().arkMetadata().resolve(linkId))
         assert(root.resolve(".ark").resolve("meta").resolve(linkId).exists())
         assert(root.resolve(".ark").resolve("previews").resolve(linkId).exists())
     }

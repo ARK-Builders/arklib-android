@@ -81,3 +81,20 @@ And add arklib-android dependency to app module's build.gradle
 ```groovy
 implementation 'dev.arkbuilders:arklib:0.3.1'
 ```
+
+## Unit tests
+
+Unit tests require native Ark library file for host machine in project root directory.
+
+- ```libarklib.so``` for Linux
+- ```libarklib.dylib``` for Mac
+- ```libarklib.dll``` for Windows
+
+For this you can use ```script/buildRustLibForHost.sh``` or ```buildRustLibForHost``` gradle task (Linux, Mac)
+
+Or do it manually:
+
+- Find out host architecture ```rustc -vV | sed -n 's|host: ||p'```
+- Build library ```cargo build --target $host_arch```
+- Move library from ```arklib/target/$host_arch/debug/libarklib.(so|dylib|dll)``` to project root directory
+

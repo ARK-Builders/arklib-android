@@ -119,7 +119,7 @@ tasks.withType(Test) {
     systemProperty "java.library.path", rootDir
 }
 
-task buildNativeLibForHost(type: Exec) {
+task buildRustLibForHost(type: Exec) {
     standardOutput = new ByteArrayOutputStream()
     commandLine 'sh', '../scripts/buildRustLibForHost.sh'
     doLast {
@@ -128,5 +128,5 @@ task buildNativeLibForHost(type: Exec) {
 }
 
 afterEvaluate {
-    testDebugUnitTest.dependsOn buildNativeLibForHost
+    testDebugUnitTest.dependsOn buildRustLibForHost
 }
