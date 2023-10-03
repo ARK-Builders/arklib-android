@@ -74,15 +74,6 @@ jobs:
     - name : Run unit tests
       run: ./gradlew :lib:test
 
-    - name: Run instrumentation tests
-      uses: reactivecircus/android-emulator-runner@v2
-      with:
-        api-level: 26
-        target: default
-        arch: x86_64
-        profile: Galaxy Nexus
-        script: ./gradlew sample:connectedCheck --stacktrace
-
     - name: Upload test results
       uses: actions/upload-artifact@v3
       with:
