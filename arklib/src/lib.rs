@@ -515,6 +515,90 @@ pub mod android {
         jni_map.into_inner()
     }
 
+    #[no_mangle]
+    pub extern "C" fn Java_dev_arkbuilders_arklib_ArkFiles_folderConstants(
+        mut env: JNIEnv,
+    ) -> jobject {
+        let jni_map = env.new_object("java/util/Map", "()V", &[]).unwrap();
+        env.call_method(
+            jni_map,
+            "put",
+            "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+            &["ARK_FOLDER", arklib::ARK_FOLDER],
+        )
+        .unwrap();
+        env.call_method(
+            jni_map,
+            "put",
+            "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+            &["STATS_FOLDER", arklib::STATS_FOLDER],
+        )
+        .unwrap();
+        env.call_method(
+            jni_map,
+            "put",
+            "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+            &["FAVORITES_FILE", arklib::FAVORITES_FILE],
+        )
+        .unwrap();
+        env.call_method(
+            jni_map,
+            "put",
+            "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+            &["SCORE_STORAGE_FILE", arklib::SCORE_STORAGE_FILE],
+        )
+        .unwrap();
+        env.call_method(
+            jni_map,
+            "put",
+            "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+            &["TAG_STORAGE_FILE", arklib::TAG_STORAGE_FILE],
+        )
+        .unwrap();
+        env.call_method(
+            jni_map,
+            "put",
+            "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+            &[
+                "PROPERTIES_STORAGE_FOLDER",
+                arklib::PROPERTIES_STORAGE_FOLDER,
+            ],
+        )
+        .unwrap();
+        env.call_method(
+            jni_map,
+            "put",
+            "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+            &["INDEX_PATH", arklib::INDEX_PATH],
+        )
+        .unwrap();
+        env.call_method(
+            jni_map,
+            "put",
+            "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+            &["METADATA_STORAGE_FOLDER", arklib::METADATA_STORAGE_FOLDER],
+        )
+        .unwrap();
+        env.call_method(
+            jni_map,
+            "put",
+            "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+            &["PREVIEWS_STORAGE_FOLDER", arklib::PREVIEWS_STORAGE_FOLDER],
+        )
+        .unwrap();
+        env.call_method(
+            jni_map,
+            "put",
+            "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+            &[
+                "THUMBNAILS_STORAGE_FOLDER",
+                arklib::THUMBNAILS_STORAGE_FOLDER,
+            ],
+        )
+        .unwrap();
+        jni_map
+    }
+
     fn provide_index(env: JNIEnv, jni_root: JString) -> Result<Arc<RwLock<ResourceIndex>>, Error> {
         let root_string: String = env.get_string(jni_root).unwrap().into();
         trace!("providing index for root {}", &root_string);

@@ -1,42 +1,38 @@
 package dev.arkbuilders.arklib
 
-import dev.arkbuilders.arklib.ArkFiles.ARK_FOLDER
-import dev.arkbuilders.arklib.ArkFiles.FAVORITES_FILE
-import dev.arkbuilders.arklib.ArkFiles.METADATA_STORAGE_FOLDER
-import dev.arkbuilders.arklib.ArkFiles.PREVIEWS_STORAGE_FOLDER
-import dev.arkbuilders.arklib.ArkFiles.PROPERTIES_STORAGE_FOLDER
-import dev.arkbuilders.arklib.ArkFiles.SCORE_STORAGE_FILE
-import dev.arkbuilders.arklib.ArkFiles.STATS_FOLDER
-import dev.arkbuilders.arklib.ArkFiles.TAG_STORAGE_FILE
-import dev.arkbuilders.arklib.ArkFiles.THUMBNAILS_STORAGE_FOLDER
 import java.nio.file.Path
 
-object ArkFiles {
-    const val ARK_FOLDER = ".ark"
-    const val STATS_FOLDER = "stats"
-    const val FAVORITES_FILE = "favorites"
 
-    // User-defined data
-    const val TAG_STORAGE_FILE = "user/tags"
-    const val SCORE_STORAGE_FILE = "user/scores"
-    const val PROPERTIES_STORAGE_FOLDER = "user/properties"
+class ArkFiles() {
+    val data = folderConstants()
+    val arkFolder = data["ARK_FOLDER"]
+    val statsFolder = data["STATS_FOLDER"]
+    val favoritesFile = data["FAVORITES_FILE"]
+    val tagStorageFile = data["TAG_STORAGE_FILE"]
+    val propertiesStorageFolder = data["PROPERTIES_STORAGE_FOLDER"]
+    val indexPath = data["INDEX_PATH"]
+    val metadataStorageFolder = data["METADATA_STORAGE_FOLDER"]
+    val previewStorageFolder = data["PREVIEWS_STORAGE_FOLDER"]
+    val thumbnailsStorageFolder = data["THUMBNAILS_STORAGE_FOLDER"]
+    val scoreStorageFile = data["SCORE_STORAGE_FILE"]
 
-    // Generated data
-    const val METADATA_STORAGE_FOLDER = "cache/metadata"
-    const val PREVIEWS_STORAGE_FOLDER = "cache/previews"
-    const val THUMBNAILS_STORAGE_FOLDER = "cache/thumbnails"
+    private external fun folderConstants(): Map<String, String>
 }
 
-fun Path.arkFolder() = resolve(ARK_FOLDER)
-fun Path.arkStats() = resolve(STATS_FOLDER)
-fun Path.arkFavorites() = resolve(FAVORITES_FILE)
+
+
+val data = ArkFiles();
+fun Path.arkFolder() = resolve(data.arkFolder)
+fun Path.arkStats() = resolve(data.statsFolder)
+fun Path.arkFavorites() = resolve(data.favoritesFile)
+fun Path.indexPath() = resolve(data.indexPath)
 
 // User-defined data
-fun Path.arkTags() = resolve(TAG_STORAGE_FILE)
-fun Path.arkScores() = resolve(SCORE_STORAGE_FILE)
-fun Path.arkProperties() = resolve(PROPERTIES_STORAGE_FOLDER)
+fun Path.arkTags() = resolve(data.tagStorageFile)
+fun Path.arkScores() = resolve(data.scoreStorageFile)
+fun Path.arkProperties() = resolve(data.propertiesStorageFolder)
 
 // Generated data
-fun Path.arkMetadata() = resolve(METADATA_STORAGE_FOLDER)
-fun Path.arkPreviews() = resolve(PREVIEWS_STORAGE_FOLDER)
-fun Path.arkThumbnails() = resolve(THUMBNAILS_STORAGE_FOLDER)
+fun Path.arkMetadata() = resolve(data.metadataStorageFolder)
+fun Path.arkPreviews() = resolve(data.previewStorageFolder)
+fun Path.arkThumbnails() = resolve(data.thumbnailsStorageFolder)
