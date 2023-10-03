@@ -430,7 +430,7 @@ pub mod android {
         let result = match provide_index(env, jni_root) {
             Ok(rwlock) => {
                 let mut index = rwlock.write().unwrap();
-                index.update().unwrap()
+                index.update_all().unwrap()
             }
             Err(err) => {
                 panic!("couldn't provide index {}", err)
@@ -516,87 +516,111 @@ pub mod android {
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_dev_arkbuilders_arklib_ArkFiles_folderConstants(
-        mut env: JNIEnv,
+    pub extern "C" fn Java_dev_arkbuilders_arklib_ArkFiles_sampleFunction(
+        env: JNIEnv,
+        _: JClass,
     ) -> jobject {
-        let jni_map = env.new_object("java/util/Map", "()V", &[]).unwrap();
+        let java_string = env.new_string(arklib::ARK_FOLDER).unwrap().into_inner();
+        java_string
+    }
+
+    #[no_mangle]
+    pub extern "C" fn Java_dev_arkbuilders_arklib_ArkFiles_folderConstants(
+        env: JNIEnv,
+        _: JClass,
+    ) -> jobject {
+        let jni_map = env.new_object("java/util/HashMap", "()V", &[]).unwrap();
+        let key = env.new_string("ARK_FOLDER").unwrap();
+        let value = env.new_string(arklib::ARK_FOLDER).unwrap();
         env.call_method(
             jni_map,
             "put",
             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-            &["ARK_FOLDER", arklib::ARK_FOLDER],
+            &[key.into(), value.into()],
         )
         .unwrap();
+        let key = env.new_string("STATS_FOLDER").unwrap();
+        let value = env.new_string(arklib::STATS_FOLDER).unwrap();
         env.call_method(
             jni_map,
             "put",
             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-            &["STATS_FOLDER", arklib::STATS_FOLDER],
+            &[key.into(), value.into()],
         )
         .unwrap();
+        let key = env.new_string("FAVORITES_FILE").unwrap();
+        let value = env.new_string(arklib::FAVORITES_FILE).unwrap();
         env.call_method(
             jni_map,
             "put",
             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-            &["FAVORITES_FILE", arklib::FAVORITES_FILE],
+            &[key.into(), value.into()],
         )
         .unwrap();
+        let key = env.new_string("SCORE_STORAGE_FILE").unwrap();
+        let value = env.new_string(arklib::SCORE_STORAGE_FILE).unwrap();
         env.call_method(
             jni_map,
             "put",
             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-            &["SCORE_STORAGE_FILE", arklib::SCORE_STORAGE_FILE],
+            &[key.into(), value.into()],
         )
         .unwrap();
+        let key = env.new_string("TAG_STORAGE_FILE").unwrap();
+        let value = env.new_string(arklib::SCORE_STORAGE_FILE).unwrap();
         env.call_method(
             jni_map,
             "put",
             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-            &["TAG_STORAGE_FILE", arklib::TAG_STORAGE_FILE],
+            &[key.into(), value.into()],
         )
         .unwrap();
+        let key = env.new_string("PROPERTIES_STORAGE_FOLDER").unwrap();
+        let value = env.new_string(arklib::PROPERTIES_STORAGE_FOLDER).unwrap();
         env.call_method(
             jni_map,
             "put",
             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-            &[
-                "PROPERTIES_STORAGE_FOLDER",
-                arklib::PROPERTIES_STORAGE_FOLDER,
-            ],
+            &[key.into(), value.into()],
         )
         .unwrap();
+        let key = env.new_string("INDEX_PATH").unwrap();
+        let value = env.new_string(arklib::INDEX_PATH).unwrap();
         env.call_method(
             jni_map,
             "put",
             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-            &["INDEX_PATH", arklib::INDEX_PATH],
+            &[key.into(), value.into()],
         )
         .unwrap();
+        let key = env.new_string("METADATA_STORAGE_FOLDER").unwrap();
+        let value = env.new_string(arklib::METADATA_STORAGE_FOLDER).unwrap();
         env.call_method(
             jni_map,
             "put",
             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-            &["METADATA_STORAGE_FOLDER", arklib::METADATA_STORAGE_FOLDER],
+            &[key.into(), value.into()],
         )
         .unwrap();
+        let key = env.new_string("PREVIEWS_STORAGE_FOLDER").unwrap();
+        let value = env.new_string(arklib::PREVIEWS_STORAGE_FOLDER).unwrap();
         env.call_method(
             jni_map,
             "put",
             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-            &["PREVIEWS_STORAGE_FOLDER", arklib::PREVIEWS_STORAGE_FOLDER],
+            &[key.into(), value.into()],
         )
         .unwrap();
+        let key = env.new_string("THUMBNAILS_STORAGE_FOLDER").unwrap();
+        let value = env.new_string(arklib::THUMBNAILS_STORAGE_FOLDER).unwrap();
         env.call_method(
             jni_map,
             "put",
             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-            &[
-                "THUMBNAILS_STORAGE_FOLDER",
-                arklib::THUMBNAILS_STORAGE_FOLDER,
-            ],
+            &[key.into(), value.into()],
         )
         .unwrap();
-        jni_map
+        jni_map.into_inner()
     }
 
     fn provide_index(env: JNIEnv, jni_root: JString) -> Result<Arc<RwLock<ResourceIndex>>, Error> {
