@@ -26,11 +26,11 @@ class FileUtilsTest {
 
     @Before
     fun beforeEach() {
-        initTikaSupport()
+        mockLog()
         initFileStructure()
     }
 
-    private fun initTikaSupport() {
+    private fun mockLog() {
         mockkStatic(Log::class)
         every { Log.d(any<String>(), any<String>()) } returns 0
     }
