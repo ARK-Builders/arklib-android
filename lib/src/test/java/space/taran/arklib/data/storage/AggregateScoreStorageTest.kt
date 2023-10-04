@@ -52,23 +52,23 @@ class AggregateScoreStorageTest {
     }
 
     private fun createRootScoreStorage(): RootScoreStorage {
-        val rootTagsStorage = mockk<RootScoreStorage>()
+        val rootScoreStorage = mockk<RootScoreStorage>()
         val scoreSlot = CapturingSlot<Score>()
         val resourceIdSlot = CapturingSlot<ResourceId>()
-        every { rootTagsStorage.setValue(capture(resourceIdSlot), capture(scoreSlot)) } answers {
-            val tags = scoreSlot.captured
+        every { rootScoreStorage.setValue(capture(resourceIdSlot), capture(scoreSlot)) } answers {
+            val score = scoreSlot.captured
             val resourceId = resourceIdSlot.captured
-            storedScores[resourceId] = tags
+            storedScores[resourceId] = score
         }
-        every { rootTagsStorage.valueById[capture(resourceIdSlot)] } answers {
+        every { rootScoreStorage.valueById[capture(resourceIdSlot)] } answers {
             val resourceId = resourceIdSlot.captured
             storedScores[resourceId]
         }
-        every { rootTagsStorage.remove(capture(resourceIdSlot)) } answers {
+        every { rootScoreStorage.remove(capture(resourceIdSlot)) } answers {
             val resourceId = resourceIdSlot.captured
             storedScores.remove(resourceId)
         }
-        return rootTagsStorage;
+        return rootScoreStorage;
     }
 
     @After
@@ -96,8 +96,8 @@ class AggregateScoreStorageTest {
     fun testSetAndGetScore() {
         val score: Score = Random.nextInt(0, Int.MAX_VALUE)
         val resourceId = resourceIds.random()
-        aggregateScoreStorage.setScore(resourceId, score)
         val retrievedScore = aggregateScoreStorage.getScore(resourceId)
+        aggregateScoreStorage.setScore(resourceId, score)
         assertEquals(score, retrievedScore)
     }
 
@@ -155,5 +155,5 @@ class AggregateScoreStorageTest {
         val resetScores = storagePairs.map { entry -> aggregateScoreStorage.getValue(entry.key) }
         assertEquals(storagePairs.map { 0 }.toSet(), resetScores.toSet())
     }
-    
+
 }
