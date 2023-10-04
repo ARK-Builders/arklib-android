@@ -14,6 +14,7 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.Path
+import kotlin.io.path.deleteIfExists
 
 class FileUtilsTest {
 
@@ -55,12 +56,12 @@ class FileUtilsTest {
     }
 
     private fun deleteFileStructure() {
-        Files.deleteIfExists(rootFolderFile)
-        Files.deleteIfExists(favFolderFile)
-        Files.deleteIfExists(emptyFavFolder)
-        Files.deleteIfExists(favFolder)
-        Files.deleteIfExists(rootFolder)
-        Files.deleteIfExists(testDir)
+        rootFolderFile.deleteIfExists()
+        favFolderFile.deleteIfExists()
+        emptyFavFolder.deleteIfExists()
+        favFolder.deleteIfExists()
+        rootFolder.deleteIfExists()
+        testDir.deleteIfExists()
     }
 
     private fun hideFileOrFolderOnWindows(path: Path) {
