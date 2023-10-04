@@ -18,11 +18,11 @@ import kotlin.io.path.Path
 class FileUtilsTest {
 
     private lateinit var testDir: Path
+    private lateinit var favFolder: Path
     private lateinit var rootFolder: Path
-    private lateinit var childFolder: Path
+    private lateinit var favFolderFile: Path
     private lateinit var rootFolderFile: Path
-    private lateinit var childFolderFile: Path
-    private lateinit var emptyChildFolder: Path
+    private lateinit var emptyFavFolder: Path
 
     @Before
     fun beforeEach() {
@@ -38,14 +38,14 @@ class FileUtilsTest {
     private fun initFileStructure() {
         testDir = Files.createTempDirectory("testFileUtils")
         rootFolder = testDir.resolve("root")
-        childFolder = rootFolder.resolve("child1")
-        emptyChildFolder = rootFolder.resolve("child2")
+        favFolder = rootFolder.resolve("child1")
+        emptyFavFolder = rootFolder.resolve("child2")
         rootFolderFile = rootFolder.resolve("file1.txt")
-        childFolderFile = childFolder.resolve("file2.txt")
-        Files.createDirectories(childFolder)
-        Files.createDirectories(emptyChildFolder)
+        favFolderFile = favFolder.resolve("file2.txt")
+        Files.createDirectories(favFolder)
+        Files.createDirectories(emptyFavFolder)
         Files.createFile(rootFolderFile)
-        Files.createFile(childFolderFile)
+        Files.createFile(favFolderFile)
     }
 
     @After
@@ -56,9 +56,9 @@ class FileUtilsTest {
 
     private fun deleteFileStructure() {
         Files.deleteIfExists(rootFolderFile)
-        Files.deleteIfExists(childFolderFile)
-        Files.deleteIfExists(emptyChildFolder)
-        Files.deleteIfExists(childFolder)
+        Files.deleteIfExists(favFolderFile)
+        Files.deleteIfExists(emptyFavFolder)
+        Files.deleteIfExists(favFolder)
         Files.deleteIfExists(rootFolder)
         Files.deleteIfExists(testDir)
     }
@@ -76,7 +76,7 @@ class FileUtilsTest {
     @Test
     fun testListAllFiles() = runBlocking {
         val result = listAllFiles(rootFolder)
-        assertEquals(listOf(rootFolderFile, childFolderFile), result)
+        assertEquals(listOf(rootFolderFile, favFolderFile), result)
     }
 
     @Test
@@ -84,9 +84,9 @@ class FileUtilsTest {
         deleteRecursively(rootFolder)
         assertTrue(Files.notExists(rootFolder))
         assertTrue(Files.notExists(rootFolderFile))
-        assertTrue(Files.notExists(childFolderFile))
-        assertTrue(Files.notExists(childFolder))
-        assertTrue(Files.notExists(emptyChildFolder))
+        assertTrue(Files.notExists(favFolderFile))
+        assertTrue(Files.notExists(favFolder))
+        assertTrue(Files.notExists(emptyFavFolder))
     }
 
     @Test
@@ -97,30 +97,30 @@ class FileUtilsTest {
 
     @Test
     fun testDeleteRecursivelyEmptyFolder() = runBlocking {
-        assertEquals(emptyList<Path>() to emptyList<Path>(), listChildren(emptyChildFolder))
-        deleteRecursively(emptyChildFolder)
-        assertTrue(Files.notExists(emptyChildFolder))
+        assertEquals(emptyList<Path>() to emptyList<Path>(), listChildren(emptyFavFolder))
+        deleteRecursively(emptyFavFolder)
+        assertTrue(Files.notExists(emptyFavFolder))
     }
 
     @Test
     fun testDeleteRecursivelySingleFile() = runBlocking {
-        assertTrue(Files.exists(childFolderFile))
-        deleteRecursively(childFolderFile)
-        assertTrue(Files.notExists(childFolderFile))
+        assertTrue(Files.exists(favFolderFile))
+        deleteRecursively(favFolderFile)
+        assertTrue(Files.notExists(favFolderFile))
     }
 
     @Test
     fun testListChildren() {
         val result = listChildren(rootFolder)
         val expectedFiles = listOf(rootFolderFile)
-        val expectedFolders = setOf(childFolder, emptyChildFolder)
+        val expectedFolders = setOf(favFolder, emptyFavFolder)
         assertEquals(expectedFiles, result.second)
         assertEquals(expectedFolders, result.first.toSet())
     }
 
     @Test
     fun testListChildrenEmptyFolder() {
-        val result = listChildren(emptyChildFolder)
+        val result = listChildren(emptyFavFolder)
         assertEquals(emptyList<Path>() to emptyList<Path>(), result)
     }
 
@@ -134,7 +134,7 @@ class FileUtilsTest {
         hideFileOrFolderOnWindows(hiddenFolder)
         val result = listChildren(rootFolder)
         val expectedFiles = listOf(rootFolderFile)
-        val expectedFolders = setOf(childFolder, emptyChildFolder)
+        val expectedFolders = setOf(favFolder, emptyFavFolder)
         assertEquals(expectedFiles, result.second)
         assertEquals(expectedFolders, result.first.toSet())
         Files.deleteIfExists(hiddenFile)
