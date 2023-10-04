@@ -90,11 +90,11 @@ Unit tests require native Ark library file for host machine in project root dire
 - ```libarklib.dylib``` for Mac
 - ```libarklib.dll``` for Windows
 
-For this you can use ```script/buildRustLibForHost.sh``` or ```buildRustLibForHost``` gradle task (Linux, Mac)
+Unit tests depend on ```buildRustLibForHost``` gradle task (Linux, Mac)
 
-Or do it manually:
+But you can do it manually:
 
 - Find out host architecture ```rustc -vV | sed -n 's|host: ||p'```
 - Build library ```cargo build --target $host_arch```
-- Move library from ```arklib/target/$host_arch/debug/libarklib.(so|dylib|dll)``` to project root directory
+- Copy library from ```arklib/target/$host_arch/debug/libarklib.(so|dylib|dll)``` to project root directory
 
