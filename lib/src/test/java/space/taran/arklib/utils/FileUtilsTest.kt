@@ -10,7 +10,6 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.Path
@@ -62,16 +61,6 @@ class FileUtilsTest {
         favFolder.deleteIfExists()
         rootFolder.deleteIfExists()
         testDir.deleteIfExists()
-    }
-
-    private fun hideFileOrFolderOnWindows(path: Path) {
-        try {
-            val command = "attrib +h \"${path}\""
-            val process = Runtime.getRuntime().exec(command)
-            process.waitFor()
-        } catch (e: IOException) {
-            println("FileUtilsTest.hideFileOrFolderOnWindows: not on a Windows system")
-        }
     }
 
     @Test
@@ -131,8 +120,6 @@ class FileUtilsTest {
         val hiddenFolder = rootFolder.resolve(".hidden_folder")
         Files.createFile(hiddenFile)
         Files.createDirectories(hiddenFolder)
-        hideFileOrFolderOnWindows(hiddenFile)
-        hideFileOrFolderOnWindows(hiddenFolder)
         val result = listChildren(rootFolder)
         val expectedFiles = listOf(rootFolderFile)
         val expectedFolders = setOf(favFolder, emptyFavFolder)
