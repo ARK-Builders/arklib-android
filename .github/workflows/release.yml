@@ -24,6 +24,7 @@ jobs:
       with:
         java-version: '11'
         distribution: 'adopt'
+        cache: gradle
 
     - name: Install latest stable Rust
       uses: dtolnay/rust-toolchain@stable
