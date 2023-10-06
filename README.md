@@ -1,3 +1,7 @@
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ARK-Builders_arklib-android&metric=coverage)](https://sonarcloud.io/summary/new_code?id=ARK-Builders_arklib-android)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=ARK-Builders_arklib-android&metric=bugs)](https://sonarcloud.io/summary/new_code?id=ARK-Builders_arklib-android)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=ARK-Builders_arklib-android&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=ARK-Builders_arklib-android)
+
 <a href="https://www.buymeacoffee.com/arkbuilders" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 # ArkLib for Android
