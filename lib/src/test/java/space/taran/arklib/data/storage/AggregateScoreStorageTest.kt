@@ -96,8 +96,8 @@ class AggregateScoreStorageTest {
     fun testSetAndGetScore() {
         val score: Score = Random.nextInt(0, Int.MAX_VALUE)
         val resourceId = resourceIds.random()
-        val retrievedScore = aggregateScoreStorage.getScore(resourceId)
         aggregateScoreStorage.setScore(resourceId, score)
+        val retrievedScore = aggregateScoreStorage.getScore(resourceId)
         assertEquals(score, retrievedScore)
     }
 
