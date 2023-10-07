@@ -1,6 +1,7 @@
 package dev.arkbuilders.sample
 
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import dev.arkbuilders.arkfilepicker.folders.FoldersRepo
 import dev.arkbuilders.arklib.initArkLib
@@ -23,13 +24,13 @@ class MainActivity : AppCompatActivity() {
         FoldersRepo.init(application)
         application.initArkLib()
         initRustLogger()
-        print("Ark: ${arkFolder()}")
-        print("Stats: ${arkStats()}")
-        print("Favorittes: ${arkFavorites()}")
-        print("Index: ${indexPath()}")
-        print("Properties: ${arkProperties()}")
-        print("Metadata: ${arkMetadata()}")
-        print("Previews: ${arkPreviews()}")
-        print("Thumbnails: ${arkThumbnails()}")
+        Log.INFO("Ark: ${arkFolder()}")
+        Log.INFO("Stats: ${arkStats()}")
+        Log.INFO("Favorites: ${arkFavorites()}")
+        Log.INFO("Index: ${indexPath()}")
+        Log.INFO("Properties: ${arkProperties()}")
+        Log.INFO("Metadata: ${arkMetadata()}")
+        Log.INFO("Previews: ${arkPreviews()}")
+        Log.INFO("Thumbnails: ${arkThumbnails()}")
     }
 }
