@@ -16,10 +16,6 @@ buildscript {
     }
 }
 
-plugins {
-  id("org.sonarqube") version "4.3.1.3277"
-}
-
 allprojects {
     repositories {
         google()
@@ -27,12 +23,4 @@ allprojects {
         maven { url "https://jitpack.io"}
         gradlePluginPortal()
     }
-}
-
-sonar {
-  properties {
-    property "sonar.projectKey", "ARK-Builders_arklib-android"
-    property "sonar.organization", "ark-builders"
-    property "sonar.host.url", "https://sonarcloud.io"
-  }
 }

@@ -1,5 +1,6 @@
 plugins {
     id "org.jetbrains.kotlin.plugin.serialization" version "$kotlin_version"
+    id "org.sonarqube" version "4.3.1.3277"
 }
 
 apply plugin: 'com.android.library'
@@ -121,6 +122,10 @@ publishing {
     }
 }
 
-repositories {
-    mavenCentral()
+sonar {
+  properties {
+    property "sonar.projectKey", "ARK-Builders_arklib-android"
+    property "sonar.organization", "ark-builders"
+    property "sonar.host.url", "https://sonarcloud.io"
+  }
 }
