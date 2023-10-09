@@ -1,37 +1,72 @@
 package dev.arkbuilders.arklib
 
+import dev.arkbuilders.arklib.ArkFiles.ARK_FOLDER
+import dev.arkbuilders.arklib.ArkFiles.FAVORITES_FILE
+import dev.arkbuilders.arklib.ArkFiles.METADATA_STORAGE_FOLDER
+import dev.arkbuilders.arklib.ArkFiles.PREVIEWS_STORAGE_FOLDER
+import dev.arkbuilders.arklib.ArkFiles.PROPERTIES_STORAGE_FOLDER
+import dev.arkbuilders.arklib.ArkFiles.SCORE_STORAGE_FILE
+import dev.arkbuilders.arklib.ArkFiles.STATS_FOLDER
+import dev.arkbuilders.arklib.ArkFiles.TAG_STORAGE_FILE
+import dev.arkbuilders.arklib.ArkFiles.THUMBNAILS_STORAGE_FOLDER
+import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.io.path.Path
 
-class ArkFiles() {
-    val data = folderConstants()
-    val arkFolder = Paths.get(data["ARK_FOLDER"]!!)!!
-    val statsFolder = Paths.get(data["STATS_FOLDER"]!!)!!
-    val favoritesFile = Paths.get(data["FAVORITES_FILE"]!!)!!
-    val tagStorageFile = Paths.get(data["TAG_STORAGE_FILE"]!!)!!
-    val propertiesStorageFolder = Paths.get(data["PROPERTIES_STORAGE_FOLDER"]!!)!!
-    val indexPath = Paths.get(data["INDEX_PATH"]!!)!!
-    val metadataStorageFolder = Paths.get(data["METADATA_STORAGE_FOLDER"]!!)!!
-    val previewStorageFolder = Paths.get(data["PREVIEWS_STORAGE_FOLDER"]!!)!!
-    val thumbnailsStorageFolder = Paths.get(data["THUMBNAILS_STORAGE_FOLDER"]!!)!!
-    val scoreStorageFile = Paths.get(data["SCORE_STORAGE_FILE"]!!)!!
+private class NativeArkFiles(
+    val ARK_FOLDER: String,
+    val STATS_FOLDER: String,
+    val FAVORITES_FILE: String,
+    val INDEX_PATH: String,
+    val TAG_STORAGE_FILE: String,
+    val SCORE_STORAGE_FILE: String,
+    val PROPERTIES_STORAGE_FOLDER: String,
+    val METADATA_STORAGE_FOLDER: String,
+    val PREVIEWS_STORAGE_FOLDER: String,
+    val THUMBNAILS_STORAGE_FOLDER: String,
+)
 
-    private external fun folderConstants(): Map<String, String>
+object ArkFiles {
+    private val nativeArkFiles by lazy {
+        provideNativeArkFiles()
+    }
+
+    private external fun provideNativeArkFiles(): NativeArkFiles
+
+    val ARK_FOLDER by lazy { Path(nativeArkFiles.ARK_FOLDER) }
+    val STATS_FOLDER by lazy { Path(nativeArkFiles.STATS_FOLDER) }
+    val FAVORITES_FILE by lazy { Path(nativeArkFiles.FAVORITES_FILE) }
+
+    // User-defined data
+    val TAG_STORAGE_FILE by lazy { Path(nativeArkFiles.TAG_STORAGE_FILE) }
+    val SCORE_STORAGE_FILE by lazy { Path(nativeArkFiles.SCORE_STORAGE_FILE) }
+    val PROPERTIES_STORAGE_FOLDER by lazy {
+        Path(nativeArkFiles.PROPERTIES_STORAGE_FOLDER)
+    }
+
+    // Generated data
+    val METADATA_STORAGE_FOLDER by lazy {
+        Path(nativeArkFiles.METADATA_STORAGE_FOLDER)
+    }
+    val PREVIEWS_STORAGE_FOLDER by lazy {
+        Path(nativeArkFiles.PREVIEWS_STORAGE_FOLDER)
+    }
+    val THUMBNAILS_STORAGE_FOLDER by lazy {
+        Path(nativeArkFiles.THUMBNAILS_STORAGE_FOLDER)
+    }
+
 }
 
-
-
-val data = ArkFiles();
-fun arkFolder() = data.arkFolder
-fun arkStats() = data.statsFolder
-fun arkFavorites() = data.favoritesFile
-fun indexPath() = data.indexPath
+fun Path.arkFolder() = resolve(ARK_FOLDER)
+fun Path.arkStats() = resolve(STATS_FOLDER)
+fun Path.arkFavorites() = resolve(FAVORITES_FILE)
 
 // User-defined data
-fun arkTags() = data.tagStorageFile
-fun arkScores() = data.scoreStorageFile
-fun arkProperties() = data.propertiesStorageFolder
+fun Path.arkTags() = resolve(TAG_STORAGE_FILE)
+fun Path.arkScores() = resolve(SCORE_STORAGE_FILE)
+fun Path.arkProperties() = resolve(PROPERTIES_STORAGE_FOLDER)
 
 // Generated data
-fun arkMetadata() = data.metadataStorageFolder
-fun arkPreviews() = data.previewStorageFolder
-fun arkThumbnails() = data.thumbnailsStorageFolder
+fun Path.arkMetadata() = resolve(METADATA_STORAGE_FOLDER)
+fun Path.arkPreviews() = resolve(PREVIEWS_STORAGE_FOLDER)
+fun Path.arkThumbnails() = resolve(THUMBNAILS_STORAGE_FOLDER)
