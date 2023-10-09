@@ -2,8 +2,8 @@ package dev.arkbuilders.arklib.data.index
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import space.taran.arkfilepicker.folders.FoldersRepo
-import space.taran.arkfilepicker.folders.RootAndFav
+import dev.arkbuilders.arkfilepicker.folders.FoldersRepo
+import dev.arkbuilders.arkfilepicker.folders.RootAndFav
 import java.nio.file.Path
 
 class ResourceIndexRepo(
