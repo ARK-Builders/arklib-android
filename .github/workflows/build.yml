@@ -27,7 +27,7 @@ jobs:
       with:
         java-version: '17'
         distribution: 'zulu'
-        cache: 'grade'
+        cache: 'gradle'
 
     - name: Install latest stable Rust
       uses: dtolnay/rust-toolchain@stable
@@ -60,7 +60,7 @@ jobs:
       with:
         java-version: '17'
         distribution: 'zulu'
-        cache: 'grade'
+        cache: 'gradle'
 
     - name: Install latest stable Rust
       uses: dtolnay/rust-toolchain@stable
