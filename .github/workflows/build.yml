@@ -22,11 +22,12 @@ jobs:
       with:
         ndk-version: r25c
 
-    - name: Set up JDK 11
+    - name: Set up JDK
       uses: actions/setup-java@v3
       with:
-        java-version: '11'
-        distribution: 'adopt'
+        java-version: '17'
+        distribution: 'zulu'
+        cache: 'grade'
 
     - name: Install latest stable Rust
       uses: dtolnay/rust-toolchain@stable
@@ -42,9 +43,6 @@ jobs:
     - name: Debug build with Gradle
       run: ./gradlew lib:assembleDebug
 
-    - name: Release build with Gradle
-      run: ./gradlew lib:assembleRelease
-
   test:
     name: Run unit tests
     needs: build
@@ -57,11 +55,12 @@ jobs:
       with:
         ndk-version: r22b
 
-    - name: Set up JDK 11
+    - name: Set up JDK
       uses: actions/setup-java@v3
       with:
-        java-version: '11'
-        distribution: 'adopt'
+        java-version: '17'
+        distribution: 'zulu'
+        cache: 'grade'
 
     - name: Install latest stable Rust
       uses: dtolnay/rust-toolchain@stable
@@ -73,9 +72,22 @@ jobs:
 
     - name: Install Cargo targets
       run: rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
+      
+    - name: Cache SonarCloud packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.sonar/cache
+        key: ${{ runner.os }}-sonar
+        restore-keys: ${{ runner.os }}-sonar
+
+    - name: Sonar analyze
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: ./gradlew lib:sonar --info
 
     - name : Run unit tests
-      run: ./gradlew :lib:test
+      run: ./gradlew lib:test
 
     - name: Run instrumentation tests
       uses: reactivecircus/android-emulator-runner@v2
@@ -83,6 +95,7 @@ jobs:
         api-level: 26
         target: default
         arch: x86_64
+        emulator-build: 7425822 # https://github.com/ReactiveCircus/android-emulator-runner/issues/160
         profile: Galaxy Nexus
         script: ./gradlew sample:connectedCheck --stacktrace
 
@@ -91,49 +104,3 @@ jobs:
       with:
         name: instrumentation-test-results
         path: ./appmock/build/reports/androidTests/connected/**
-
-  analyze:
-    name: Analyze with SonarCloud
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled
-          # for a better relevancy of analysis
-
-      - uses: actions/checkout@v3
-
-      - name: Set up NDK
-        uses: nttld/setup-ndk@v1
-        with:
-          ndk-version: r22b
-
-      - name: Set up JDK
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'zulu'
-
-      - name: Install latest stable Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - uses: Swatinem/rust-cache@v2
-
-      - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v1.0.5
-
-      - name: Install Cargo targets
-        run: rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
-
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
-      - name: Build and analyze
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew build sonar --info
