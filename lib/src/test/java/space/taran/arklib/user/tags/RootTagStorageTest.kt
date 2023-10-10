@@ -1,21 +1,33 @@
 package space.taran.arklib.user.tags
 
+import dev.arkbuilders.arklib.arkFolder
+import dev.arkbuilders.arklib.arkTags
 import dev.arkbuilders.arklib.data.index.ResourceIndex
 import dev.arkbuilders.arklib.user.tags.Tag
 import dev.arkbuilders.arklib.user.tags.TagStorage
 import dev.arkbuilders.arklib.user.tags.Tags
+import dev.arkbuilders.arklib.user.tags.TagsStorageRepo
 import junit.framework.TestCase.assertEquals
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.Test
+import space.taran.arklib.utils.TestDeps
 import space.taran.arklib.utils.mockLog
 import space.taran.arklib.utils.TestFiles
 import space.taran.arklib.utils.TestRepo
 import java.util.UUID
+import kotlin.io.path.fileSize
 
 class RootTagStorageTest {
+
+    val root = TestFiles.root1
 
     companion object {
         lateinit var index: ResourceIndex
@@ -55,6 +67,23 @@ class RootTagStorageTest {
         tagStorage.remove(id)
         val actual = tagStorage.getTags(id)
         assertEquals(actual, emptySet<Tag>())
+    }
+
+    @Test
+    fun persistTest() = runTest(UnconfinedTestDispatcher()) {
+        val job = Job()
+        val testTagStorage = TagsStorageRepo(
+            CoroutineScope(this.coroutineContext + job),
+            TestDeps.statsFlow
+        ).provide(index)
+
+        val id = index.allIds().first()
+        testTagStorage.setTags(id, createRandomTags(3))
+        testTagStorage.persist()
+        advanceTimeBy(5000L)
+        job.cancel()
+
+        assert(root.arkFolder().arkTags().fileSize() > 0)
     }
 
     private fun createRandomTags(amount: Int): Tags {

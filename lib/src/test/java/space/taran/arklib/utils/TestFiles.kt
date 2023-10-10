@@ -27,14 +27,15 @@ object TestFiles {
     // 100% unique file name and content
     private val generatedFileContent = mutableSetOf<String>()
     private val generatedFiles = mutableListOf<Path>()
-    fun randomFile(parent: Path, extension: String = ""): Path {
+    fun randomFile(parent: Path, extension: String? = null): Path {
         var uuid: String
         do {
             uuid = UUID.randomUUID().toString()
         } while (generatedFileContent.contains(uuid))
 
         generatedFileContent.add(uuid)
-        val file = parent.resolve("$uuid.$extension")
+        val fileExt = extension?.let { ".$it" } ?: ""
+        val file = parent.resolve("$uuid$fileExt")
         file.createFile()
         file.writeText(uuid)
 
