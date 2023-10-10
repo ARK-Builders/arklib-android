@@ -21,10 +21,10 @@ object TestRepo {
             failed = emptyList()
         )
         coEvery {
-            resolveRoots(TestFiles.rootAndFav1)
+            resolveRoots(TestFiles.rootAndFav1())
         } returns listOf(TestFiles.root1)
         coEvery {
-            resolveRoots(TestFiles.rootAndFav2)
+            resolveRoots(TestFiles.rootAndFav2())
         } returns listOf(TestFiles.root2)
         coEvery {
             resolveRoots(TestFiles.allRoots)

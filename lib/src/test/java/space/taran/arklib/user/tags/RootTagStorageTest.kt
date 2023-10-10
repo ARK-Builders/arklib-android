@@ -5,8 +5,10 @@ import dev.arkbuilders.arklib.user.tags.Tag
 import dev.arkbuilders.arklib.user.tags.TagStorage
 import dev.arkbuilders.arklib.user.tags.Tags
 import junit.framework.TestCase.assertEquals
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import org.junit.Test
 import space.taran.arklib.utils.mockLog
 import space.taran.arklib.utils.TestFiles
@@ -15,17 +17,26 @@ import java.util.UUID
 
 class RootTagStorageTest {
 
-    val root = TestFiles.root1
-    lateinit var index: ResourceIndex
-    lateinit var tagStorage: TagStorage
+    companion object {
+        lateinit var index: ResourceIndex
+        lateinit var tagStorage: TagStorage
 
-    @Before
-    fun before() = runTest {
-        System.loadLibrary("arklib")
-        mockLog()
-        TestFiles.randomFile(root)
-        index = TestRepo.index.provide(root)
-        tagStorage = TestRepo.tags.provide(index)
+        @BeforeClass
+        @JvmStatic
+        fun before() = runBlocking {
+            System.loadLibrary("arklib")
+            TestFiles.init()
+            mockLog()
+            TestFiles.randomFile(TestFiles.root1)
+            index = TestRepo.index.provide(TestFiles.root1)
+            tagStorage = TestRepo.tags.provide(index)
+        }
+
+        @AfterClass
+        @JvmStatic
+        fun after() {
+            TestFiles.clear()
+        }
     }
 
     @Test

@@ -1,15 +1,12 @@
 package space.taran.arklib.lib
 
-import dev.arkbuilders.arklib.arkFolder
-import dev.arkbuilders.arklib.arkMetadata
-import dev.arkbuilders.arklib.arkPreviews
 import dev.arkbuilders.arklib.createLinkFile
 import dev.arkbuilders.arklib.fetchLinkData
 import dev.arkbuilders.arklib.getLinkHash
 import dev.arkbuilders.arklib.loadLinkFile
-import junit.framework.Assert
 import junit.framework.TestCase.assertNotNull
-import org.junit.Before
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import org.junit.Test
 import space.taran.arklib.utils.TestFiles
 import kotlin.io.path.exists
@@ -19,9 +16,19 @@ class LinkTest {
     val root = TestFiles.root1
     val url = "https://github.com/ARK-Builders/arklib-android"
 
-    @Before
-    fun before() {
-        System.loadLibrary("arklib")
+    companion object {
+        @BeforeClass
+        @JvmStatic
+        fun before() {
+            System.loadLibrary("arklib")
+            TestFiles.init()
+        }
+
+        @AfterClass
+        @JvmStatic
+        fun after() {
+            TestFiles.clear()
+        }
     }
 
     @Test

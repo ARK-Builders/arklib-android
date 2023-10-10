@@ -2,22 +2,44 @@ package space.taran.arklib.lib
 
 import android.graphics.Bitmap
 import dev.arkbuilders.arklib.PreviewQuality
+import dev.arkbuilders.arklib.data.index.ResourceIndex
 import dev.arkbuilders.arklib.pdfPreviewGenerate
+import dev.arkbuilders.arklib.user.tags.TagStorage
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.runs
 import io.mockk.slot
+import io.mockk.unmockkAll
 import junit.framework.TestCase.assertEquals
+import kotlinx.coroutines.runBlocking
+import org.junit.AfterClass
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Test
+import space.taran.arklib.utils.TestFiles
+import space.taran.arklib.utils.TestRepo
+import space.taran.arklib.utils.mockLog
+import kotlin.io.path.deleteIfExists
 import kotlin.io.path.outputStream
 
 class PDFGenTest {
-    @Before
-    fun before() {
-        System.loadLibrary("arklib")
+
+    companion object {
+        @BeforeClass
+        @JvmStatic
+        fun before() {
+            System.loadLibrary("arklib")
+        }
+
+        @AfterClass
+        @JvmStatic
+        fun after() {
+            unmockkAll()
+            clearAllMocks()
+        }
     }
 
     @Test
@@ -54,5 +76,7 @@ class PDFGenTest {
 
         assertEquals(captureWidth.captured, 595)
         assertEquals(captureHeight.captured, 841)
+
+        tempPdfFile.deleteIfExists()
     }
 }
