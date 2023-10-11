@@ -8,7 +8,7 @@ name = "arklib"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-arklib = { git = "https://github.com/ARK-builders/arklib", rev = "03add5a" }
+arklib = { git = "https://github.com/ARK-builders/arklib", rev = "1b3a4519d17a35960bfde2d9ed25cb96f9f0" }
 anyhow = "1.0.58"
 env_logger = "0.9.0"
 url = { version = "2.2.2", features = ["serde"] }
