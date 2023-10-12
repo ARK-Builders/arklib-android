@@ -1,5 +1,8 @@
 package space.taran.arklib.lib
 
+import dev.arkbuilders.arklib.arkFolder
+import dev.arkbuilders.arklib.arkMetadata
+import dev.arkbuilders.arklib.arkPreviews
 import dev.arkbuilders.arklib.createLinkFile
 import dev.arkbuilders.arklib.fetchLinkData
 import dev.arkbuilders.arklib.getLinkHash
@@ -36,8 +39,8 @@ class LinkTest {
         createLinkFile()
         val linkId = getLinkHash(url)
         assert(root.resolve("$linkId.link").exists())
-        assert(root.resolve(".ark").resolve("meta").resolve(linkId).exists())
-        assert(root.resolve(".ark").resolve("previews").resolve(linkId).exists())
+        assert(root.arkFolder().arkMetadata().resolve(linkId).exists())
+        assert(root.arkFolder().arkPreviews().resolve(linkId).exists())
     }
 
     @Test
