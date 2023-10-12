@@ -53,7 +53,7 @@ cargo {
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
-    implementation 'com.github.ARK-Builders:ark-filepicker:1d89c8c478'
+    implementation 'dev.arkbuilders:arkfilepicker:0.1.0'
 
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
@@ -102,6 +102,7 @@ publishing {
             }
         }
     }
+
     repositories {
         maven {
             name = "GithubPackages"

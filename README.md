@@ -8,60 +8,11 @@ This is a wrapper of <a href="https://github.com/ARK-Builders/arklib" target="_b
 |:---------------------------|
 | The following information is only for developers. |
 
-## Prerequisites
-
-- Rust toolchain
-- Kotlin toolchain
-- Android SDK + NDK r24 (latest)
-
-## Debug
-
-Make sure you have switch to `debug` profile in cargo config, which could be found at `lib/build.gradle` 
-
-Run the command to build
-
-```sh
-./gradlew lib:assemble
-```
-
-Connect to a device or setup an AVD and check the functionality.
-
-```sh
-./gradlew appmock:connectedCheck
-```
-
-## Build Rust
-
-For checking if Rust code compiles without problems, you can use this command:
-
-```sh
-./gradlew cargoBuild
-```
-
-## Build AAR
-
-Before make a release build, ensure you have set `profile = "release"` in cargo config.
-
-```sh
-./gradlew lib:assemble
-```
-
-The generated release build is `lib/build/outputs/aar/lib-release.aar`
-
-## Publish New Version
-
-Ensure you have committed your changes.
-
-```sh
-./gradlew release
-```
-
-Then simply push to the repo.
-
-## Installation
-Add the following script to project's build.gradle
-
+## Importing the library
 **Github packages with credentials is a workaround since JCenter is shutdown**
+
+Add the following script to project's `build.gradle`:
+
 ```groovy
 allprojects {
     repositories{
@@ -77,14 +28,74 @@ allprojects {
 }
 ```
 
-And add arklib-android dependency to app module's build.gradle
+And add `arklib-android` dependency to app module's `build.gradle`:
 ```groovy
 implementation 'dev.arkbuilders:arklib:0.3.1'
 ```
 
-## Unit tests
+## Development of the library
 
-Unit tests require native Ark library file for host machine in project root directory.
+### Prerequisites
+
+- Rust toolchain
+- Kotlin toolchain
+- Android SDK + NDK r24 (latest)
+
+### Build Rust
+
+You need to have Rust targets installed:
+```sh
+rustup target add armv7-linux-androideabi
+rustup target add aarch64-linux-android
+rustup target add i686-linux-android
+rustup target add x86_64-linux-android
+```
+
+For checking if Rust code compiles without problems, you can use this command:
+
+```sh
+./gradlew cargoBuild
+```
+
+### Build AAR
+
+Before make a release build, ensure you have set `profile = "release"` in cargo config.
+
+```sh
+./gradlew lib:assemble
+```
+
+The generated release build is `lib/build/outputs/aar/lib-release.aar`
+
+### Publish New Version
+
+Ensure you have committed your changes.
+
+```sh
+./gradlew release
+```
+
+Then simply push to the repo.
+
+### Debug
+
+Make sure you have switch to `debug` profile in cargo config, which could be found at `lib/build.gradle` 
+
+Run the command to build
+
+```sh
+./gradlew lib:assemble
+```
+
+Connect to a device or setup an AVD and check the functionality.
+
+```sh
+./gradlew appmock:connectedCheck
+```
+
+### Unit tests
+
+Unit tests require native ARK library file for host machine in project root directory.
 
 - ```libarklib.so``` for Linux
 - ```libarklib.dylib``` for Mac
@@ -95,6 +106,11 @@ Unit tests depend on ```buildRustLibForHost``` gradle task (Linux, Mac)
 But you can do it manually:
 
 - Find out host architecture ```rustc -vV | sed -n 's|host: ||p'```
-- Build library ```cargo build --target $host_arch```
+- Change to `arklib` directory and build the library ```cargo build --target $host_arch```
 - Copy library from ```arklib/target/$host_arch/debug/libarklib.(so|dylib|dll)``` to project root directory
+
+Shortcut for Linux:
+```sh
+ARCH=$(rustc -vV | sed -n 's|host: ||p') cargo build --target $ARCH && cp arklib/target/$ARCH/debug/libarklib.so .
+```
 
