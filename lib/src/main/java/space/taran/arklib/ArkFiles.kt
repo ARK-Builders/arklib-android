@@ -10,21 +10,51 @@ import dev.arkbuilders.arklib.ArkFiles.STATS_FOLDER
 import dev.arkbuilders.arklib.ArkFiles.TAG_STORAGE_FILE
 import dev.arkbuilders.arklib.ArkFiles.THUMBNAILS_STORAGE_FOLDER
 import java.nio.file.Path
+import java.nio.file.Paths
+import kotlin.io.path.Path
+
+private class NativeArkFiles(
+    val ARK_FOLDER: String,
+    val STATS_FOLDER: String,
+    val FAVORITES_FILE: String,
+    val INDEX_PATH: String,
+    val TAG_STORAGE_FILE: String,
+    val SCORE_STORAGE_FILE: String,
+    val PROPERTIES_STORAGE_FOLDER: String,
+    val METADATA_STORAGE_FOLDER: String,
+    val PREVIEWS_STORAGE_FOLDER: String,
+    val THUMBNAILS_STORAGE_FOLDER: String,
+)
 
 object ArkFiles {
-    const val ARK_FOLDER = ".ark"
-    const val STATS_FOLDER = "stats"
-    const val FAVORITES_FILE = "favorites"
+    private val nativeArkFiles by lazy {
+        provideNativeArkFiles()
+    }
+
+    private external fun provideNativeArkFiles(): NativeArkFiles
+
+    val ARK_FOLDER by lazy { Path(nativeArkFiles.ARK_FOLDER) }
+    val STATS_FOLDER by lazy { Path(nativeArkFiles.STATS_FOLDER) }
+    val FAVORITES_FILE by lazy { Path(nativeArkFiles.FAVORITES_FILE) }
 
     // User-defined data
-    const val TAG_STORAGE_FILE = "user/tags"
-    const val SCORE_STORAGE_FILE = "user/scores"
-    const val PROPERTIES_STORAGE_FOLDER = "user/properties"
+    val TAG_STORAGE_FILE by lazy { Path(nativeArkFiles.TAG_STORAGE_FILE) }
+    val SCORE_STORAGE_FILE by lazy { Path(nativeArkFiles.SCORE_STORAGE_FILE) }
+    val PROPERTIES_STORAGE_FOLDER by lazy {
+        Path(nativeArkFiles.PROPERTIES_STORAGE_FOLDER)
+    }
 
     // Generated data
-    const val METADATA_STORAGE_FOLDER = "cache/metadata"
-    const val PREVIEWS_STORAGE_FOLDER = "cache/previews"
-    const val THUMBNAILS_STORAGE_FOLDER = "cache/thumbnails"
+    val METADATA_STORAGE_FOLDER by lazy {
+        Path(nativeArkFiles.METADATA_STORAGE_FOLDER)
+    }
+    val PREVIEWS_STORAGE_FOLDER by lazy {
+        Path(nativeArkFiles.PREVIEWS_STORAGE_FOLDER)
+    }
+    val THUMBNAILS_STORAGE_FOLDER by lazy {
+        Path(nativeArkFiles.THUMBNAILS_STORAGE_FOLDER)
+    }
+
 }
 
 fun Path.arkFolder() = resolve(ARK_FOLDER)

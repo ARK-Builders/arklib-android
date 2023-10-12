@@ -1,4 +1,4 @@
-package space.taran.arklib.utils
+package dev.arkbuilders.arklib.utils
 
 import dev.arkbuilders.arklib.utils.tickerFlow
 import dev.arkbuilders.arklib.utils.tryUnlock
