@@ -105,11 +105,11 @@ abstract class BaseStorage<V>(
         readFromDisk {
             for (addedId in it.keys - valueById.keys) {
                 Log.d(logPrefix, "resource $addedId appeared from outside")
-                setValue(addedId, it[addedId]!!)
+                setValue(addedId, it.getValue(addedId))
             }
 
             for (knownId in it.keys.intersect(valueById.keys)) {
-                val theirs = it[knownId]!!
+                val theirs = it.getValue(knownId)
                 val ours = getValue(knownId)
                 if (theirs != ours) {
                     //if `ours` or `theirs` was `null` they wouldn't conflict

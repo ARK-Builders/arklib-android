@@ -34,7 +34,7 @@ internal class MetadataStorage(
         val text = String(raw, Charsets.UTF_8)
         val json = Json.parseToJsonElement(text)
 
-        val kind = json.jsonObject[KIND]!!.jsonPrimitive.content
+        val kind = json.jsonObject.getValue(KIND).jsonPrimitive.content
 
         val metadata = when (Kind.valueOf(kind)) {
             Kind.IMAGE ->

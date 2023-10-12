@@ -52,7 +52,7 @@ class IndexProjection(
         val allPathsMap = root.allPaths()
         return root
             .allResources()
-            .filter { (id, res) -> predicate(res, allPathsMap[id]!!)  }
+            .filter { (id, res) -> predicate(res, allPathsMap.getValue(id))  }
     }
 
     override fun getResource(id: ResourceId): Resource? {
@@ -64,7 +64,7 @@ class IndexProjection(
         val allResourcesMap = root.allResources()
         return root
             .allPaths()
-            .filter { (id, path) -> predicate(allResourcesMap[id]!!, path) }
+            .filter { (id, path) -> predicate(allResourcesMap.getValue(id), path) }
     }
 
     override fun getPath(id: ResourceId): Path? {

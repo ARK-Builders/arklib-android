@@ -49,7 +49,7 @@ class RootIndex private constructor(val path: Path) : ResourceIndex {
         Log.d(LOG_PREFIX, "wrapping raw updates from arklib")
 
         val deleted = update.deleted.associateWith { id ->
-            val (resource, path) = resourceAndPathById[id]!!
+            val (resource, path) = resourceAndPathById.getValue(id)
             LostResource(path, resource)
         }
 

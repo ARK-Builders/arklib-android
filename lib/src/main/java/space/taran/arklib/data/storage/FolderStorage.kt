@@ -63,7 +63,7 @@ abstract class FolderStorage<V>(
     override fun remove(id: ResourceId) {
         super.remove(id)
 
-        if (diskTimestamps[id]!! >= Files.getLastModifiedTime(pathFromId(id))) {
+        if (diskTimestamps.getValue(id) >= Files.getLastModifiedTime(pathFromId(id))) {
             scope.launch(Dispatchers.IO) {
                 pathFromId(id).deleteIfExists()
             }
@@ -94,7 +94,10 @@ abstract class FolderStorage<V>(
                         val value = valueFromBinary(binary)
 
                         if (isNeutral(value)) {
-                            throw StorageException(label, "Empty value can be indicator of dirty write")
+                            throw StorageException(
+                                label,
+                                "Empty value can be indicator of dirty write"
+                            )
                         }
 
                         newValueById[id] = value
@@ -118,7 +121,7 @@ abstract class FolderStorage<V>(
         Files.createDirectories(storageFolder)
 
         val changedValueByIds = findChangedIds().map { id ->
-            id to valueById[id]!!
+            id to valueById.getValue(id)
         }.toMap()
 
         changedValueByIds.forEach {
