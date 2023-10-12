@@ -1,4 +1,4 @@
-package space.taran.arklib.lib
+package dev.arkbuilders.arklib.lib
 
 import dev.arkbuilders.arklib.computeId
 import junit.framework.TestCase.assertEquals

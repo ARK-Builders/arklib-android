@@ -1,4 +1,4 @@
-package space.taran.arklib.utils
+package dev.arkbuilders.arklib.utils
 
 import dev.arkbuilders.arklib.data.index.ResourceIndexRepo
 import dev.arkbuilders.arklib.data.meta.MetadataProcessorRepo
@@ -8,8 +8,8 @@ import dev.arkbuilders.arklib.user.score.ScoreStorageRepo
 import dev.arkbuilders.arklib.user.tags.TagsStorageRepo
 import io.mockk.coEvery
 import io.mockk.mockk
-import space.taran.arkfilepicker.PartialResult
-import space.taran.arkfilepicker.folders.FoldersRepo
+import dev.arkbuilders.arkfilepicker.PartialResult
+import dev.arkbuilders.arkfilepicker.folders.FoldersRepo
 
 object TestRepo {
     val folders = mockk<FoldersRepo>().apply {
