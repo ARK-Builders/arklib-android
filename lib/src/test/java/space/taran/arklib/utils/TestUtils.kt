@@ -1,4 +1,4 @@
-package dev.arkbuilders.arklib.utils
+package space.taran.arklib.utils
 
 import android.util.Log
 import io.mockk.every

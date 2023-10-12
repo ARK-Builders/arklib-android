@@ -1,6 +1,6 @@
-package dev.arkbuilders.arklib.utils
+package space.taran.arklib.utils
 
-import dev.arkbuilders.arkfilepicker.folders.RootAndFav
+import space.taran.arkfilepicker.folders.RootAndFav
 import java.nio.file.Path
 import java.util.UUID
 import kotlin.io.path.createFile

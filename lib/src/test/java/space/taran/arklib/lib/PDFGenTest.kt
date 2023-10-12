@@ -1,4 +1,4 @@
-package dev.arkbuilders.arklib.lib
+package space.taran.arklib.lib
 
 import android.graphics.Bitmap
 import dev.arkbuilders.arklib.PreviewQuality
@@ -19,9 +19,9 @@ import org.junit.AfterClass
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
-import dev.arkbuilders.arklib.utils.TestFiles
-import dev.arkbuilders.arklib.utils.TestRepo
-import dev.arkbuilders.arklib.utils.mockLog
+import space.taran.arklib.utils.TestFiles
+import space.taran.arklib.utils.TestRepo
+import space.taran.arklib.utils.mockLog
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.outputStream
 
