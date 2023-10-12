@@ -53,7 +53,7 @@ cargo {
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
-    implementation 'dev.arkbuilders:arkfilepicker:0.1.0'
+    implementation 'dev.arkbuilders:arkfilepicker:0.1.1'
 
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
