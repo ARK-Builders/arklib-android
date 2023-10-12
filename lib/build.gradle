@@ -40,7 +40,7 @@ android {
 }
 
 cargo {
-    module  = "../arklib"
+    module = "../arklib"
     libname = "arklib"
     targets = ["arm64", "x86", "x86_64", "arm"]
     // speed up local build
@@ -48,12 +48,12 @@ cargo {
     prebuiltToolchains = true
     // Set to "debug" to enable logging. Or "release" to make a production build.
     // https://github.com/mozilla/rust-android-gradle/issues/38
-    profile = gradle.startParameter.taskNames.any{it.toLowerCase().contains("debug")} ? "debug" : "release"
+    profile = gradle.startParameter.taskNames.any { it.toLowerCase().contains("debug") } ? "debug" : "release"
 }
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
-    implementation 'com.github.ARK-Builders:ark-filepicker:1d89c8c478'
+    implementation 'dev.arkbuilders:arkfilepicker:0.1.1'
 
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
@@ -68,6 +68,7 @@ dependencies {
     kapt "com.github.bumptech.glide:compiler:4.11.0"
 
     testImplementation "junit:junit:4.13.2"
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3'
     testImplementation "io.mockk:mockk:1.13.7"
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3"
 }
@@ -101,6 +102,7 @@ publishing {
             }
         }
     }
+
     repositories {
         maven {
             name = "GithubPackages"
@@ -114,6 +116,18 @@ publishing {
     }
 }
 
-repositories {
-    mavenCentral()
+tasks.withType(Test) {
+    systemProperty "java.library.path", rootDir
+}
+
+task buildRustLibForHost(type: Exec) {
+    standardOutput = new ByteArrayOutputStream()
+    commandLine 'sh', '../scripts/buildRustLibForHost.sh'
+    doLast {
+        println "Output: $standardOutput"
+    }
+}
+
+afterEvaluate {
+    testDebugUnitTest.dependsOn buildRustLibForHost
 }

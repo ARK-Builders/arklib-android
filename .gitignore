@@ -16,6 +16,10 @@ target
 .cargo
 .vscode
 
+libarklib.so
+libarklib.dylib
+libarklib.dll
+
 !arklib/.cargo
 arklib/.cargo/*
 !arklib/.cargo/config
