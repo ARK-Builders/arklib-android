@@ -12,6 +12,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'pl.allegro.tech.build.axion-release'
 
 android {
+    namespace 'dev.arkbuilders.arklib'
     compileSdkVersion 32
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
