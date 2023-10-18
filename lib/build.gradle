@@ -11,7 +11,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'pl.allegro.tech.build.axion-release'
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 32
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -40,7 +40,7 @@ android {
 }
 
 cargo {
-    module  = "../arklib"
+    module = "../arklib"
     libname = "arklib"
     targets = ["arm64", "x86", "x86_64", "arm"]
     // speed up local build
@@ -48,33 +48,27 @@ cargo {
     prebuiltToolchains = true
     // Set to "debug" to enable logging. Or "release" to make a production build.
     // https://github.com/mozilla/rust-android-gradle/issues/38
-    profile = gradle.startParameter.taskNames.any{it.toLowerCase().contains("debug")} ? "debug" : "release"
+    profile = gradle.startParameter.taskNames.any { it.toLowerCase().contains("debug") } ? "debug" : "release"
 }
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
+    implementation 'dev.arkbuilders:arkfilepicker:0.1.1'
+
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3"
-
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4"
     implementation 'org.apache.tika:tika-core:2.4.0'
-
-    implementation 'com.github.ARK-Builders:ark-filepicker:ae2c37ea87'
-
-    implementation 'com.github.wseemann:FFmpegMediaMetadataRetriever:1.0.14'
-
     implementation "com.google.dagger:dagger:2.41"
-
     implementation 'com.davemorrissey.labs:subsampling-scale-image-view-androidx:3.10.0'
+    implementation 'com.github.wseemann:FFmpegMediaMetadataRetriever:1.0.14'
     implementation 'com.github.MikeOrtiz:TouchImageView:3.1.1'
-
     implementation "com.github.bumptech.glide:glide:4.11.0"
     kapt "com.github.bumptech.glide:compiler:4.11.0"
-
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4"
-
+    
     testImplementation "junit:junit:4.13.2"
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3'
     testImplementation "io.mockk:mockk:1.13.7"
 }
 
@@ -107,6 +101,7 @@ publishing {
             }
         }
     }
+
     repositories {
         maven {
             name = "GithubPackages"
@@ -120,6 +115,18 @@ publishing {
     }
 }
 
-repositories {
-    mavenCentral()
+tasks.withType(Test) {
+    systemProperty "java.library.path", rootDir
+}
+
+task buildRustLibForHost(type: Exec) {
+    standardOutput = new ByteArrayOutputStream()
+    commandLine 'sh', '../scripts/buildRustLibForHost.sh'
+    doLast {
+        println "Output: $standardOutput"
+    }
+}
+
+afterEvaluate {
+    testDebugUnitTest.dependsOn buildRustLibForHost
 }
