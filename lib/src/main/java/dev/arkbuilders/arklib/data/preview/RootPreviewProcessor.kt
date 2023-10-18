@@ -105,7 +105,7 @@ class RootPreviewProcessor private constructor(
 
                 previews.saveBitmap(id, it.bitmap)
 
-                val thumbnail = Preview.downscale(it.bitmap)
+                val thumbnail = Preview.downscale(path, it.bitmap)
                 thumbnails.saveBitmap(id, thumbnail)
             }
             .onFailure {

@@ -1,11 +1,12 @@
 package dev.arkbuilders.arklib.data.preview
 
 import android.graphics.Bitmap
-import com.bumptech.glide.Glide
-import com.bumptech.glide.RequestBuilder
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
-import com.bumptech.glide.request.RequestOptions
+import android.util.Log
+import androidx.core.graphics.drawable.toBitmap
+import coil.ImageLoader
+import coil.request.ImageRequest
+import coil.size.Precision
+import coil.size.Scale
 import kotlinx.coroutines.Job
 import dev.arkbuilders.arklib.*
 import dev.arkbuilders.arklib.app
@@ -29,27 +30,35 @@ data class Preview(
 
     // we don't have fullscreen preview for
     // some kinds of resources, e.g. Image or PlainText
-    val onlyThumbnail: Boolean) {
+    val onlyThumbnail: Boolean
+) {
 
     internal companion object {
         const val THUMBNAIL_SIZE = 128
         const val COMPRESSION_QUALITY = 100
 
-        fun downscale(bitmap: Bitmap): Bitmap =
-            downscale(Glide.with(app).asBitmap().load(bitmap))
-
-        fun downscale(builder: RequestBuilder<Bitmap>): Bitmap =
-            builder
-                .apply(RequestOptions()
-                    .downsample(DownsampleStrategy.CENTER_INSIDE)
-                    .override(THUMBNAIL_SIZE)
-                    .fitCenter()
-                    .diskCacheStrategy(DiskCacheStrategy.NONE)
-                    .skipMemoryCache(true)
+        /**
+         * See [ImageRequest.Builder.data] for supported data types
+         * Note: pass [java.io.File] instead of [java.nio.file.Path]
+         */
+        suspend fun downscale(resource: Path, data: Any): Bitmap {
+            val request = ImageRequest.Builder(app)
+                .size(THUMBNAIL_SIZE)
+                .precision(Precision.EXACT)
+                .scale(Scale.FIT)
+                .data(data)
+                .listener(
+                    onError = { _, result ->
+                        Log.d(
+                            LOG_PREFIX,
+                            "Failed to downscale preview for $resource because ${result.throwable}"
+                        )
+                    },
                 )
-                .addListener(ImageUtils.glideExceptionListener<Bitmap>())
-                .submit()
-                .get()
+                .build()
+
+            return ImageUtils.arkImageLoader.execute(request).drawable!!.toBitmap()
+        }
     }
 }
 
@@ -67,7 +76,8 @@ class PreviewLocator(
     private val previewsDir = root.arkFolder().arkPreviews()
     private val thumbnailsDir = root.arkFolder().arkThumbnails()
 
-    fun fullscreen(): Path = processor.images[id] ?: previewsDir.resolve(id.toString())
+    fun fullscreen(): Path =
+        processor.images[id] ?: previewsDir.resolve(id.toString())
 
     fun thumbnail(): Path = thumbnailsDir.resolve(id.toString())
 
