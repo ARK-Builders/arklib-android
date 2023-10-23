@@ -1,7 +1,6 @@
 package dev.arkbuilders.arklib.utils
 
 import android.util.Log
-import dev.arkbuilders.arklib.utils.*
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll

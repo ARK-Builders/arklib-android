@@ -1,7 +1,6 @@
 package dev.arkbuilders.arklib.user.tags
 
 import dev.arkbuilders.arklib.ResourceId
-import dev.arkbuilders.arklib.data.index.ResourceIndex
 import dev.arkbuilders.arklib.data.index.RootIndex
 import dev.arkbuilders.arklib.data.storage.AggregateStorage
 import dev.arkbuilders.arklib.data.storage.Storage

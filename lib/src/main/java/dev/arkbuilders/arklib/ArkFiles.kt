@@ -10,7 +10,6 @@ import dev.arkbuilders.arklib.ArkFiles.STATS_FOLDER
 import dev.arkbuilders.arklib.ArkFiles.TAG_STORAGE_FILE
 import dev.arkbuilders.arklib.ArkFiles.THUMBNAILS_STORAGE_FOLDER
 import java.nio.file.Path
-import java.nio.file.Paths
 import kotlin.io.path.Path
 
 private class NativeArkFiles(

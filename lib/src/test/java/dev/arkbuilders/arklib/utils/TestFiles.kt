@@ -1,4 +1,4 @@
-package space.taran.arklib.utils
+package dev.arkbuilders.arklib.utils
 
 import dev.arkbuilders.arkfilepicker.folders.RootAndFav
 import java.nio.file.Path

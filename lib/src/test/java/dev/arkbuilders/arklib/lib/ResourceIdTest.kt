@@ -1,8 +1,7 @@
-package space.taran.arklib.lib
+package dev.arkbuilders.arklib.lib
 
 import dev.arkbuilders.arklib.computeId
 import junit.framework.TestCase.assertEquals
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import kotlin.io.path.createTempFile
