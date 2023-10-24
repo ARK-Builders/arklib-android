@@ -1,4 +1,4 @@
-package space.taran.arklib.data.storage
+package dev.arkbuilders.arklib.data.storage
 
 import dev.arkbuilders.arklib.ResourceId
 import dev.arkbuilders.arklib.data.index.RootIndex

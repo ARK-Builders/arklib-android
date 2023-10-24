@@ -1,16 +1,14 @@
 package dev.arkbuilders.arklib.data.index
 
 import android.util.Log
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import dev.arkbuilders.arklib.ResourceId
 import dev.arkbuilders.arklib.binding.BindingIndex
 import dev.arkbuilders.arklib.binding.RawUpdates
 import dev.arkbuilders.arklib.utils.withContextAndLock
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.sync.Mutex
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 

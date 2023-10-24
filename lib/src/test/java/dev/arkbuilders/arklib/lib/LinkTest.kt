@@ -1,4 +1,4 @@
-package space.taran.arklib.lib
+package dev.arkbuilders.arklib.lib
 
 import dev.arkbuilders.arklib.arkFolder
 import dev.arkbuilders.arklib.arkMetadata
@@ -11,7 +11,7 @@ import junit.framework.TestCase.assertNotNull
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.Test
-import space.taran.arklib.utils.TestFiles
+import dev.arkbuilders.arklib.utils.TestFiles
 import kotlin.io.path.exists
 
 class LinkTest {
