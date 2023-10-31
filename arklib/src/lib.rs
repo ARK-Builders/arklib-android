@@ -558,7 +558,7 @@ pub mod android {
         trace!("providing index for root {}", &root_string);
 
         let root: PathBuf = PathBuf::from(root_string);
-        arklib::provide_index(&root)
+         Ok(arklib::provide_index(&root)?)
     }
 
     fn provide_index_readonly(env: JNIEnv, jni_root: JString) -> Arc<RwLock<ResourceIndex>> {
