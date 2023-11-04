@@ -9,7 +9,16 @@ apply plugin: 'kotlin-parcelize'
 apply plugin: 'org.mozilla.rust-android-gradle.rust-android'
 apply plugin: 'maven-publish'
 apply plugin: 'pl.allegro.tech.build.axion-release'
+apply plugin: "org.sonarqube"
 
+sonarqube {
+    properties {
+        property "sonar.projectName", "arklib-android"
+        property "sonar.projectKey", "ARK-Builders_arklib-android"
+        property "sonar.organization", "ark-builders"
+        property "sonar.host.url", "https://sonarcloud.io"
+    }
+}
 android {
     compileSdkVersion 32
     compileOptions {
