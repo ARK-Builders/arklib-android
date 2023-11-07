@@ -20,7 +20,7 @@ sonarqube {
     }
 }
 android {
-    compileSdkVersion 32
+    compileSdkVersion 34
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -28,7 +28,7 @@ android {
 
     defaultConfig {
         minSdkVersion 26
-        targetSdkVersion 31
+        targetSdkVersion 34
     }
 
     buildTypes {
