@@ -13,11 +13,13 @@ object ImagePreviewGenerator: PreviewGenerator {
     }
 
     override suspend fun generate(path: Path, meta: Metadata): Result<Preview> {
-        val bitmap = Preview.downscale(
+        val thumbnailResult = Preview.downscale(
             path,
             path.toFile()
         )
 
-        return Result.success(Preview(bitmap, onlyThumbnail = true))
+        return thumbnailResult.map { thumbnail ->
+            Preview(thumbnail, onlyThumbnail = true)
+        }
     }
 }

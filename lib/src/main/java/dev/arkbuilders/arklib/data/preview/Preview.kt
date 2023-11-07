@@ -41,7 +41,7 @@ data class Preview(
          * See [ImageRequest.Builder.data] for supported data types
          * Note: pass [java.io.File] instead of [java.nio.file.Path]
          */
-        suspend fun downscale(resource: Path, data: Any): Bitmap {
+        suspend fun downscale(resource: Path, data: Any): Result<Bitmap> = runCatching {
             val request = ImageRequest.Builder(app)
                 .size(THUMBNAIL_SIZE)
                 .precision(Precision.EXACT)
@@ -57,7 +57,7 @@ data class Preview(
                 )
                 .build()
 
-            return ImageUtils.arkImageLoader.execute(request).drawable!!.toBitmap()
+            ImageUtils.arkImageLoader.execute(request).drawable!!.toBitmap()
         }
     }
 }

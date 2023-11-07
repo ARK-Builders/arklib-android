@@ -105,8 +105,10 @@ class RootPreviewProcessor private constructor(
 
                 previews.saveBitmap(id, it.bitmap)
 
-                val thumbnail = Preview.downscale(path, it.bitmap)
-                thumbnails.saveBitmap(id, thumbnail)
+                val thumbnailResult = Preview.downscale(path, it.bitmap)
+                thumbnailResult.onSuccess { thumbnail ->
+                    thumbnails.saveBitmap(id, thumbnail)
+                }
             }
             .onFailure {
                 Log.w(LOG_PREFIX, "Failed to generate preview for $path")

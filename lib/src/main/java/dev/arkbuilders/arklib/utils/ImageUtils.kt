@@ -1,5 +1,6 @@
 package dev.arkbuilders.arklib.utils
 
+import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.util.Log
 import android.widget.ImageView
@@ -87,7 +88,7 @@ object ImageUtils {
                 Log.d(LOG_PREFIX, "$prefix Cancel loading path[$image] id[$id]")
             },
             onError = { _, result ->
-                Log.d(
+                Log.w(
                     LOG_PREFIX,
                     "$prefix Error[${result.throwable}] when loading path[$image] id[$id]"
                 )
@@ -101,7 +102,7 @@ object ImageUtils {
     val arkImageLoader by lazy {
         ImageLoader.Builder(app)
             .components {
-                if (SDK_INT >= 28) {
+                if (SDK_INT >= Build.VERSION_CODES.P) {
                     add(ImageDecoderDecoder.Factory())
                 } else {
                     add(GifDecoder.Factory())
