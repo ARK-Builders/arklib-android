@@ -1,4 +1,4 @@
-package space.taran.arklib.user.tags
+package dev.arkbuilders.arklib.user.tags
 
 import dev.arkbuilders.arklib.arkFolder
 import dev.arkbuilders.arklib.arkTags
