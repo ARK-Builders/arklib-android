@@ -11,7 +11,7 @@ object ImageMetadataGenerator: MetadataGenerator {
         get() = setOf("bmp", "gif", "ico", "jpg", "jpeg",
             "png", "tif", "tiff",
             "webp", "heic", "heif",
-            "avif")
+            "avif", "svg")
 
     override val acceptedMimeTypes: Set<String>
         get() = setOf(
@@ -24,7 +24,8 @@ object ImageMetadataGenerator: MetadataGenerator {
             "image/tiff",
             "image/webp",
             "image/heic",
-            "image/avif"
+            "image/avif",
+            "image/svg+xml"
         )
 
     override fun generate(path: Path, resource: Resource): Result<Metadata> =

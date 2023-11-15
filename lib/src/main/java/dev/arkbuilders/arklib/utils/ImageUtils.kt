@@ -1,33 +1,28 @@
 package dev.arkbuilders.arklib.utils
 
-import android.graphics.drawable.Drawable
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.util.Log
 import android.widget.ImageView
-import com.bumptech.glide.Glide
-import com.bumptech.glide.Priority
-import com.bumptech.glide.load.DataSource
-import com.bumptech.glide.load.engine.GlideException
-import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
-import com.bumptech.glide.request.RequestListener
-import com.bumptech.glide.request.RequestOptions
-import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.target.Target
-import com.bumptech.glide.request.transition.Transition
-import com.bumptech.glide.signature.ObjectKey
+import coil.ImageLoader
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
+import coil.decode.SvgDecoder
+import coil.decode.VideoFrameDecoder
+import coil.load
+import coil.request.ImageRequest
+import coil.size.Scale
 import com.davemorrissey.labs.subscaleview.ImageSource
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
-import com.ortiz.touchview.TouchImageView
 import dev.arkbuilders.arklib.app
 import dev.arkbuilders.arklib.R
 import dev.arkbuilders.arklib.ResourceId
 import java.nio.file.Path
 
 object ImageUtils {
-    private const val MAX_GLIDE_SIZE = 1500
+    private const val MAX_SIZE = 1500
     private const val PREVIEW_SIGNATURE = "preview"
     private const val THUMBNAIL_SIGNATURE = "thumbnail"
-    const val APPEARANCE_DURATION = 300L
 
     fun iconForExtension(ext: String): Int {
         val drawableID = app.resources
@@ -41,30 +36,21 @@ object ImageUtils {
         else R.drawable.ic_file
     }
 
-    fun loadGlideZoomImage(id: ResourceId, image: Path, view: TouchImageView) =
-        Glide.with(view.context)
-            .load(image.toFile())
-            .apply(
-                RequestOptions()
-                    .priority(Priority.IMMEDIATE)
-                    .signature(ObjectKey("$id$PREVIEW_SIGNATURE"))
-                    .downsample(DownsampleStrategy.CENTER_INSIDE)
-                    .override(MAX_GLIDE_SIZE)
-            )
-            .into(object : CustomTarget<Drawable>() {
-                override fun onResourceReady(
-                    resource: Drawable,
-                    transition: Transition<in Drawable>?
-                ) {
-                    view.setImageDrawable(resource)
-                    view.animate().apply {
-                        duration = APPEARANCE_DURATION
-                        alpha(1f)
-                    }
-                }
-
-                override fun onLoadCleared(placeholder: Drawable?) {}
-            })
+    fun loadImage(
+        id: ResourceId,
+        image: Path,
+        view: ImageView,
+        limitSize: Boolean
+    ) {
+        val signature = "$id$PREVIEW_SIGNATURE"
+        view.load(image.toFile(), arkImageLoader) {
+            if (limitSize)
+                size(MAX_SIZE)
+            diskCacheKey(signature)
+            memoryCacheKey(signature)
+            logListener("[Preview]", id, image)
+        }
+    }
 
     fun loadSubsamplingImage(image: Path, view: SubsamplingScaleImageView) {
         view.orientation = SubsamplingScaleImageView.ORIENTATION_USE_EXIF
@@ -77,42 +63,56 @@ object ImageUtils {
         placeHolder: Int,
         view: ImageView
     ) {
-        Log.v(LOG_PREFIX, "loading image $image")
+        val signature = "$id$THUMBNAIL_SIGNATURE"
 
-        Glide.with(view.context)
-            .load(image?.toFile())
-            .placeholder(placeHolder)
-            .signature(ObjectKey("$id$THUMBNAIL_SIGNATURE"))
-            .transition(DrawableTransitionOptions.withCrossFade())
-            .into(view)
-    }
-
-    fun <T> glideExceptionListener() = object : RequestListener<T> {
-        override fun onLoadFailed(
-            e: GlideException?,
-            model: Any?,
-            target: Target<T>?,
-            isFirstResource: Boolean
-        ): Boolean {
-            Log.w(
-                LOG_PREFIX,
-                "load failed with message: ${
-                e?.message
-                } for target of type: ${
-                target?.javaClass?.canonicalName
-                }"
-            )
-            return true
+        view.load(image?.toFile(), arkImageLoader) {
+            scale(Scale.FILL)
+            placeholder(placeHolder)
+            diskCacheKey(signature)
+            memoryCacheKey(signature)
+            crossfade(true)
+            logListener("[Thumbnail]", id, image)
         }
-
-        override fun onResourceReady(
-            resource: T,
-            model: Any?,
-            target: Target<T>?,
-            dataSource: DataSource?,
-            isFirstResource: Boolean
-        ) = false
     }
+
+    fun ImageRequest.Builder.logListener(
+        prefix: String,
+        id: ResourceId,
+        image: Path?
+    ) {
+        listener(
+            onStart = {
+                Log.d(LOG_PREFIX, "$prefix Start loading path[$image] id[$id]")
+            },
+            onCancel = {
+                Log.d(LOG_PREFIX, "$prefix Cancel loading path[$image] id[$id]")
+            },
+            onError = { _, result ->
+                Log.w(
+                    LOG_PREFIX,
+                    "$prefix Error[${result.throwable}] when loading path[$image] id[$id]"
+                )
+            },
+            onSuccess = { _, result ->
+                Log.d(LOG_PREFIX, "$prefix Loaded path[$image] id[$id]")
+            },
+        )
+    }
+
+    val arkImageLoader by lazy {
+        ImageLoader.Builder(app)
+            .components {
+                if (SDK_INT >= Build.VERSION_CODES.P) {
+                    add(ImageDecoderDecoder.Factory())
+                } else {
+                    add(GifDecoder.Factory())
+                }
+                add(SvgDecoder.Factory())
+                add(VideoFrameDecoder.Factory())
+            }
+            .build()
+    }
+
 }
 
 private const val LOG_PREFIX: String = "[images]"

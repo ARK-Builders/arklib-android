@@ -4,13 +4,16 @@ import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.util.Log
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
+import androidx.core.graphics.drawable.toBitmap
+import coil.request.ImageRequest
+import coil.size.Precision
+import coil.size.Scale
 import dev.arkbuilders.arklib.app
 import dev.arkbuilders.arklib.data.meta.Kind
 import dev.arkbuilders.arklib.data.meta.Metadata
 import dev.arkbuilders.arklib.data.preview.Preview
 import dev.arkbuilders.arklib.data.preview.PreviewGenerator
+import dev.arkbuilders.arklib.utils.ImageUtils
 import java.nio.file.Path
 import kotlin.io.path.name
 import wseemann.media.FFmpegMediaMetadataRetriever
@@ -26,7 +29,10 @@ object VideoPreviewGenerator : PreviewGenerator {
             Preview(it, onlyThumbnail = false)
         }
 
-    private fun generateBitmap(path: Path, durationMillis: Long?): Result<Bitmap> {
+    private suspend fun generateBitmap(
+        path: Path,
+        durationMillis: Long?
+    ): Result<Bitmap> {
         val timeMicros = (durationMillis ?: 10000) / 1000 / 2
 
         val retriever = FFmpegMediaMetadataRetriever()
@@ -36,7 +42,7 @@ object VideoPreviewGenerator : PreviewGenerator {
             // Trying 3 ways to get preview image for video.
             // 1. using FFmpegMediaMetadataRetriever
             // 2. using MediaMetadataRetriever
-            // 3. using Glide
+            // 3. using Coil
             val mainBitmap = retriever.frameAtTime ?: let {
                 MediaMetadataRetriever().let { mediaMetadataRetriever ->
                     try {
@@ -61,10 +67,13 @@ object VideoPreviewGenerator : PreviewGenerator {
                         }
                     }
                     bitmap
-                } ?: Glide.with(app.baseContext).asBitmap()
-                    .load(path.toFile())
-                    .diskCacheStrategy(DiskCacheStrategy.NONE)
-                    .submit().get()
+                } ?: let {
+                    val request = ImageRequest.Builder(app)
+                        .data(path.toFile())
+                        .build()
+
+                    ImageUtils.arkImageLoader.execute(request).drawable!!.toBitmap()
+                }
             }
 
             if (mainBitmap != null) {

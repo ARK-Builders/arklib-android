@@ -1,7 +1,5 @@
 package dev.arkbuilders.arklib.data.preview.generator
 
-import com.bumptech.glide.Glide
-import dev.arkbuilders.arklib.app
 import dev.arkbuilders.arklib.data.meta.Kind
 import dev.arkbuilders.arklib.data.meta.Metadata
 import dev.arkbuilders.arklib.data.preview.Preview
@@ -15,10 +13,13 @@ object ImagePreviewGenerator: PreviewGenerator {
     }
 
     override suspend fun generate(path: Path, meta: Metadata): Result<Preview> {
-        val bitmap = Preview.downscale(
-            Glide.with(app).asBitmap().load(path.toFile())
+        val thumbnailResult = Preview.downscale(
+            path,
+            path.toFile()
         )
 
-        return Result.success(Preview(bitmap, onlyThumbnail = true))
+        return thumbnailResult.map { thumbnail ->
+            Preview(thumbnail, onlyThumbnail = true)
+        }
     }
 }
