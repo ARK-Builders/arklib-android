@@ -45,7 +45,7 @@ implementation 'dev.arkbuilders:arklib:0.3.1'
 - Kotlin toolchain
 - Android SDK + NDK r24 (latest)
 
-### Build Rust
+### Build Rust library
 
 You need to have Rust targets installed:
 ```sh
@@ -55,11 +55,30 @@ rustup target add i686-linux-android
 rustup target add x86_64-linux-android
 ```
 
+#### Compile Rust (option 1)
+
 For checking if Rust code compiles without problems, you can use this command:
 
 ```sh
 ./gradlew cargoBuild
 ```
+
+The above command should generates `libarklib.so` file inside `./arklib/target/<arch>/<buildVariant>` folder.
+If the build is failed, which leads to no generated `.so` files, there's a build alternative
+which doesn't require you to install extra dependencies:
+
+https://github.com/bbqsrc/cargo-ndk
+
+#### Compile Rust (option 2)
+
+Using `cargo-ndk`, you can generate the `libarklib.so` files in two steps:
+
+```sh
+- cd arklib
+- cargo ndk -o ./jniLibs build
+```
+
+Running the above two commands outputs same `.so` files as `./gradlew cargoBuild` does.
 
 ### Build AAR
 
