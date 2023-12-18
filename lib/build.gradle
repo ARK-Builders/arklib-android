@@ -48,7 +48,7 @@ cargo {
     prebuiltToolchains = true
     // Set to "debug" to enable logging. Or "release" to make a production build.
     // https://github.com/mozilla/rust-android-gradle/issues/38
-    profile = gradle.startParameter.taskNames.any{it.toLowerCase().contains("debug")} ? "debug" : "release"
+    profile =  gradle.startParameter.taskNames.any{it.toLowerCase().contains("debug")} ? "debug" : "release"
 }
 
 dependencies {

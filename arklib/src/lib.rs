@@ -13,10 +13,7 @@ pub mod android {
     use std::str::FromStr;
     use std::sync::{Arc, RwLock};
     use std::{fs::File, path::Path};
-
-    use canonical_path::CanonicalPathBuf;
-
-    use anyhow::Error;
+    
     use image::EncodableLayout;
     use log::{debug, trace, Level};
     use url::Url;
@@ -27,6 +24,8 @@ pub mod android {
     use jni::JNIEnv;
     extern crate android_logger;
     use android_logger::Config;
+    
+    pub type Result<T> = std::result::Result<T, arklib::ArklibError>;
 
     #[no_mangle]
     pub extern "C" fn Java_dev_arkbuilders_arklib_LibKt_initRustLogger(_: JNIEnv, _: JClass) {
@@ -477,7 +476,7 @@ pub mod android {
             Ok(rwlock) => {
                 let mut index = rwlock.write().unwrap();
                 index
-                    .update_one(CanonicalPathBuf::canonicalize(path).unwrap(), old_id)
+                    .update_one(&path, old_id)
                     .unwrap()
             }
             Err(err) => {
@@ -569,7 +568,7 @@ pub mod android {
         .into()
     }
 
-    fn provide_index(env: JNIEnv, jni_root: JString) -> Result<Arc<RwLock<ResourceIndex>>, Error> {
+    fn provide_index(env: JNIEnv, jni_root: JString) -> Result<Arc<RwLock<ResourceIndex>>> {
         let root_string: String = env.get_string(jni_root).unwrap().into();
         trace!("providing index for root {}", &root_string);
 
