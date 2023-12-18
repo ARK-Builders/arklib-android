@@ -1,4 +1,3 @@
-#[cfg(target_os = "android")]
 #[allow(non_snake_case)]
 pub mod android {
     extern crate jni;
@@ -568,7 +567,46 @@ pub mod android {
         .into()
     }
 
-    fn provide_index(env: JNIEnv, jni_root: JString) -> Result<Arc<RwLock<ResourceIndex>>> {
+    #[no_mangle]
+    pub extern "C" fn Java_dev_arkbuilders_arklib_ArkFiles_provideNativeArkFiles(
+        env: JNIEnv,
+        _: JClass,
+    ) -> jobject {
+        let jni_ark = env.new_string(arklib::ARK_FOLDER).unwrap().into();
+        let jni_stats = env.new_string(arklib::STATS_FOLDER).unwrap().into();
+        let jni_favs = env.new_string(arklib::FAVORITES_FILE).unwrap().into();
+        let jni_score = env.new_string(arklib::SCORE_STORAGE_FILE).unwrap().into();
+        let jni_tag = env.new_string(arklib::TAG_STORAGE_FILE).unwrap().into();
+        let jni_props = env.new_string(arklib::PROPERTIES_STORAGE_FOLDER).unwrap().into();
+        let jni_index = env.new_string(arklib::INDEX_PATH).unwrap().into();
+        let jni_meta = env.new_string(arklib::METADATA_STORAGE_FOLDER).unwrap().into();
+        let jni_previews = env.new_string(arklib::PREVIEWS_STORAGE_FOLDER).unwrap().into();
+        let jni_thumbnails = env.new_string(arklib::THUMBNAILS_STORAGE_FOLDER).unwrap().into();
+
+        let args_count = 10;
+        let args = "Ljava/lang/String;".repeat(args_count);
+
+        env.new_object(
+            "dev/arkbuilders/arklib/NativeArkFiles",
+            format!("({args})V"),
+            &[
+                jni_ark,
+                jni_stats,
+                jni_favs,
+                jni_index,
+                jni_tag,
+                jni_score,
+                jni_props,
+                jni_meta,
+                jni_previews,
+                jni_thumbnails,
+            ],
+        )
+        .unwrap()
+        .into_inner()
+    }
+
+    fn provide_index(env: JNIEnv, jni_root: JString) -> Result<Arc<RwLock<ResourceIndex>>, Error> {
         let root_string: String = env.get_string(jni_root).unwrap().into();
         trace!("providing index for root {}", &root_string);
 

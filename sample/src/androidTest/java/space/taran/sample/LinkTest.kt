@@ -4,6 +4,9 @@ import android.Manifest
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import de.mannodermaus.junit5.ActivityScenarioExtension
+import dev.arkbuilders.arklib.arkFolder
+import dev.arkbuilders.arklib.arkMetadata
+import dev.arkbuilders.arklib.arkPreviews
 import junit.framework.Assert.assertNotNull
 import org.junit.Rule
 import org.junit.jupiter.api.MethodOrderer
@@ -52,8 +55,8 @@ class LinkTest {
 
         val linkId = getLinkHash(url)
         assert(root.resolve("$linkId.link").exists())
-        assert(root.resolve(".ark").resolve("meta").resolve(linkId).exists())
-        assert(root.resolve(".ark").resolve("previews").resolve(linkId).exists())
+        assert(root.arkFolder().arkMetadata().resolve(linkId).exists())
+        assert(root.arkFolder().arkPreviews().resolve(linkId).exists())
     }
 
     @Test
