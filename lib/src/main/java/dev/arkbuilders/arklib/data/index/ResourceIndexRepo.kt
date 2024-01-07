@@ -1,9 +1,9 @@
 package dev.arkbuilders.arklib.data.index
 
+import dev.arkbuilders.arklib.data.folders.FoldersRepo
+import dev.arkbuilders.arklib.data.folders.RootAndFav
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import dev.arkbuilders.arkfilepicker.folders.FoldersRepo
-import dev.arkbuilders.arkfilepicker.folders.RootAndFav
 import java.nio.file.Path
 
 class ResourceIndexRepo(
@@ -25,7 +25,7 @@ class ResourceIndexRepo(
 
             if (folders.fav != null) {
                 val rootPath = folders.root!!
-                val favoritePath = rootPath.resolve(folders.fav!!)
+                val favoritePath = rootPath.resolve(folders.fav)
 
                 return@withContext IndexProjection(index) { _, path ->
                     path.startsWith(favoritePath)
