@@ -19,7 +19,7 @@ internal val ANDROID_DIRECTORY: Path = Path("Android")
 
 val INTERNAL_STORAGE = Path("/storage/emulated/0")
 
-internal class DeviceStorageUtils(private val appContext: Context) {
+class DeviceStorageUtils(private val appContext: Context) {
     fun listStorages(): List<Path> =
         appContext.getExternalFilesDirs(null)
             .toList()
