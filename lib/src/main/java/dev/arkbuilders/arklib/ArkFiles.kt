@@ -2,9 +2,11 @@ package dev.arkbuilders.arklib
 
 import dev.arkbuilders.arklib.ArkFiles.ARK_FOLDER
 import dev.arkbuilders.arklib.ArkFiles.FAVORITES_FILE
+import dev.arkbuilders.arklib.ArkFiles.GLOBAL_FOLDER
 import dev.arkbuilders.arklib.ArkFiles.METADATA_STORAGE_FOLDER
 import dev.arkbuilders.arklib.ArkFiles.PREVIEWS_STORAGE_FOLDER
 import dev.arkbuilders.arklib.ArkFiles.PROPERTIES_STORAGE_FOLDER
+import dev.arkbuilders.arklib.ArkFiles.GLOBAL_ROOTS_FILE
 import dev.arkbuilders.arklib.ArkFiles.SCORE_STORAGE_FILE
 import dev.arkbuilders.arklib.ArkFiles.STATS_FOLDER
 import dev.arkbuilders.arklib.ArkFiles.TAG_STORAGE_FILE
@@ -35,6 +37,8 @@ object ArkFiles {
     val ARK_FOLDER by lazy { Path(nativeArkFiles.ARK_FOLDER) }
     val STATS_FOLDER by lazy { Path(nativeArkFiles.STATS_FOLDER) }
     val FAVORITES_FILE by lazy { Path(nativeArkFiles.FAVORITES_FILE) }
+    const val GLOBAL_FOLDER = ".ark-global"
+    const val GLOBAL_ROOTS_FILE = "roots"
 
     // User-defined data
     val TAG_STORAGE_FILE by lazy { Path(nativeArkFiles.TAG_STORAGE_FILE) }
@@ -59,6 +63,8 @@ object ArkFiles {
 fun Path.arkFolder() = resolve(ARK_FOLDER)
 fun Path.arkStats() = resolve(STATS_FOLDER)
 fun Path.arkFavorites() = resolve(FAVORITES_FILE)
+fun Path.arkGlobal() = resolve(GLOBAL_FOLDER)
+fun Path.arkGlobalRoots() = resolve(GLOBAL_ROOTS_FILE)
 
 // User-defined data
 fun Path.arkTags() = resolve(TAG_STORAGE_FILE)

@@ -1,6 +1,6 @@
 package dev.arkbuilders.arklib.utils
 
-import dev.arkbuilders.arkfilepicker.folders.RootAndFav
+import dev.arkbuilders.arklib.data.folders.RootAndFav
 import java.nio.file.Path
 import java.util.UUID
 import kotlin.io.path.createFile
