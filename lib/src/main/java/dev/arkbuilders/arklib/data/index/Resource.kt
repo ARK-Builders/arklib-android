@@ -16,7 +16,7 @@ data class Resource(
     val modified: FileTime,
 ) {
 
-    fun size() = id.dataSize
+    fun size() = 0 // DO NOT MERGE
 
     companion object {
         fun compute(

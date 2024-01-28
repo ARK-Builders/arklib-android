@@ -19,7 +19,7 @@ pub mod android {
 
     use jni::objects::{JClass, JObject, JString, JValue};
     use jni::signature::{JavaType, Primitive};
-    use jni::sys::{jboolean, jint, jlong, jobject, jstring, JNI_FALSE, JNI_TRUE};
+    use jni::sys::{jboolean, jint, jobject, jstring, JNI_FALSE, JNI_TRUE};
     use jni::JNIEnv;
     extern crate android_logger;
     use android_logger::Config;
@@ -58,16 +58,13 @@ pub mod android {
             )
             .unwrap();
 
-        let data_size: jlong = resourceId.data_size as usize as i64;
-        let crc32: jlong = resourceId.crc32 as usize as i64;
-
         trace!("after uszie");
         let resource_id = env
             .call_static_method_unchecked(
                 resource_id_cls,
                 create_resource_id_fn,
                 JavaType::Object(String::from("dev/arkbuilders/arklib/ResourceId")),
-                &[JValue::from(data_size), JValue::from(crc32)],
+                &[JValue::from(env.new_string(resourceId.to_string()).unwrap())],
             )
             .unwrap()
             .l()

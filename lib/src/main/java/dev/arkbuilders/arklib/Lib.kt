@@ -27,30 +27,18 @@ data class LinkData(
 
 @Parcelize
 data class ResourceId(
-    val dataSize: Long,
-    val crc32: Long
+    val blake3: String
 ) : Parcelable {
 
-    override fun toString() =
-        dataSize.toString()
-            .plus(KEY_VALUE_SEPARATOR)
-            .plus(crc32)
+    override fun toString() = blake3
 
     companion object {
 
-        const val KEY_VALUE_SEPARATOR = "-"
-
-        fun fromString(str: String): ResourceId {
-            val parts = str.split(KEY_VALUE_SEPARATOR)
-                return ResourceId(
-                    parts[0].toLong(),
-                    parts[1].toLong()
-           )
-        }
+        fun fromString(str: String) = create(str)
 
         @JvmStatic
-        fun create(dataSize: Long, crc32: Long): ResourceId =
-            ResourceId(dataSize, crc32)
+        fun create(blake3: String): ResourceId =
+            ResourceId(blake3)
     }
 }
 
