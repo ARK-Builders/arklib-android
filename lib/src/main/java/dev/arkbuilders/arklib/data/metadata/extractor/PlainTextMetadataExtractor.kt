@@ -1,11 +1,11 @@
-package dev.arkbuilders.arklib.data.meta.generator
+package dev.arkbuilders.arklib.data.metadata.extractor
 
 import dev.arkbuilders.arklib.data.index.Resource
-import dev.arkbuilders.arklib.data.meta.Metadata
-import dev.arkbuilders.arklib.data.meta.MetadataGenerator
+import dev.arkbuilders.arklib.data.metadata.Metadata
+import dev.arkbuilders.arklib.data.metadata.MetadataExtractor
 import java.nio.file.Path
 
-object PlainTextMetadataGenerator: MetadataGenerator {
+object PlainTextMetadataExtractor: MetadataExtractor {
 
     override val acceptedExtensions: Set<String>
         get() = setOf("txt", "log", "text",
@@ -14,6 +14,6 @@ object PlainTextMetadataGenerator: MetadataGenerator {
     override val acceptedMimeTypes: Set<String>
         get() = setOf("text/plain")
 
-    override fun generate(path: Path, resource: Resource): Result<Metadata> =
+    override fun extract(path: Path, resource: Resource): Result<Metadata> =
         Result.success(Metadata.PlainText())
 }

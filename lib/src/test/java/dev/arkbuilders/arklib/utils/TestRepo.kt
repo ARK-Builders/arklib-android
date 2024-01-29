@@ -2,7 +2,7 @@ package dev.arkbuilders.arklib.utils
 
 import dev.arkbuilders.arklib.data.folders.FoldersRepo
 import dev.arkbuilders.arklib.data.index.ResourceIndexRepo
-import dev.arkbuilders.arklib.data.meta.MetadataProcessorRepo
+import dev.arkbuilders.arklib.data.metadata.MetadataProcessorRepo
 import dev.arkbuilders.arklib.data.preview.PreviewProcessorRepo
 import dev.arkbuilders.arklib.user.properties.PropertiesStorageRepo
 import dev.arkbuilders.arklib.user.score.ScoreStorageRepo

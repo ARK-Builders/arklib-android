@@ -6,11 +6,9 @@ import android.net.Uri
 import android.util.Log
 import androidx.core.graphics.drawable.toBitmap
 import coil.request.ImageRequest
-import coil.size.Precision
-import coil.size.Scale
 import dev.arkbuilders.arklib.app
-import dev.arkbuilders.arklib.data.meta.Kind
-import dev.arkbuilders.arklib.data.meta.Metadata
+import dev.arkbuilders.arklib.data.metadata.Kind
+import dev.arkbuilders.arklib.data.metadata.Metadata
 import dev.arkbuilders.arklib.data.preview.Preview
 import dev.arkbuilders.arklib.data.preview.PreviewGenerator
 import dev.arkbuilders.arklib.utils.ImageUtils

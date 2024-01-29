@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import dev.arkbuilders.arklib.*
 import dev.arkbuilders.arklib.data.index.RootIndex
-import dev.arkbuilders.arklib.data.meta.*
+import dev.arkbuilders.arklib.data.metadata.*
 import dev.arkbuilders.arklib.data.processor.RootProcessor
 import dev.arkbuilders.arklib.data.storage.BitmapStorage
 import java.nio.file.Path

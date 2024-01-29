@@ -1,7 +1,7 @@
 package dev.arkbuilders.arklib.data.stats
 
 import dev.arkbuilders.arklib.ResourceId
-import dev.arkbuilders.arklib.data.meta.Kind
+import dev.arkbuilders.arklib.data.metadata.Kind
 import dev.arkbuilders.arklib.user.tags.Tag
 import dev.arkbuilders.arklib.user.tags.Tags
 
