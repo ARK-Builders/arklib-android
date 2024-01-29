@@ -1,14 +1,14 @@
-package dev.arkbuilders.arklib.data.meta.generator
+package dev.arkbuilders.arklib.data.metadata.extractor
 
 import android.net.Uri
 import dev.arkbuilders.arklib.app
 import dev.arkbuilders.arklib.data.index.Resource
-import dev.arkbuilders.arklib.data.meta.Metadata
-import dev.arkbuilders.arklib.data.meta.MetadataGenerator
+import dev.arkbuilders.arklib.data.metadata.Metadata
+import dev.arkbuilders.arklib.data.metadata.MetadataExtractor
 import wseemann.media.FFmpegMediaMetadataRetriever
 import java.nio.file.Path
 
-object VideoMetadataGenerator: MetadataGenerator {
+object VideoMetadataExtractor: MetadataExtractor {
 
     override val acceptedExtensions: Set<String>
         get() = setOf("mp4", "avi", "mkv", "mov", "wmv", "flv", "webm", "ts", "mpg")
@@ -16,7 +16,7 @@ object VideoMetadataGenerator: MetadataGenerator {
     override val acceptedMimeTypes: Set<String>
         get() = setOf("video/mp4")
 
-    override fun generate(path: Path, resource: Resource): Result<Metadata> {
+    override fun extract(path: Path, resource: Resource): Result<Metadata> {
         val retriever = FFmpegMediaMetadataRetriever()
 
         val uri = Uri.fromFile(path.toFile())

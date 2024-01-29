@@ -3,8 +3,8 @@ package dev.arkbuilders.arklib.data.preview.generator
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import dev.arkbuilders.arklib.PreviewQuality
-import dev.arkbuilders.arklib.data.meta.Kind
-import dev.arkbuilders.arklib.data.meta.Metadata
+import dev.arkbuilders.arklib.data.metadata.Kind
+import dev.arkbuilders.arklib.data.metadata.Metadata
 import dev.arkbuilders.arklib.data.preview.Preview
 import dev.arkbuilders.arklib.data.preview.PreviewGenerator
 import dev.arkbuilders.arklib.pdfPreviewGenerate
