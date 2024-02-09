@@ -73,7 +73,7 @@ dependencies {
     implementation 'com.davemorrissey.labs:subsampling-scale-image-view-androidx:3.10.0'
     implementation 'com.github.wseemann:FFmpegMediaMetadataRetriever:1.0.14'
 
-    def coilVersion = "2.4.0"
+    def coilVersion = "2.5.0"
     implementation "io.coil-kt:coil:$coilVersion"
     implementation "io.coil-kt:coil-gif:$coilVersion"
     implementation "io.coil-kt:coil-svg:$coilVersion"
