@@ -1,4 +1,4 @@
-package dev.arkbuilders.arklib.data.meta
+package dev.arkbuilders.arklib.data.metadata
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.encodeToString
@@ -14,6 +14,7 @@ internal class MetadataStorage(
 ) : FolderStorage<Metadata>(
     "metadata", scope, path, MonoidIsNotUsed()
 ) {
+
     override fun isNeutral(value: Metadata): Boolean = false
 
     override suspend fun valueToBinary(value: Metadata): ByteArray {
@@ -32,9 +33,10 @@ internal class MetadataStorage(
 
     override suspend fun valueFromBinary(raw: ByteArray): Metadata {
         val text = String(raw, Charsets.UTF_8)
-        val json = Json.parseToJsonElement(text)
+        if (text.isEmpty()) return Metadata.Unknown()
 
-        val kind = json.jsonObject[KIND]!!.jsonPrimitive.content
+        val json = Json.parseToJsonElement(text)
+        val kind = json.jsonObject[KIND]?.jsonPrimitive?.content ?: return Metadata.Unknown()
 
         val metadata = when (Kind.valueOf(kind)) {
             Kind.IMAGE ->
