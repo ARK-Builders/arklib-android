@@ -1,7 +1,7 @@
 package dev.arkbuilders.arklib.data.preview
 
 import android.util.Log
-import dev.arkbuilders.arklib.data.meta.Metadata
+import dev.arkbuilders.arklib.data.metadata.Metadata
 import dev.arkbuilders.arklib.data.preview.generator.ImagePreviewGenerator
 import dev.arkbuilders.arklib.data.preview.generator.PdfPreviewGenerator
 import dev.arkbuilders.arklib.data.preview.generator.TxtPreviewGenerator

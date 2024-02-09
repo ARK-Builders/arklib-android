@@ -3,8 +3,8 @@ package dev.arkbuilders.arklib.data.preview
 import kotlinx.coroutines.CoroutineScope
 import dev.arkbuilders.arklib.data.index.ResourceIndex
 import dev.arkbuilders.arklib.data.index.RootIndex
-import dev.arkbuilders.arklib.data.meta.MetadataProcessorRepo
-import dev.arkbuilders.arklib.data.meta.RootMetadataProcessor
+import dev.arkbuilders.arklib.data.metadata.MetadataProcessorRepo
+import dev.arkbuilders.arklib.data.metadata.RootMetadataProcessor
 import java.nio.file.Path
 
 class PreviewProcessorRepo(

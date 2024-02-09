@@ -1,5 +1,6 @@
 package dev.arkbuilders.arklib.data.storage
 
+import android.os.Build
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,10 +13,10 @@ import java.nio.file.Path
 import java.nio.file.attribute.FileTime
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
+import java.util.stream.Collectors
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.isDirectory
 import kotlin.io.path.relativeTo
-import kotlin.streams.toList
 
 abstract class FolderStorage<V>(
     private val label: String,
@@ -78,7 +79,7 @@ abstract class FolderStorage<V>(
         val newTimestamps: ConcurrentHashMap<ResourceId, FileTime> =
             ConcurrentHashMap()
 
-        val jobs = Files.list(storageFolder)
+        val stream = Files.list(storageFolder)
             .filter { !it.isDirectory() }
             .map { path ->
                 Log.v(logPrefix, "reading value from $path")
@@ -101,7 +102,13 @@ abstract class FolderStorage<V>(
                         newTimestamps[id] = newTimestamp
                     }
                 }
-            }.toList()
+            }
+
+        val jobs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            stream.toList()
+        } else {
+            stream.collect(Collectors.toList())
+        }
 
         jobs.joinAll()
 

@@ -1,4 +1,4 @@
-package dev.arkbuilders.arklib.data.meta
+package dev.arkbuilders.arklib.data.metadata
 
 import kotlinx.serialization.Serializable
 import dev.arkbuilders.arklib.data.processor.AggregateProcessor

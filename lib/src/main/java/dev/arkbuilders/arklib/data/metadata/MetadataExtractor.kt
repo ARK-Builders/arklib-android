@@ -1,21 +1,21 @@
-package dev.arkbuilders.arklib.data.meta
+package dev.arkbuilders.arklib.data.metadata
 
 import android.util.Log
 import dev.arkbuilders.arklib.data.index.Resource
-import dev.arkbuilders.arklib.data.meta.generator.*
+import dev.arkbuilders.arklib.data.metadata.extractor.*
 import dev.arkbuilders.arklib.utils.detectMimeType
 import dev.arkbuilders.arklib.utils.extension
 import java.nio.file.Path
 import kotlin.system.measureTimeMillis
 
-interface MetadataGenerator {
+interface MetadataExtractor {
 
     val acceptedExtensions: Set<String>
 
     // https://mimetype.io/
     val acceptedMimeTypes: Set<String>
 
-    fun generate(path: Path, resource: Resource): Result<Metadata>
+    fun extract(path: Path, resource: Resource): Result<Metadata>
 
     fun isValid(path: Path): Boolean {
         if (acceptedExtensions.contains(extension(path))) {
@@ -27,8 +27,8 @@ interface MetadataGenerator {
     }
 
     companion object {
-        fun generate(path: Path, resource: Resource): Result<Metadata> {
-            val generator = GENERATORS.find {
+        fun extract(path: Path, resource: Resource): Result<Metadata> {
+            val generator = EXTRACTORS.find {
                 it.isValid(path)
             } ?: let {
                 Log.d(LOG_PREFIX, "No generators found for $path")
@@ -37,19 +37,19 @@ interface MetadataGenerator {
 
             var result: Result<Metadata>
             val time = measureTimeMillis {
-                result = generator.generate(path, resource)
+                result = generator.extract(path, resource)
             }
             Log.v(LOG_PREFIX, "metadata generated for $path in $time ms")
             return result
         }
 
         // Use this list to declare new types of generators
-        private val GENERATORS: List<MetadataGenerator> = listOf(
-            ImageMetadataGenerator,
-            VideoMetadataGenerator,
-            DocumentMetadataGenerator,
-            PlainTextMetadataGenerator,
-            ArchiveMetadataGenerator
+        private val EXTRACTORS: List<MetadataExtractor> = listOf(
+            ImageMetadataExtractor,
+            VideoMetadataExtractor,
+            DocumentMetadataExtractor,
+            PlainTextMetadataExtractor,
+            ArchiveMetadataExtractor
         )
     }
 }

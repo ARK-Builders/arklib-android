@@ -6,9 +6,9 @@
 /buildSrc/build/
 /captures
 /local.properties
-*.class
 .externalNativeBuild
 .cxx
+*.class
 *.tab
 *.tab.values.at
 misc.xml
