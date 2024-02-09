@@ -1,12 +1,12 @@
 *.iml
 .idea
 .gradle
-/local.properties
 .DS_Store
 /build
 /buildSrc/build/
-*.class
 /captures
+/local.properties
+*.class
 .externalNativeBuild
 .cxx
 *.tab
