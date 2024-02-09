@@ -4,11 +4,11 @@
 .DS_Store
 /build
 /buildSrc/build/
-/local.properties
 /captures
-*.class
+/local.properties
 .externalNativeBuild
 .cxx
+*.class
 *.tab
 *.tab.values.at
 misc.xml
