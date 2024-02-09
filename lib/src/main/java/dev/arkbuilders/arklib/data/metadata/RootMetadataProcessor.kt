@@ -1,4 +1,4 @@
-package dev.arkbuilders.arklib.data.meta
+package dev.arkbuilders.arklib.data.metadata
 
 import android.util.Log
 import kotlinx.coroutines.*
@@ -56,7 +56,7 @@ class RootMetadataProcessor private constructor(
         }
     }
 
-    private suspend fun generate(resources: Collection<NewResource>): List<AddedMetadata> =
+    private suspend fun extract(resources: Collection<NewResource>): List<AddedMetadata> =
         withContext(Dispatchers.Default) {
             val amount = resources.size
             Log.i(
@@ -68,7 +68,7 @@ class RootMetadataProcessor private constructor(
 
             val jobs = resources.map { added ->
                 async {
-                    generate(added)
+                    extract(added)
                 }
             }
 
@@ -80,7 +80,7 @@ class RootMetadataProcessor private constructor(
             return@withContext added
         }
 
-    private suspend fun generate(newResource: NewResource): AddedMetadata? =
+    private suspend fun extract(newResource: NewResource): AddedMetadata? =
         withContext(Dispatchers.Default) {
             val resource = newResource.resource
             val path = newResource.path
@@ -96,8 +96,8 @@ class RootMetadataProcessor private constructor(
                 "generating metadata for resource ${resource.id} by path $path"
             )
 
-            metadata = MetadataGenerator
-                .generate(path, resource)
+            metadata = MetadataExtractor
+                .extract(path, resource)
                 .getOrNull()
 
             metadata?.let {
@@ -117,7 +117,7 @@ class RootMetadataProcessor private constructor(
     private fun initUpdatedResourcesListener() {
         Log.i(LOG_PREFIX, "Listening for updates in the index")
         index.updates.onEach { diff ->
-            val addedMetadata = generate(diff.added.values)
+            val addedMetadata = extract(diff.added.values)
 
             diff.deleted.forEach { (id, _) ->
                 storage.remove(id)
@@ -132,7 +132,7 @@ class RootMetadataProcessor private constructor(
         }.launchIn(scope + Dispatchers.Default)
     }
 
-    private suspend fun initKnownResources() = generate(index.asAdded())
+    private suspend fun initKnownResources() = extract(index.asAdded())
 
     companion object {
         suspend fun provide(

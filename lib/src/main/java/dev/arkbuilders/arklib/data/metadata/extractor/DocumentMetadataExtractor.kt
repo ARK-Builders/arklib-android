@@ -1,16 +1,16 @@
-package dev.arkbuilders.arklib.data.meta.generator
+package dev.arkbuilders.arklib.data.metadata.extractor
 
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
 import dev.arkbuilders.arklib.data.index.Resource
-import dev.arkbuilders.arklib.data.meta.Metadata
-import dev.arkbuilders.arklib.data.meta.MetadataGenerator
+import dev.arkbuilders.arklib.data.metadata.Metadata
+import dev.arkbuilders.arklib.data.metadata.MetadataExtractor
 import dev.arkbuilders.arklib.utils.detectMimeType
 import dev.arkbuilders.arklib.utils.extension
 import java.io.FileNotFoundException
 import java.nio.file.Path
 
-object DocumentMetadataGenerator: MetadataGenerator {
+object DocumentMetadataExtractor: MetadataExtractor {
 
     override val acceptedExtensions: Set<String>
         get() = setOf("csv", "pdf", "odt", "odp", "ods",
@@ -34,7 +34,7 @@ object DocumentMetadataGenerator: MetadataGenerator {
             "text/markdown"
         )
 
-    override fun generate(path: Path, resource: Resource): Result<Metadata> {
+    override fun extract(path: Path, resource: Resource): Result<Metadata> {
         if (!isPdf(path)) {
             return Result.success(
                 Metadata.Document(isPdf = false, pages = null)
