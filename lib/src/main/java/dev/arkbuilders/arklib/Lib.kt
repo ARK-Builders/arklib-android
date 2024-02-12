@@ -42,7 +42,7 @@ data class ResourceId(
 
         fun fromString(str: String): ResourceId {
             val parts = str.split(KEY_VALUE_SEPARATOR)
-                return ResourceId(
+            return ResourceId(
                     parts[0].toLong(),
                     parts[1].toLong()
            )

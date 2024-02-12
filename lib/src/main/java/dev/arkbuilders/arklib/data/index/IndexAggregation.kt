@@ -54,4 +54,16 @@ class IndexAggregation(
     override suspend fun updateAll() {
         shards.forEach { it.updateAll() }
     }
+
+    override suspend fun updateOne(
+        resourcePath: Path,
+        oldId: ResourceId
+    ): ResourceUpdates {
+        return shards.find { resourcePath.startsWith(it.path) }
+            ?.updateOne(resourcePath, oldId)
+            ?: error(
+                "At least one shard must contain the passed path" +
+                        "shards: ${shards.map { it.path }} path: $resourcePath"
+            )
+    }
 }

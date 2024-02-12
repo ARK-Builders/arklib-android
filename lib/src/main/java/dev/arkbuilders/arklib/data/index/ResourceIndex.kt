@@ -13,6 +13,13 @@ interface ResourceIndex {
 
     suspend fun updateAll()
 
+    suspend fun updateOne(resourcePath: Path, oldId: ResourceId): ResourceUpdates
+
+    suspend fun updateOne(oldId: ResourceId): ResourceUpdates = updateOne(
+        allPaths()[oldId]!!,
+        oldId
+    )
+
     fun allResources(): Map<ResourceId, Resource>
 
     fun getResource(id: ResourceId): Resource?

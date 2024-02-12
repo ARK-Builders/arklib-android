@@ -1,6 +1,10 @@
 package dev.arkbuilders.arklib.data.index
 
 import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.sync.Mutex
 import dev.arkbuilders.arklib.ResourceId
 import dev.arkbuilders.arklib.binding.BindingIndex
 import dev.arkbuilders.arklib.binding.RawUpdates
@@ -11,6 +15,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.sync.Mutex
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.io.path.Path
 
 /**
  * [RootIndex] is a type of index backed by storage file.
@@ -53,7 +58,8 @@ class RootIndex private constructor(val path: Path) : ResourceIndex {
 
         val added = update.added
             //we can't present empty resources
-            .mapNotNull { (id, path) ->
+            .mapNotNull { (id, _path) ->
+                val path = Path(_path)
                 val resource: Resource = Resource.compute(id, path)
                     .onFailure { error ->
                         Log.e(
@@ -89,7 +95,7 @@ class RootIndex private constructor(val path: Path) : ResourceIndex {
             // we should not have subscribers yet
             // this update is not pushed into the flow
             // it is needed only to catch up
-            BindingIndex.update(path)
+            BindingIndex.updateAll(path)
             BindingIndex.store(path)
 
             // id2path should be used in order to filter-out duplicates
@@ -118,21 +124,21 @@ class RootIndex private constructor(val path: Path) : ResourceIndex {
         withContextAndLock(Dispatchers.IO, mutex) {
             Log.i(LOG_PREFIX, "Updating the index of root $path")
 
-            val raw: RawUpdates = BindingIndex.update(path)
+            val raw: RawUpdates = BindingIndex.updateAll(path)
             BindingIndex.store(path)
+            handleRawUpdates(raw)
+        }
 
-            val updates: ResourceUpdates = wrap(raw)
+    override suspend fun updateOne(resourcePath: Path, oldId: ResourceId): ResourceUpdates =
+        withContextAndLock(Dispatchers.IO, mutex) {
+            Log.i(
+                LOG_PREFIX,
+                "Updating one resource[$resourcePath] the index of root $path"
+            )
 
-            updates.deleted.forEach { (id, _) ->
-                resourceAndPathById.remove(id)
-            }
-
-            updates.added.forEach { (id, added) ->
-                resourceAndPathById[id] = added.resource to added.path
-            }
-
-            _updates.emit(updates)
-            check()
+            val raw: RawUpdates = BindingIndex.updateOne(path, resourcePath, oldId)
+            BindingIndex.store(path)
+            return@withContextAndLock handleRawUpdates(raw)
         }
 
     override fun allResources(): Map<ResourceId, Resource> =
@@ -154,6 +160,23 @@ class RootIndex private constructor(val path: Path) : ResourceIndex {
             NewResource(path, resource)
         }.toSet()
 
+    private suspend fun handleRawUpdates(raw: RawUpdates): ResourceUpdates {
+        BindingIndex.store(path)
+
+        val updates: ResourceUpdates = wrap(raw)
+
+        updates.deleted.forEach { (id, _) ->
+            resourceAndPathById.remove(id)
+        }
+
+        updates.added.forEach { (id, added) ->
+            resourceAndPathById[id] = added.resource to added.path
+        }
+
+        _updates.emit(updates)
+        check()
+        return updates
+    }
 
     private fun check() {
         val resourceById = resourceAndPathById.mapValues { it.value.first }

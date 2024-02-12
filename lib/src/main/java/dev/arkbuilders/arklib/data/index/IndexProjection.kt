@@ -48,6 +48,9 @@ class IndexProjection(
 
     override suspend fun updateAll() = root.updateAll()
 
+    override suspend fun updateOne(resourcePath: Path, oldId: ResourceId) =
+        root.updateOne(resourcePath, oldId)
+
     override fun allResources(): Map<ResourceId, Resource> {
         val allPathsMap = root.allPaths()
         return root
